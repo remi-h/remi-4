@@ -55,12 +55,6 @@ export default async function ProjectPage({
 
   return (
     <main className="p-4">
-      <Link
-        href="/projects"
-        className="text-xs uppercase tracking-[0.2em]"
-      >
-        ← Back to projects
-      </Link>
       <div className="mt-6">
         <h1 className="text-4xl font-bitcount">
           {project.fields.title ?? "Project"}

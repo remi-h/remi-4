@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="">
       <main className="p-4">
-        <section className="bg-linear-to-r from-slate-900 to-slate-700 p-6 rounded-4xl w-full mb-2 text-white">
+        <section className="bg-linear-to-r from-slate-300 to-slate-300 p-6 rounded-4xl w-full mb-2 text-black">
           <h1 className="text-8xl font-bitcount">Remi Higuchi</h1>
           <h2 className="text-xl font-bitcount">Experience Designer & Software Engineer</h2>
           <h3 className="text-lg font-bitcount">From Tokyo, Based in Stockholm</h3>

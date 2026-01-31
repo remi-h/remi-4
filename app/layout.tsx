@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bitcount_Single, Noto_Serif_JP, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigatin";
+import { Footer } from "@/components/Footer";
 
 const notoSerifJp = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
@@ -30,7 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-
       <body
         className={`${notoSerifJp.variable} ${bitcountSingle.variable} ${spaceGrotesk.variable} antialiased`}
       >
@@ -38,6 +38,7 @@ export default function RootLayout({
           {children}
         </div>
         <Navigation />
+        <Footer />
       </body>
     </html>
   );
