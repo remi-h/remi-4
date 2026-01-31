@@ -16,7 +16,7 @@ export const Footer = () => {
                         <div>
                             <h4 className="uppercase text-lg">Contact</h4>
                             <p className="text-sm">
-                                Send a DM on <Link href="https://linkedin.com/in/hremi" target="_blank">Linkedin</Link>
+                                Text me on <Link href="https://linkedin.com/in/hremi" target="_blank">Linkedin</Link>
                             </p>
                         </div>
                         <div>

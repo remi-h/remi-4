@@ -35,7 +35,7 @@ export const ProjectsTile = async ({
 
                     const content = (
                         <div
-                            className="group relative flex h-80 w-full items-center overflow-hidden rounded-4xl"
+                            className="group relative flex h-80 w-full items-center overflow-hidden rounded-4xl border border-white/20"
                             style={
                                 cover
                                     ? {
@@ -46,7 +46,7 @@ export const ProjectsTile = async ({
                                     : undefined
                             }
                         >
-                            <div className="absolute inset-0 bg-black/30 transition group-hover:bg-black/50" />
+                            <div className="absolute inset-0 bg-black/30 duration-300 group-hover:bg-black/50" />
                             <div className="relative z-10 p-4 text-left">
                                 <h4 className="text-xl font-bitcount uppercase">
                                     {project.fields.title}
