@@ -21,6 +21,7 @@ export type ContentfulProject = {
     slug?: string;
     summary?: string;
     duration?: string;
+    featured?: boolean;
     cover?: { sys: ContentfulSys };
     text?: ContentfulRichText;
   };
@@ -69,7 +70,7 @@ const fetchContentful = async (url: URL) => {
   return (await response.json()) as ContentfulResponse;
 };
 
-export const fetchProjects = async () => {
+export const fetchProjects = async (options?: { featuredOnly?: boolean }) => {
   const { contentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 
@@ -81,6 +82,9 @@ export const fetchProjects = async () => {
   url.searchParams.set("content_type", contentType);
   url.searchParams.set("include", "1");
   url.searchParams.set("order", "-sys.createdAt");
+  if (options?.featuredOnly) {
+    url.searchParams.set("fields.featured", "true");
+  }
 
   return (
     (await fetchContentful(url)) ??

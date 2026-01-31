@@ -16,17 +16,10 @@
   --font-serif: var(--font-noto-serif-jp);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-noto-serif-jp), serif;
+  font-family: var(--font-space-grotesk);
 }
 
 a {
@@ -37,10 +30,4 @@ a {
 a:hover {
   color: #ce9eff !important;
   transition: .2s;
-}
-
-@layer components {
-  .nav-link {
-    @apply font-bitcount relative inline-flex;
-  }
 }

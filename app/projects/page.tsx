@@ -9,8 +9,8 @@ export default function ProjectsPage() {
   return (
     <main className="p-4">
       <h1 className="text-4xl font-bitcount">Projects</h1>
-      <p className="mt-3 max-w-lg text-sm">
-        Selected work and case studies pulled from Contentful.
+      <p className="my-3 max-w-lg text-sm">
+        Selected work and case studies. In order to see, password is required.
       </p>
       <ProjectsTile showHeading={false} />
     </main>

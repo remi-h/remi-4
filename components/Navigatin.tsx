@@ -2,21 +2,21 @@ import Link from "next/link";
 
 export const Navigation = () => {
     return (
-        <header className="flex uppercase justify-between p-4 text-xl">
-            <Link className="nav-link" href="/">
+        <nav className="fixed bottom-2 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between rounded-2xl border border-black/10 bg-black/50 px-4 py-2 shadow-lg backdrop-blur min-w-sm">
+            <Link className="font-bitcount relative inline-flex rounded-xl px-3 py-2 text-sm uppercase tracking-[0.08em] transition hover:bg-black/50" href="/">
                 Remi Higuchi
             </Link>
-            <div className="space-x-4">
-                <Link className="nav-link" href="/projects">
+            <div className="flex items-center gap-1">
+                <Link className="font-bitcount relative inline-flex rounded-xl px-3 py-2 text-sm uppercase tracking-[0.08em] transition hover:bg-black/50" href="/projects">
                     Projects
                 </Link>
                 <Link
-                    className="nav-link"
+                    className="font-bitcount relative inline-flex rounded-xl px-3 py-2 text-sm uppercase tracking-[0.08em] transition hover:bg-black/50"
                     href="/cv"
                 >
                     CV
                 </Link>
             </div>
-        </header>
+        </nav>
     );
 };
