@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bitcount_Single, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
+import { Navigation } from "@/components/Navigatin";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSerifJp = Noto_Serif_JP({
+  variable: "--font-noto-serif-jp",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bitcountSingle = Bitcount_Single({
+  variable: "--font-bitcount-single",
   subsets: ["latin"],
 });
 
@@ -24,9 +25,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${notoSerifJp.variable} ${bitcountSingle.variable} antialiased`}
       >
+        <div className="root">
+          <Navigation />
+        </div>
         {children}
       </body>
     </html>
