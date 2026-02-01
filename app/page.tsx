@@ -19,7 +19,15 @@ export default function Home() {
         <section className="">
           <div className="flex justify-between items-center">
             <h2 className="font-bitcount text-2xl uppercase m-4">Featured Projects</h2>
-            <Link href="/projects" className="font-bitcount text-sm uppercase underline">View all &gt;</Link>
+            <Link
+              href="/projects"
+              className="group font-bitcount text-md uppercase underline"
+            >
+              <span>View all</span>
+              <span className="ml-2 opacity-0 transition group-hover:opacity-100">
+                &gt;
+              </span>
+            </Link>
           </div>
           <ProjectsTile featuredOnly showHeading={false} />
         </section>

@@ -20,16 +20,28 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-space-grotesk);
-  /* cursor: none; */
 }
 
 a {
   color: #ffd073 !important;
   text-decoration: none;
-  /* cursor: none !important; */
 }
 
-a:hover {
+.project-page h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.project-page h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.project-page h4 {
+  font-weight: 700;
+}
+
+footer>a:hover {
   color: #ce9eff !important;
   transition: .3s;
 }

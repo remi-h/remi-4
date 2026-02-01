@@ -35,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${notoSerifJp.variable} ${bitcountSingle.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        <div className="root max-w-8xl mx-auto">
+        <div className="root max-w-7xl mx-auto">
           {children}
           <Footer />
         </div>

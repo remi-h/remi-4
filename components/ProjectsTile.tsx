@@ -36,33 +36,41 @@ export const ProjectsTile = async ({
                     const backgroundUrl = cover?.url ?? "/lock.png";
 
                     const content = (
-                        <div
-                            className="group relative flex h-80 w-full overflow-hidden rounded-4xl border border-white/20"
-                            style={{
-                                backgroundImage: `url(${backgroundUrl})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                            }}
-                        >
-                            <div className="absolute inset-0 duration-300 group-hover:bg-black/50" />
-                            <div className="relative z-10 p-4 text-left">
-                                <h4 className="text-xl font-bitcount uppercase">
-                                    {project.fields.title}
+                        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/5">
+                            <div
+                                className="h-64 w-full"
+                                style={{
+                                    backgroundImage: `url(${backgroundUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                }}
+                            />
+                            <div className="flex flex-1 flex-col p-4">
+                                <h4 className="flex items-center gap-2 text-lg font-bitcount uppercase">
+                                    <span>{project.fields.title}</span>
+                                    <span className="opacity-0 transition group-hover:opacity-100">
+                                        &gt;
+                                    </span>
                                 </h4>
+                                {project.fields.summary ? (
+                                    <p className="text-sm text-white/80">
+                                        {project.fields.summary}
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
                     );
 
                     return slug ? (
                         <Link
-                            className="block"
+                            className="group block h-full"
                             href={`/projects/${slug}`}
                             key={project.sys.id}
                         >
                             {content}
                         </Link>
                     ) : (
-                        <article className="border" key={project.sys.id}>
+                        <article className="h-full" key={project.sys.id}>
                             {content}
                         </article>
                     );
