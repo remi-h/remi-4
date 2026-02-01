@@ -35,12 +35,12 @@ export default function RootLayout({
       <body
         className={`${notoSerifJp.variable} ${bitcountSingle.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        <div className="root">
+        <div className="root max-w-8xl mx-auto">
           {children}
+          <Footer />
         </div>
         <Navigation />
-        <Footer />
-        <Cursor />
+        {/* <Cursor /> */}
       </body>
     </html>
   );

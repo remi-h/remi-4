@@ -26,27 +26,25 @@ export const ProjectsTile = async ({
             {showHeading ? (
                 <h3 className="text-2xl font-bitcount uppercase">Projects</h3>
             ) : null}
-            <div className="grid gap-2 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {data.items.map((project) => {
                     const cover = resolveAssetImage(
                         assets.get(project.fields.cover?.sys.id ?? "")
                     );
                     const slug = project.fields.slug;
 
+                    const backgroundUrl = cover?.url ?? "/lock.png";
+
                     const content = (
                         <div
-                            className="group relative flex h-80 w-full items-center overflow-hidden rounded-4xl border border-white/20"
-                            style={
-                                cover
-                                    ? {
-                                        backgroundImage: `url(${cover.url})`,
-                                        backgroundSize: "cover",
-                                        backgroundPosition: "center",
-                                    }
-                                    : undefined
-                            }
+                            className="group relative flex h-80 w-full overflow-hidden rounded-4xl border border-white/20"
+                            style={{
+                                backgroundImage: `url(${backgroundUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                            }}
                         >
-                            <div className="absolute inset-0 bg-black/30 duration-300 group-hover:bg-black/50" />
+                            <div className="absolute inset-0 duration-300 group-hover:bg-black/50" />
                             <div className="relative z-10 p-4 text-left">
                                 <h4 className="text-xl font-bitcount uppercase">
                                     {project.fields.title}
@@ -64,10 +62,7 @@ export const ProjectsTile = async ({
                             {content}
                         </Link>
                     ) : (
-                        <article
-                            className="borde"
-                            key={project.sys.id}
-                        >
+                        <article className="border" key={project.sys.id}>
                             {content}
                         </article>
                     );

@@ -77,7 +77,7 @@ export default async function ProjectPage({
     : null;
 
   return (
-    <main className="p-4">
+    <main className="p-4 max-w-3xl mx-auto">
       <div className="mt-6">
         <h1 className="text-4xl font-bitcount">
           {project.fields.title ?? "Project"}
