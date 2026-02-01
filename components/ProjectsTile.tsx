@@ -4,6 +4,7 @@ import {
     getAssetMap,
     resolveAssetImage,
 } from "@/lib/contentful";
+import { LockClosedIcon } from "@radix-ui/react-icons";
 
 type ProjectsTileProps = {
     showHeading?: boolean;
@@ -38,13 +39,20 @@ export const ProjectsTile = async ({
                     const content = (
                         <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/5">
                             <div
-                                className="h-64 w-full"
+                                className="relative h-64 w-full"
                                 style={{
                                     backgroundImage: `url(${backgroundUrl})`,
                                     backgroundSize: "cover",
                                     backgroundPosition: "center",
                                 }}
-                            />
+                            >
+                                {project.fields.lock ? (
+                                    <div className="absolute left-2 bottom-2 rounded-full bg-black/70 p-2 opacity-0 transition group-hover:opacity-100">
+                                        <LockClosedIcon className="h-4 w-4 text-white" />
+                                    </div>
+                                ) : null}
+                            </div>
+
                             <div className="flex flex-1 flex-col p-4">
                                 <h4 className="flex items-center gap-2 text-lg font-bitcount uppercase">
                                     <span>{project.fields.title}</span>
@@ -52,6 +60,7 @@ export const ProjectsTile = async ({
                                         &gt;
                                     </span>
                                 </h4>
+
                                 {project.fields.summary ? (
                                     <p className="text-sm text-white/80">
                                         {project.fields.summary}

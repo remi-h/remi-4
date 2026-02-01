@@ -23,6 +23,7 @@ export type ContentfulProject = {
     duration?: string;
     date?: string;
     featured?: boolean;
+    lock?: boolean;
     cover?: { sys: ContentfulSys };
     text?: ContentfulRichText;
   };
