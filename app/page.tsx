@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProjectsTile } from "@/components/ProjectsTile";
 
 export default function Home() {
@@ -9,13 +10,17 @@ export default function Home() {
           <h2 className="text-xl font-bitcount">Experience Designer & Software Engineer</h2>
           <h3 className="text-lg font-bitcount">From Tokyo, Based in Stockholm</h3>
           <p className="my-4 text-xs max-w-2xl">
-            I'm a designer and engineer focused on
-            crafting meaningful digital experiences. With a background in both
+            I design and code :) <br />
+            With a background in both
             design and software development, I bridge the gap between
             aesthetics and functionality to create user-centric solutions.
           </p>
         </section>
         <section className="">
+          <div className="flex justify-between items-center">
+            <h2 className="font-bitcount text-2xl uppercase m-4">Featured Projects</h2>
+            <Link href="/projects" className="font-bitcount text-sm uppercase underline">View all &gt;</Link>
+          </div>
           <ProjectsTile featuredOnly showHeading={false} />
         </section>
       </main>

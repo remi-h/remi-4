@@ -21,6 +21,7 @@ export type ContentfulProject = {
     slug?: string;
     summary?: string;
     duration?: string;
+    date?: string;
     featured?: boolean;
     cover?: { sys: ContentfulSys };
     text?: ContentfulRichText;
@@ -81,7 +82,7 @@ export const fetchProjects = async (options?: { featuredOnly?: boolean }) => {
   const url = new URL(baseUrl);
   url.searchParams.set("content_type", contentType);
   url.searchParams.set("include", "1");
-  url.searchParams.set("order", "-sys.createdAt");
+  url.searchParams.set("order", "-fields.date");
   if (options?.featuredOnly) {
     url.searchParams.set("fields.featured", "true");
   }

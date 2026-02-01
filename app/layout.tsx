@@ -3,6 +3,7 @@ import { Bitcount_Single, Noto_Serif_JP, Space_Grotesk } from "next/font/google"
 import "./globals.css";
 import { Navigation } from "@/components/Navigatin";
 import { Footer } from "@/components/Footer";
+import { Cursor } from "@/components/Cursor";
 
 const notoSerifJp = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
@@ -39,6 +40,7 @@ export default function RootLayout({
         </div>
         <Navigation />
         <Footer />
+        <Cursor />
       </body>
     </html>
   );

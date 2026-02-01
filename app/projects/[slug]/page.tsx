@@ -1,13 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   fetchProjectBySlug,
   fetchProjectSlugs,
   getAssetMap,
   resolveAssetImage,
-  richTextToPlainText,
 } from "@/lib/contentful";
+import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
+import { BLOCKS, Document } from "@contentful/rich-text-types";
 
 export const dynamicParams = true;
 
@@ -51,7 +51,30 @@ export default async function ProjectPage({
   const cover = resolveAssetImage(
     assets.get(project.fields.cover?.sys.id ?? "")
   );
-  const description = richTextToPlainText(project.fields.text);
+  const description = project.fields.text
+    ? documentToReactComponents(project.fields.text as Document, {
+      renderNode: {
+        [BLOCKS.EMBEDDED_ASSET]: (node) => {
+          const target = node.data?.target?.sys?.id;
+          if (!target) return null;
+          const asset = assets.get(target);
+          const image = resolveAssetImage(asset);
+          if (!image) return null;
+          return (
+            <div className="my-6">
+              <Image
+                alt={image.title}
+                className="w-full max-w-3xl object-cover rounded border border-white/40"
+                height={image.height}
+                src={image.url}
+                width={image.width}
+              />
+            </div>
+          );
+        },
+      },
+    })
+    : null;
 
   return (
     <main className="p-4">
@@ -72,7 +95,7 @@ export default async function ProjectPage({
         <div className="mt-6">
           <Image
             alt={cover.title}
-            className="w-full max-w-3xl object-cover"
+            className="w-full max-w-3xl object-cover rounded border border-white/40"
             height={cover.height}
             src={cover.url}
             width={cover.width}
