@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { BackButton } from "@/components/BackButton";
 import { notFound } from "next/navigation";
 import {
   fetchProjectBySlug,
@@ -78,7 +79,8 @@ export default async function ProjectPage({
 
   return (
     <main className="p-4 max-w-3xl mx-auto project-page">
-      <div className="mt-6">
+      <BackButton />
+      <div className="mt-4">
         <h1 className="text-4xl font-bitcount">
           {project.fields.title ?? "Project"}
         </h1>
