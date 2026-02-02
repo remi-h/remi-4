@@ -9,6 +9,7 @@ import {
 } from "@/lib/contentful";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import { BLOCKS, Document } from "@contentful/rich-text-types";
+import { ExternalLinkIcon } from "@radix-ui/react-icons";
 
 export const dynamicParams = true;
 
@@ -86,6 +87,16 @@ export default async function ProjectPage({
         </h1>
         {project.fields.summary ? (
           <p className="mt-3 max-w-2xl text-sm">{project.fields.summary}</p>
+        ) : null}
+        {project.fields.link ? (
+          <a
+            className="group mt-2 text-sm flex items-center gap-2"
+            href={project.fields.link}
+            target="_blank"
+          >
+            Visit {project.fields.title}
+            <ExternalLinkIcon className="w-4 h-4" />
+          </a>
         ) : null}
         {project.fields.duration ? (
           <p className="mt-2 text-xs uppercase tracking-[0.08em]">

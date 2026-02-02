@@ -21,6 +21,7 @@ export type ContentfulProject = {
     slug?: string;
     summary?: string;
     duration?: string;
+    link?: string;
     date?: string;
     featured?: boolean;
     lock?: boolean;
