@@ -41,7 +41,7 @@ a {
   font-weight: 700;
 }
 
-footer>a:hover {
+footer a:hover {
   color: #ce9eff !important;
   transition: .3s;
 }

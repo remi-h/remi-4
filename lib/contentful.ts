@@ -72,7 +72,10 @@ const fetchContentful = async (url: URL) => {
   return (await response.json()) as ContentfulResponse;
 };
 
-export const fetchProjects = async (options?: { featuredOnly?: boolean }) => {
+export const fetchProjects = async (options?: {
+  featuredOnly?: boolean;
+  featuredFirst?: boolean;
+}) => {
   const { contentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 
@@ -88,10 +91,20 @@ export const fetchProjects = async (options?: { featuredOnly?: boolean }) => {
     url.searchParams.set("fields.featured", "true");
   }
 
-  return (
+  const response =
     (await fetchContentful(url)) ??
-    ({ items: [], includes: { Asset: [] } } as ContentfulResponse)
-  );
+    ({ items: [], includes: { Asset: [] } } as ContentfulResponse);
+
+  if (options?.featuredFirst) {
+    response.items.sort((a, b) => {
+      const aFeatured = Boolean(a.fields.featured);
+      const bFeatured = Boolean(b.fields.featured);
+      if (aFeatured === bFeatured) return 0;
+      return aFeatured ? -1 : 1;
+    });
+  }
+
+  return response;
 };
 
 export const fetchProjectBySlug = async (slug: string) => {

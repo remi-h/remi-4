@@ -15,7 +15,7 @@ export const ProjectsTile = async ({
     showHeading = true,
     featuredOnly = false,
 }: ProjectsTileProps) => {
-    const data = await fetchProjects({ featuredOnly });
+    const data = await fetchProjects({ featuredOnly, featuredFirst: true });
     const assets = getAssetMap(data.includes?.Asset);
 
     if (data.items.length === 0) {
