@@ -11,7 +11,7 @@ export const Footer = () => {
                             <h4 className="uppercase text-lg">Contents</h4>
                             <p className="text-sm"><Link href="/">Home</Link></p>
                             <p className="text-sm"><Link href="/projects">Projects</Link></p>
-                            <p className="text-sm"><Link href="/cv">CV</Link></p>
+                            <p className="text-sm"><Link href="/log">LOG</Link></p>
                         </div>
                         <div className="mb-2">
                             <h4 className="uppercase text-lg">Contact</h4>

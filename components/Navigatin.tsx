@@ -12,9 +12,9 @@ export const Navigation = () => {
                 </Link>
                 <Link
                     className="font-bitcount relative inline-flex rounded-xl px-3 py-2 text-sm uppercase tracking-[0.08em] transition hover:bg-black/50"
-                    href="/cv"
+                    href="/log"
                 >
-                    CV
+                    LOG
                 </Link>
             </div>
         </nav>

@@ -12,7 +12,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-bitcount: var(--font-bitcount-single);
+  --font-bitcount: var(--font-bitcount-single), var(--font-dot-gothic-16), sans-serif;
   --font-serif: var(--font-noto-serif-jp);
 }
 
@@ -41,7 +41,7 @@ a {
   font-weight: 700;
 }
 
-footer a:hover {
+a:hover {
   color: #ce9eff !important;
   transition: .3s;
 }

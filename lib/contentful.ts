@@ -34,6 +34,20 @@ type ContentfulResponse = {
   includes?: { Asset?: ContentfulAsset[] };
 };
 
+export type ContentfulLog = {
+  sys: ContentfulSys;
+  fields: {
+    date?: string;
+    title?: string;
+    org?: string;
+    link?: string;
+  };
+};
+
+type ContentfulLogResponse = {
+  items: ContentfulLog[];
+};
+
 type ContentfulRichText = {
   nodeType?: string;
   value?: string;
@@ -46,8 +60,9 @@ const getEnv = () => {
   const token = process.env.CONTENTFUL_DELIVERY_TOKEN;
   const contentType =
     process.env.CONTENTFUL_PROJECT_CONTENT_TYPE ?? "project";
+  const logContentType = process.env.CONTENTFUL_LOG_CONTENT_TYPE ?? "log";
 
-  return { spaceId, environment, token, contentType };
+  return { spaceId, environment, token, contentType, logContentType };
 };
 
 const buildBaseUrl = () => {
@@ -105,6 +120,22 @@ export const fetchProjects = async (options?: {
   }
 
   return response;
+};
+
+export const fetchLogs = async () => {
+  const { logContentType, spaceId } = getEnv();
+  const baseUrl = buildBaseUrl();
+
+  if (!spaceId || !baseUrl) {
+    return { items: [] } as ContentfulLogResponse;
+  }
+
+  const url = new URL(baseUrl);
+  url.searchParams.set("content_type", logContentType);
+  url.searchParams.set("order", "-fields.date");
+
+  const response = await fetchContentful(url);
+  return ((response as unknown as ContentfulLogResponse) ?? { items: [] }) as ContentfulLogResponse;
 };
 
 export const fetchProjectBySlug = async (slug: string) => {
