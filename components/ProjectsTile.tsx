@@ -47,7 +47,7 @@ export const ProjectsTile = async ({
                                 }}
                             >
                                 {project.fields.lock ? (
-                                    <div className="absolute left-2 bottom-2 rounded-full bg-black/70 p-2 transition group-hover:opacity-100 opacity-100 md:opacity-0">
+                                    <div className="absolute left-2 bottom-2 rounded-full bg-black/70 p-2 transition">
                                         <LockClosedIcon className="h-4 w-4 text-white" />
                                     </div>
                                 ) : null}
