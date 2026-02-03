@@ -29,20 +29,20 @@ a {
 
 .project-page h2 {
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 20px;
 }
 
 .project-page h3 {
   font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 18px;
+  font-weight: 700;
+  margin-top: 16px;
 }
 
 .project-page h4 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-top: 16px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-top: 12px;
 }
 
 .project-page p {
@@ -52,7 +52,7 @@ a {
 .project-page blockquote {
   border-left: 2px solid #FFF;
   padding-left: 12px;
-  opacity: 0.6;
+  opacity: 0.8;
   margin-bottom: 16px;
 }
 
