@@ -34,7 +34,7 @@ export default async function ProjectsPage() {
                                     <p className="inline"> | {entry.fields.org}</p>
                                 ) : null}
                             </div>
-                            <p className="mt-2 flex items-center gap-2">
+                            <p className="flex items-center gap-2">
                                 <span>{entry.fields.title ?? "Untitled"}</span>
                                 <span className="font-bitcount opacity-0 transition group-hover:opacity-100">
                                     &gt;
