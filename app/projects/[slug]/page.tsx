@@ -63,7 +63,7 @@ export default async function ProjectPage({
           const image = resolveAssetImage(asset);
           if (!image) return null;
           return (
-            <div className="my-6">
+            <div className="my-3">
               <Image
                 alt={image.title}
                 className="w-full max-w-3xl object-cover rounded border border-white/40"

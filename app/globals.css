@@ -79,6 +79,10 @@ a {
   margin-top: 0;
 }
 
+.project-page hr {
+  margin: 24px 0;
+}
+
 a:hover {
   color: #ce9eff !important;
   transition: .3s;
