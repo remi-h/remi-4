@@ -30,15 +30,53 @@ a {
 .project-page h2 {
   font-size: 1.4rem;
   font-weight: 600;
+  margin-top: 20px;
 }
 
 .project-page h3 {
   font-size: 1.2rem;
   font-weight: 600;
+  margin-top: 18px;
 }
 
 .project-page h4 {
+  font-size: 1.2rem;
   font-weight: 700;
+  margin-top: 16px;
+}
+
+.project-page p {
+  margin-top: 8px;
+}
+
+.project-page blockquote {
+  border-left: 2px solid #FFF;
+  padding-left: 12px;
+  opacity: 0.6;
+  margin-bottom: 16px;
+}
+
+.project-page table {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.project-page thead {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.project-page th,
+.project-page td {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.project-page table p {
+  margin-top: 0;
 }
 
 a:hover {

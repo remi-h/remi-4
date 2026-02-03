@@ -86,7 +86,7 @@ export default async function ProjectPage({
           {project.fields.title ?? "Project"}
         </h1>
         {project.fields.summary ? (
-          <p className="mt-3 max-w-2xl text-sm">{project.fields.summary}</p>
+          <p className="mt-3 max-w-3xl text-sm">{project.fields.summary}</p>
         ) : null}
         {project.fields.link ? (
           <a
