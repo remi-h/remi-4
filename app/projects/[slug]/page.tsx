@@ -66,7 +66,7 @@ export default async function ProjectPage({
             <div className="my-3">
               <Image
                 alt={image.title}
-                className="w-full max-w-3xl object-cover rounded border border-white/40"
+                className="w-full max-w-4xl object-cover rounded border border-white/40"
                 height={image.height}
                 src={image.url}
                 width={image.width}
@@ -79,14 +79,14 @@ export default async function ProjectPage({
     : null;
 
   return (
-    <main className="p-4 max-w-3xl mx-auto project-page">
+    <main className="p-4 max-w-4xl mx-auto project-page">
       <BackButton />
       <div className="mt-4">
         <h1 className="text-4xl font-bitcount">
           {project.fields.title ?? "Project"}
         </h1>
         {project.fields.summary ? (
-          <p className="mt-3 max-w-3xl text-sm">{project.fields.summary}</p>
+          <p className="mt-3 max-w-4xl text-sm">{project.fields.summary}</p>
         ) : null}
         {project.fields.link ? (
           <a
@@ -108,7 +108,7 @@ export default async function ProjectPage({
         <div className="mt-6">
           <Image
             alt={cover.title}
-            className="w-full max-w-3xl object-cover rounded border border-white/40"
+            className="w-full max-w-4xl object-cover rounded border border-white/40"
             height={cover.height}
             src={cover.url}
             width={cover.width}
@@ -116,7 +116,7 @@ export default async function ProjectPage({
         </div>
       ) : null}
       {description ? (
-        <div className="mt-6 max-w-2xl text-sm">{description}</div>
+        <div className="mt-6 max-w-4xl text-sm">{description}</div>
       ) : null}
     </main>
   );
