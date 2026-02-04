@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next"
 import { Bitcount_Single, Noto_Serif_JP, Space_Grotesk, DotGothic16 } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigatin";
@@ -46,6 +47,7 @@ export default function RootLayout({
         </div>
         <Navigation />
         {/* <Cursor /> */}
+        <Analytics />
       </body>
     </html>
   );
