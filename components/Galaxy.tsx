@@ -93,7 +93,7 @@ vec3 StarLayer(vec2 uv) {
       vec2 offset = vec2(float(x), float(y));
       vec2 si = id + vec2(float(x), float(y));
       float seed = Hash21(si);
-      float size = fract(seed * 345.32);
+      float size = min(fract(seed * 345.32), 0.6);
       float glossLocal = tri(uStarSpeed / (PERIOD * seed + 1.0));
       float flareSize = smoothstep(0.9, 1.0, size) * glossLocal;
 

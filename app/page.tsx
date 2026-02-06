@@ -7,17 +7,18 @@ export default function Home() {
     <div className="relative">
       <div className="fixed inset-0 -z-10">
         <Galaxy
-          starSpeed={0.1}
-          density={0.3}
-          hueShift={30}
-          speed={0.1}
-          glowIntensity={0.2}
-          saturation={1}
           mouseRepulsion={false}
-          repulsionStrength={2}
+          mouseInteraction={false}
+          density={0.3}
+          glowIntensity={0.2}
+          saturation={0}
+          hueShift={140}
           twinkleIntensity={0.3}
           rotationSpeed={0.1}
-          transparent
+          repulsionStrength={2}
+          autoCenterRepulsion={0}
+          starSpeed={0.1}
+          speed={0.1}
         />
       </div>
 
