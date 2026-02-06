@@ -37,7 +37,7 @@ export const ProjectsTile = async ({
                     const backgroundUrl = cover?.url ?? "/lock.png";
 
                     const content = (
-                        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/5">
+                        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-[#0b052d]/80">
                             <div
                                 className="relative h-64 w-full"
                                 style={{
