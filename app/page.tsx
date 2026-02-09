@@ -45,7 +45,7 @@ export default function Home() {
               </span>
             </Link>
           </div>
-          <ProjectsTile featuredOnly showHeading={false} />
+          <ProjectsTile featuredOnly />
         </section>
       </main>
     </div>

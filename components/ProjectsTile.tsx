@@ -7,12 +7,10 @@ import {
 import { LockClosedIcon } from "@radix-ui/react-icons";
 
 type ProjectsTileProps = {
-    showHeading?: boolean;
     featuredOnly?: boolean;
 };
 
 export const ProjectsTile = async ({
-    showHeading = true,
     featuredOnly = false,
 }: ProjectsTileProps) => {
     const data = await fetchProjects({ featuredOnly, featuredFirst: true });
@@ -24,9 +22,6 @@ export const ProjectsTile = async ({
 
     return (
         <section>
-            {showHeading ? (
-                <h3 className="text-2xl font-bitcount uppercase">Projects</h3>
-            ) : null}
             <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {data.items.map((project) => {
                     const cover = resolveAssetImage(

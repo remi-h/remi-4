@@ -29,7 +29,7 @@ export default function ProjectsPage() {
         <p className="my-3 max-w-lg text-sm">
           Selected work and case studies. Some projects require a login to view.
         </p>
-        <ProjectsTile showHeading={false} />
+        <ProjectsTile />
       </main>
     </div>
   );
