@@ -4,6 +4,8 @@ const PORT = 3100;
 
 export default defineConfig({
   testDir: './e2e',
+  // The dev server compiles each route on first visit, which can exceed the 5s default.
+  expect: { timeout: 15_000 },
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
@@ -28,6 +30,7 @@ export default defineConfig({
   webServer: {
     command: `npm run dev -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
+    env: { CONTENTFUL_FIXTURES: '1' },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
