@@ -1,29 +1,26 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next"
-import { Bitcount_Single, Noto_Serif_JP, Space_Grotesk, DotGothic16 } from "next/font/google";
+import { Familjen_Grotesk, IBM_Plex_Mono, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigatin";
 import { Footer } from "@/components/Footer";
 
+const familjenGrotesk = Familjen_Grotesk({
+  variable: "--font-familjen-grotesk",
+  subsets: ["latin"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
+// Used for small Japanese details. CJK fonts are split into many slices, so load them on demand.
 const notoSerifJp = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
-  subsets: ["latin"],
-});
-
-const bitcountSingle = Bitcount_Single({
-  variable: "--font-bitcount-single",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-});
-
-const dotGothic16 = DotGothic16({
-  variable: "--font-dot-gothic-16",
-  subsets: ["latin"],
-  weight: "400"
+  weight: ["400", "600"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -39,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${notoSerifJp.variable} ${bitcountSingle.variable} ${spaceGrotesk.variable} ${dotGothic16.variable} antialiased`}
+        className={`${familjenGrotesk.variable} ${ibmPlexMono.variable} ${notoSerifJp.variable} antialiased`}
       >
         <div className="root max-w-7xl mx-auto">
           {children}

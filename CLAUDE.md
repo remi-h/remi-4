@@ -156,9 +156,14 @@ doesn't churn tests.
       that. Dates in `log.spec.ts` allow a one-day time-zone shift.
 
 ### Phase 4 — Redesign (each step its own PR, tests green)
-1. **Foundations:** tokens in `globals.css` `@theme`, fonts in `layout.tsx`,
-   base typography, link/focus styles, remove the global
-   `a { color: ... !important }` hack.
+1. **Foundations:** ✅ done. Tokens in `globals.css` (`paper`, `ink`, `stone`,
+   `sage`, `body`, `muted`, `vermilion`, `vermilion-text`; `font-display`,
+   `font-mono`, `font-jp`), fonts in `layout.tsx`, base link and focus styles,
+   `!important` link hack removed. Surfaces stay dark and `font-bitcount` is
+   an alias of the display font until steps 2-6 migrate the components; flip
+   `--background`/`--foreground` to paper/ink in step 3 and delete the alias
+   in Phase 5. Font tokens must stay in `@theme inline` (next/font defines its
+   variables on `<body>`).
 2. **Shell:** new `Navigation` (quiet, top or bottom, text-only with hanko
    active marker) and `Footer`; fix the `Navigatin.tsx` filename typo (rename +
    update imports).

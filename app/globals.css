@@ -5,26 +5,62 @@
 }
 
 :root {
+  /* Surfaces still use the dark scheme until the shell and pages are migrated (Phase 4 steps 2-6). */
   --background: #0b052d;
   --foreground: #FFFFFF;
 }
 
+/* Design tokens for the redesign. Use these in new and migrated components. */
+@theme {
+  --color-paper: #f4f1ea;
+  --color-ink: #16140f;
+  --color-stone: #ddd6c7;
+  --color-sage: #b9c4bd;
+  --color-body: #3f3b33;
+  --color-muted: #6b665b;
+  --color-vermilion: #d8431f;
+  --color-vermilion-text: #b8341a; /* accent for small text, passes contrast on paper */
+
+  --radius-sharp: 2px;
+}
+
+/* Fonts must be inline: next/font defines its variables on <body>, not :root. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-bitcount: var(--font-bitcount-single), var(--font-dot-gothic-16), sans-serif;
-  --font-serif: var(--font-noto-serif-jp);
+  --font-display: var(--font-familjen-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --font-jp: var(--font-noto-serif-jp), serif;
+  /* Old pixel-font class, kept so pages keep working until they migrate; remove in Phase 5. */
+  --font-bitcount: var(--font-familjen-grotesk), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-space-grotesk);
+  font-family: var(--font-familjen-grotesk), system-ui, sans-serif;
 }
 
 a {
-  color: #ffd073 !important;
+  color: inherit;
   text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-vermilion);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-vermilion);
+  outline-offset: 3px;
+}
+
+.project-page a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .project-page h2 {
@@ -97,9 +133,4 @@ a {
 
 .project-page ol li {
   padding-left: 4px;
-}
-
-a:hover {
-  color: #ce9eff !important;
-  transition: .3s;
 }
