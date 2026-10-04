@@ -56,7 +56,7 @@ test.describe('on a wide screen', () => {
     const heading = await page.getByRole('heading', { level: 1, name: 'Log' }).boundingBox();
     const footerHeading = await page.getByRole('contentinfo').getByRole('heading').boundingBox();
     expect(left(wordmark)).toBe(left(footerHeading));
-    expect(left(heading)).toBeLessThanOrEqual(left(wordmark) as number);
+    expect(left(heading)).toBe(left(wordmark));
   });
 });
 

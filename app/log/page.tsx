@@ -10,7 +10,7 @@ export const metadata = {
 export default async function ProjectsPage() {
     const { items } = await fetchLogs();
     return (
-        <main className="p-4">
+        <main className="px-4 py-8 sm:px-8">
             <h1 className="text-4xl font-bitcount">Log</h1>
             <p className="my-3 max-w-lg text-sm">
                 Media Coverage / Conference + Things I have done and am proud of :)

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('the grid lists every fixture project', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
-  const titles = page.getByRole('main').getByRole('heading', { level: 4 });
+  const titles = page.getByRole('main').getByRole('heading', { level: 2 });
   await expect(titles).toHaveText([/Fixture Alpha/, /Fixture Gamma/, /Fixture Beta/]);
 });
 
@@ -33,4 +33,20 @@ test('a locked project shows a lock and has no page to open', async ({ page }) =
 test('an unknown project slug is a 404', async ({ page }) => {
   const response = await page.goto('/projects/does-not-exist', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(404);
+});
+
+test('a project card looks the same on the home page and the listing', async ({ page }) => {
+  const cardMetrics = async (path: string) => {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+    const card = page.getByRole('link', { name: /Fixture Alpha/ });
+    const title = card.getByRole('heading');
+    const image = card.locator('div').first();
+    return {
+      titleSize: await title.evaluate((el) => getComputedStyle(el).fontSize),
+      titleWeight: await title.evaluate((el) => getComputedStyle(el).fontWeight),
+      ratio: await image.evaluate((el) => Math.round((el.clientWidth / el.clientHeight) * 100)),
+      meta: await card.getByText(/^01/).innerText(),
+    };
+  };
+  expect(await cardMetrics('/')).toEqual(await cardMetrics('/projects'));
 });

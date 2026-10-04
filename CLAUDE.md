@@ -178,15 +178,18 @@ doesn't churn tests.
    seal uses `vermilion-text` as its fill: paper on `vermilion` is 3.9:1 and
    fails contrast for small text. `Navigatin.tsx` is now `Navigation.tsx`.
 3. **Home:** ✅ done. Hero is the name at up to 150px with the role as a mono
-   eyebrow, the vermilion disc, the vertical 東京 → ストックホルム, and the
-   coordinates. Featured projects are alternating asymmetric rows
-   (`FeaturedProjects`, numbered, with tonal placeholder art when a project
-   has no cover). The site surface is now paper/ink; `Galaxy` and `ogl` are
+   eyebrow, the vermilion disc and the vertical 東京 → ストックホルム (coordinates and
+   location lines were removed again on review: only the name, role, disc and
+   vertical Japanese remain). Featured projects reuse the project listing's
+   card and grid (`ProjectsTile`), so the two look the same. The site surface is now paper/ink; `Galaxy` and `ogl` are
    removed. The "Calm tools for a loud world." headline from the mockup was
    not used, because the copy is unconfirmed: the name is the h1. Older pages
    got minimal colour fixes to stay legible on paper until steps 4-6.
-4. **Projects index + tile:** `ProjectsTile` redesign (square corners, caption
-   under image, index numbers, hover underline), responsive grid.
+4. **Projects index + tile:** card and grid ✅ done in step 3 (`ProjectsTile`:
+   sharp image, title + `01 · year` row, summary, staggered two columns,
+   hover underline, tonal placeholders without a cover, `titleAs` for the
+   heading level). Still to do: the page header from the mockup (huge
+   "Projects" title, count, 作品) and responsive polish.
 5. **Project detail:** reading column (~65ch), big title, meta row
    (date/duration/link), rewrite `.project-page` rich-text styles for the new
    tokens.

@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { FeaturedProjects } from "@/components/FeaturedProjects";
+import Link from 'next/link';
+import { ProjectsTile } from '@/components/ProjectsTile';
 
 export default function Home() {
   return (
@@ -10,9 +10,7 @@ export default function Home() {
             <p className="mb-8 font-mono text-[13px] uppercase tracking-[0.04em] text-muted">
               Experience Designer &amp; Software Engineer
             </p>
-            <h1 className="text-[clamp(52px,10.4vw,150px)] font-bold leading-[0.94] tracking-tighter">
-              Remi Higuchi
-            </h1>
+            <h1 className="text-[clamp(52px,10.4vw,150px)] font-bold leading-[0.94] tracking-tighter">Remi Higuchi</h1>
           </div>
           <div aria-hidden="true" className="flex items-start gap-8">
             <div className="size-32 rounded-full bg-vermilion" />
@@ -21,16 +19,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="mt-16 flex flex-wrap items-end justify-between gap-10 sm:mt-24">
-          <p className="max-w-[560px] text-2xl leading-snug">
-            I enjoy shaping experiences at the intersection of design and technology, and collaborating across
-            disciplines to turn complexity into something intuitive and human.
-          </p>
-          <div className="font-mono text-[13px] uppercase leading-8 tracking-[0.04em] text-muted sm:text-right">
-            <p>From Tokyo, Based in Stockholm</p>
-            <p>35.68°N 139.69°E → 59.33°N 18.07°E</p>
-          </div>
-        </div>
+        <p className="mt-16 max-w-[560px] text-2xl leading-snug sm:mt-24">
+          I enjoy shaping experiences at the intersection of design and technology, and collaborating across disciplines
+          to turn complexity into something intuitive and human.
+        </p>
       </section>
 
       <section className="pb-24">
@@ -40,7 +32,7 @@ export default function Home() {
             View all →
           </Link>
         </div>
-        <FeaturedProjects />
+        <ProjectsTile featuredOnly />
       </section>
     </main>
   );
