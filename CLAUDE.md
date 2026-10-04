@@ -20,7 +20,7 @@ This file has two parts: **Conventions** (how to work here, kept current) and
 React components, `lib/` non-React logic (Contentful). Tests sit next to the
 file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 
-### Commands (target state — see Plan Phase 1)
+### Commands
 | Task | Command |
 | --- | --- |
 | Dev server | `npm run dev` |
@@ -88,35 +88,35 @@ in the mockup is placeholder; real content comes from Contentful.
 Goal: same quality gate as micrographics, before touching visuals so the
 redesign is protected by tests.
 
-- [ ] `package.json` scripts: `lint` → `eslint . --max-warnings 0`,
+- [x] `package.json` scripts: `lint` → `eslint . --max-warnings 0`,
       `typecheck` → `tsc --noEmit`, `test` → `jest`, `test:e2e` →
       `playwright test`, `format` → `prettier --write`.
-- [ ] ESLint: keep flat config; append `eslint-config-prettier` last; ignore
+- [x] ESLint: keep flat config; append `eslint-config-prettier` last; ignore
       `playwright-report/`, `test-results/`, `coverage/`.
-- [ ] Prettier: `.prettierrc.json` (+ `.prettierignore`) matching the existing
+- [x] Prettier: `.prettierrc.json` (+ `.prettierignore`) matching the existing
       tree style (the repo is mixed 2/4-space today, so no repo-wide format
       check in CI — same stance as micrographics).
-- [ ] Jest: `jest.config.mjs` via `next/jest`, `jsdom`, `jest.setup.ts` with
+- [x] Jest: `jest.config.mjs` via `next/jest`, `jsdom`, `jest.setup.ts` with
       `@testing-library/jest-dom`; ignore `e2e/`. Deps: jest@29,
       jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom,
       @types/jest.
-- [ ] Playwright: `playwright.config.ts` (chromium, port 3100,
+- [x] Playwright: `playwright.config.ts` (chromium, port 3100,
       `webServer: npm run dev -- --port 3100`, retries + html report on CI,
       optional `PLAYWRIGHT_CHROMIUM_PATH` for sandboxes — pre-installed at
       `/opt/pw-browsers/chromium` in cloud sessions).
-- [ ] `.gitignore`: add `playwright-report/`, `test-results/`.
-- [ ] GitHub Actions `.github/workflows/ci.yml`, on `pull_request` and push to
+- [x] `.gitignore`: add `playwright-report/`, `test-results/`.
+- [x] GitHub Actions `.github/workflows/ci.yml`, on `pull_request` and push to
       `main`, `concurrency` cancel-in-progress, Node 22, `npm ci` with cache:
       - `lint` job: `npm run lint`
       - `build-and-unit-test` job: `typecheck`, `build`, `test -- --ci`
       - `e2e-test` job: `npx playwright install --with-deps chromium`,
         `npm run test:e2e` with `CI=true`, upload `playwright-report/` on
         failure
-- [ ] `.github/workflows/claude-code-review.yml` — copy the micrographics
+- [x] `.github/workflows/claude-code-review.yml` — copy the micrographics
       workflow (needs repo secret `CLAUDE_CODE_OAUTH_TOKEN`; Remi to add).
 - [ ] Optional: Dependabot (npm + actions, weekly) — micrographics does not
       have it, so only if wanted.
-- [ ] Fix whatever lint/typecheck surfaces in existing code in a separate,
+- [x] Fix whatever lint/typecheck surfaces in existing code in a separate,
       mechanical commit (no visual changes mixed in).
 - [ ] Repo settings (Remi, in GitHub UI): protect `main`, require the three CI
       jobs.
