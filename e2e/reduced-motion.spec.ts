@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// Installs a requestAnimationFrame counter and opens the home page, which has the animated background.
-const openHomeCountingFrames = async (page: Page) => {
+// Counts requestAnimationFrame calls, which is how any animated background or effect would run.
+const watchFrames = async (page: Page) => {
   await page.addInitScript(() => {
     const w = window as unknown as { __frames: number };
     w.__frames = 0;
@@ -11,8 +11,6 @@ const openHomeCountingFrames = async (page: Page) => {
       return raf(cb);
     };
   });
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('canvas')).toBeAttached();
 };
 
 const frames = (page: Page) => page.evaluate(() => (window as unknown as { __frames: number }).__frames);
@@ -20,21 +18,21 @@ const frames = (page: Page) => page.evaluate(() => (window as unknown as { __fra
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('the home background does not run an animation loop', async ({ page }) => {
-    await openHomeCountingFrames(page);
-    await page.waitForTimeout(500);
-    const settled = await frames(page);
-    await page.waitForTimeout(1500);
-    expect(await frames(page)).toBe(settled);
-  });
-});
+  for (const route of ['/', '/projects', '/log']) {
+    test(`${route} runs no animation loop and no CSS animations`, async ({ page }) => {
+      await watchFrames(page);
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      await expect(page.getByRole('main')).toBeVisible();
+      await page.waitForTimeout(500);
 
-test.describe('without a motion preference', () => {
-  test.use({ reducedMotion: 'no-preference' });
+      const settled = await frames(page);
+      await page.waitForTimeout(1500);
+      expect(await frames(page)).toBe(settled);
 
-  test('the home background keeps animating', async ({ page }) => {
-    await openHomeCountingFrames(page);
-    // Software rendering can be slow, so wait for progress instead of assuming a frame rate.
-    await expect.poll(() => frames(page), { timeout: 20_000 }).toBeGreaterThan(5);
-  });
+      const running = await page.evaluate(
+        () => document.getAnimations().filter((a) => a.playState === 'running').length,
+      );
+      expect(running).toBe(0);
+    });
+  }
 });

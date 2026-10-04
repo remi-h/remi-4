@@ -32,7 +32,7 @@ export const ProjectsTile = async ({
                     const backgroundUrl = cover?.url ?? "/lock.png";
 
                     const content = (
-                        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-[#0b052d]/80">
+                        <div className="flex h-full flex-col overflow-hidden rounded-sharp border border-ink/30 bg-paper">
                             <div
                                 className="relative h-64 w-full"
                                 style={{
@@ -57,7 +57,7 @@ export const ProjectsTile = async ({
                                 </h4>
 
                                 {project.fields.summary ? (
-                                    <p className="text-sm text-white/80">
+                                    <p className="text-sm text-body">
                                         {project.fields.summary}
                                     </p>
                                 ) : null}

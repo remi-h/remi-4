@@ -66,7 +66,7 @@ export default async function ProjectPage({
             <div className="my-3">
               <Image
                 alt={image.title}
-                className="w-full max-w-4xl object-cover rounded border border-white/40"
+                className="w-full max-w-4xl object-cover rounded border border-ink/30"
                 height={image.height}
                 src={image.url}
                 width={image.width}
@@ -108,7 +108,7 @@ export default async function ProjectPage({
         <div className="mt-6">
           <Image
             alt={cover.title}
-            className="w-full max-w-4xl object-cover rounded border border-white/40"
+            className="w-full max-w-4xl object-cover rounded border border-ink/30"
             height={cover.height}
             src={cover.url}
             width={cover.width}

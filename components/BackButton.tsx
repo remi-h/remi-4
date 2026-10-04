@@ -11,7 +11,7 @@ export const BackButton = ({ label = "back" }: BackButtonProps) => {
 
   return (
     <button
-      className="font-bitcount text-md text-[#ffd073] hover:text-[#ce9eff]  hover:cursor-pointer"
+      className="font-bitcount text-md text-vermilion-text hover:underline hover:cursor-pointer"
       onClick={() => router.back()}
       type="button"
     >

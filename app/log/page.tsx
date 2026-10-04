@@ -29,7 +29,7 @@ export default async function ProjectsPage() {
 
                     const content = (
                         <div className="">
-                            <div className="text-xs font-bitcount uppercase tracking-[0.08em] text-white/70">
+                            <div className="text-xs font-bitcount uppercase tracking-[0.08em] text-muted">
                                 {date} {entry.fields.org ? (
                                     <p className="inline"> | {entry.fields.org}</p>
                                 ) : null}

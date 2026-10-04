@@ -155,10 +155,10 @@ doesn't churn tests.
       violations per route (also guards the colour-contrast of the new palette).
 - [x] `reduced-motion.spec.ts`: with `reducedMotion: 'reduce'` nothing animates.
 - [ ] Optional later: visual snapshot tests once the design stabilises.
-      Notes: e2e runs with `reducedMotion: 'reduce'` by default (the Galaxy
-      shader starves CI's software rendering); `reduced-motion.spec.ts`
-      overrides it per test. Tests that start on `/` or `/projects` rely on
-      that. Dates in `log.spec.ts` allow a one-day time-zone shift.
+      Notes: dates in `log.spec.ts` allow a one-day time-zone shift. Pages
+      are prerendered at build time, so anything that shows fixtures needs
+      `CONTENTFUL_FIXTURES=1` on `npm run build` too (Playwright's
+      `webServer.env` does this for the e2e build).
 
 ### Phase 4 — Redesign (each step its own PR, tests green)
 1. **Foundations:** ✅ done. Tokens in `globals.css` (`paper`, `ink`, `stone`,
@@ -175,8 +175,14 @@ doesn't churn tests.
    inherit the page colour, so they follow the surface flip in step 3. The
    seal uses `vermilion-text` as its fill: paper on `vermilion` is 3.9:1 and
    fails contrast for small text. `Navigatin.tsx` is now `Navigation.tsx`.
-3. **Home:** oversized name/role statement, `ma`-heavy hero, featured projects
-   as an asymmetric grid with large crops and thin rules; remove Galaxy.
+3. **Home:** ✅ done. Hero is the name at up to 150px with the role as a mono
+   eyebrow, the vermilion disc, the vertical 東京 → ストックホルム, and the
+   coordinates. Featured projects are alternating asymmetric rows
+   (`FeaturedProjects`, numbered, with tonal placeholder art when a project
+   has no cover). The site surface is now paper/ink; `Galaxy` and `ogl` are
+   removed. The "Calm tools for a loud world." headline from the mockup was
+   not used, because the copy is unconfirmed: the name is the h1. Older pages
+   got minimal colour fixes to stay legible on paper until steps 4-6.
 4. **Projects index + tile:** `ProjectsTile` redesign (square corners, caption
    under image, index numbers, hover underline), responsive grid.
 5. **Project detail:** reading column (~65ch), big title, meta row
@@ -187,8 +193,8 @@ doesn't churn tests.
    Lighthouse check (perf ≥ 90, a11y 100).
 
 ### Phase 5 — Cleanup
-- [ ] Remove unused deps/files (`ogl` if Galaxy goes, `public/*.svg` Next
-      boilerplate, `Cursor.tsx` if unused).
+- [ ] Remove unused deps/files (`public/*.svg` Next
+      boilerplate, `Cursor.tsx` if unused, the `font-bitcount` alias).
 - [ ] Rewrite `README.md` (stack, setup, env vars, testing, deploy) and update
       the Commands table above to "current state".
 - [ ] Add `components/*.test.tsx` for non-trivial components.

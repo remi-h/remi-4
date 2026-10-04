@@ -5,9 +5,8 @@
 }
 
 :root {
-  /* Surfaces still use the dark scheme until the shell and pages are migrated (Phase 4 steps 2-6). */
-  --background: #0b052d;
-  --foreground: #FFFFFF;
+  --background: #f4f1ea;
+  --foreground: #16140f;
 }
 
 /* Design tokens for the redesign. Use these in new and migrated components. */
@@ -86,7 +85,7 @@ a:hover {
 }
 
 .project-page blockquote {
-  border-left: 2px solid #FFF;
+  border-left: 2px solid var(--color-ink);
   padding-left: 12px;
   opacity: 0.8;
   margin-bottom: 16px;
@@ -100,13 +99,13 @@ a:hover {
 }
 
 .project-page thead {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(22, 20, 15, 0.06);
 }
 
 .project-page th,
 .project-page td {
   padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(22, 20, 15, 0.2);
   text-align: left;
   vertical-align: middle;
 }
