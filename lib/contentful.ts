@@ -1,3 +1,5 @@
+import { fixtureLogs, fixtureProjects } from "./contentful.fixtures";
+
 type ContentfulSys = {
   id: string;
 };
@@ -55,6 +57,8 @@ type ContentfulRichText = {
   content?: ContentfulRichText[];
 };
 
+const fixturesEnabled = () => process.env.CONTENTFUL_FIXTURES === "1";
+
 const getEnv = () => {
   const spaceId = process.env.CONTENTFUL_SPACE_ID;
   const environment = process.env.CONTENTFUL_ENVIRONMENT ?? "master";
@@ -92,6 +96,18 @@ export const fetchProjects = async (options?: {
   featuredOnly?: boolean;
   featuredFirst?: boolean;
 }) => {
+  if (fixturesEnabled()) {
+    const items = fixtureProjects.filter(
+      (project) => !options?.featuredOnly || project.fields.featured
+    );
+    if (options?.featuredFirst) {
+      items.sort(
+        (a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured))
+      );
+    }
+    return { items, includes: { Asset: [] } } as ContentfulResponse;
+  }
+
   const { contentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 
@@ -124,6 +140,10 @@ export const fetchProjects = async (options?: {
 };
 
 export const fetchLogs = async () => {
+  if (fixturesEnabled()) {
+    return { items: fixtureLogs } as ContentfulLogResponse;
+  }
+
   const { logContentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 
@@ -140,6 +160,11 @@ export const fetchLogs = async () => {
 };
 
 export const fetchProjectBySlug = async (slug: string) => {
+  if (fixturesEnabled()) {
+    const project = fixtureProjects.find((item) => item.fields.slug === slug);
+    return project ? { project, assets: [] as ContentfulAsset[] } : null;
+  }
+
   const { contentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 
@@ -161,6 +186,12 @@ export const fetchProjectBySlug = async (slug: string) => {
 };
 
 export const fetchProjectSlugs = async () => {
+  if (fixturesEnabled()) {
+    return fixtureProjects
+      .map((item) => item.fields.slug)
+      .filter((slug): slug is string => Boolean(slug));
+  }
+
   const { contentType, spaceId } = getEnv();
   const baseUrl = buildBaseUrl();
 

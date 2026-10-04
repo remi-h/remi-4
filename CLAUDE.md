@@ -27,7 +27,7 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 | Lint (0 warnings) | `npm run lint` |
 | Typecheck | `npm run typecheck` |
 | Unit tests | `npm run test` |
-| E2E tests | `npm run test:e2e` (own server on port 3100) |
+| E2E tests | `npm run test:e2e` (own server on port 3100; dev server locally, production build when `CI=true`) |
 | Format files | `npm run format -- <paths>` |
 | Build | `npm run build` |
 
@@ -39,7 +39,7 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
   reason. Never disable a rule project-wide to get green.
 - Never skip or quarantine a test to get CI green.
 - Don't require Contentful secrets for build, unit tests or e2e. E2E uses
-  fixtures (Phase 3).
+  `CONTENTFUL_FIXTURES=1`.
 - Treat a PR as mergeable only when CI is green.
 
 ---
@@ -122,13 +122,17 @@ redesign is protected by tests.
       jobs.
 
 ### Phase 2 — Test seams for Contentful
-- [ ] Unit-test `lib/contentful.ts` (asset map, image resolution, missing-env
+- [x] Unit-test `lib/contentful.ts` (asset map, image resolution, missing-env
       fallback, sorting/featured logic) with `fetch` mocked.
-- [ ] Add a deterministic fixture mode (e.g. `CONTENTFUL_FIXTURES=1`, or a
+- [x] Add a deterministic fixture mode (e.g. `CONTENTFUL_FIXTURES=1`, or a
       Playwright route mock for `cdn.contentful.com`) so e2e sees stable
       projects/log entries without secrets. Server-component fetches happen on
       the Next server, so prefer the env-var fixture mode over browser
       `page.route`. Set it in `playwright.config.ts` `webServer.env`.
+      Implemented as `CONTENTFUL_FIXTURES=1` (data in
+      `lib/contentful.fixtures.ts`), set automatically by the Playwright
+      `webServer`. Fixtures: Alpha (featured), Beta (not featured), Gamma
+      (featured + locked, no slug), two log entries.
 
 ### Phase 3 — E2E coverage (written against current UI, kept through redesign)
 Use role/text/`data-testid` selectors, not Tailwind classes, so the redesign
