@@ -232,6 +232,8 @@ export default function Galaxy({
       gl.clearColor(0, 0, 0, 1);
     }
 
+    // resize() reads `program` before it is assigned below, so it cannot be const here. File is removed in the redesign.
+    // eslint-disable-next-line prefer-const
     let program: Program;
 
     function resize() {
