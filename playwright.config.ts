@@ -28,10 +28,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --port ${PORT}`,
+    // CI tests the production build: the dev server compiles each route on first visit,
+    // which made navigation tests time out on the slower runners.
+    command: process.env.CI ? `npm run build && npm run start -- --port ${PORT}` : `npm run dev -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     env: { CONTENTFUL_FIXTURES: '1' },
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: process.env.CI ? 300_000 : 120_000,
   },
 });

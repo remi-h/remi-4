@@ -27,7 +27,7 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 | Lint (0 warnings) | `npm run lint` |
 | Typecheck | `npm run typecheck` |
 | Unit tests | `npm run test` |
-| E2E tests | `npm run test:e2e` (own server on port 3100) |
+| E2E tests | `npm run test:e2e` (own server on port 3100; dev server locally, production build when `CI=true`) |
 | Format files | `npm run format -- <paths>` |
 | Build | `npm run build` |
 
