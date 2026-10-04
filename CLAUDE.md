@@ -73,10 +73,16 @@ Proposed tokens (adjust in one place, `app/globals.css` `@theme`):
   default theme (heavy, off-direction). Keep or retire the file once the new
   home page ships.
 
-Open questions for Remi (answer before Phase 2 starts):
-1. Light-only (paper) or light + dark? 2. Keep any pixel/space personality
-anywhere (e.g. on `/log` only), or fully retire it? 3. Accent: vermilion OK?
-4. Is the Japanese copy wanted visibly (hero detail) or only subtle?
+**Approved mockup:** https://claude.ai/artifact/Cv3eBchkaZCu4XQyWQyJUU (home
+desktop + mobile, projects, project detail, log). Decisions locked from it:
+light-only (no dark mode), pixel fonts and Galaxy fully retired, vermilion
+accent, visible-but-small Japanese details (seal 樋口, vertical 東京 →
+ストックホルム, 作品). Final tokens: Familjen Grotesk (display/body), IBM Plex
+Mono (labels, uppercase 13px), Noto Serif JP (Japanese); extra colours
+`#DDD6C7` stone, `#B9C4BD` sage, `#3F3B33` body grey, `#6B665B` muted,
+`#B8341A` accent for small text (contrast). Hero headline copy "Calm tools for a
+loud world." is a mockup suggestion, confirm before shipping. Project/log copy
+in the mockup is placeholder; real content comes from Contentful.
 
 ### Phase 1 — Tooling baseline (mirrors `remi-h/micrographics`)
 Goal: same quality gate as micrographics, before touching visuals so the
