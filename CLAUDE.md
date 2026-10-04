@@ -170,8 +170,10 @@ doesn't churn tests.
    in Phase 5. Font tokens must stay in `@theme inline` (next/font defines its
    variables on `<body>`).
 2. **Shell:** ✅ done. `Navigation` is a top header (seal, wordmark,
-   Projects / Log / Contact, vermilion dot + `aria-current` on the active
-   page) and `Footer` is the ink "Say hello." block with social links. Both
+   Projects / Log, vermilion dot + `aria-current` on the active
+   page) and `Footer` is the full-width ink "Say hello." block with social links. The
+   header rule and footer background span the full viewport, their content is
+   capped at `max-w-7xl`. Both
    inherit the page colour, so they follow the surface flip in step 3. The
    seal uses `vermilion-text` as its fill: paper on `vermilion` is 3.9:1 and
    fails contrast for small text. `Navigatin.tsx` is now `Navigation.tsx`.

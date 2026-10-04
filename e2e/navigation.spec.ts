@@ -33,11 +33,31 @@ test('the current page is marked in the nav', async ({ page }) => {
   await expect(nav.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current', 'page');
 });
 
-test('the Contact link jumps to the footer', async ({ page }) => {
+test('the nav has no Contact link', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Contact' }).click();
-  await expect(page).toHaveURL(/#contact$/);
-  await expect(page.getByRole('contentinfo').getByRole('heading', { name: /Say hello/ })).toBeInViewport();
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText(['Projects', 'Log']);
+});
+
+test.describe('on a wide screen', () => {
+  test.use({ viewport: { width: 1800, height: 900 } });
+
+  test('the header line and the footer background span the full width', async ({ page }) => {
+    await page.goto('/log', { waitUntil: 'domcontentloaded' });
+    const header = await page.getByRole('banner').boundingBox();
+    const footer = await page.getByRole('contentinfo').boundingBox();
+    expect(header?.width).toBe(1800);
+    expect(footer?.width).toBe(1800);
+  });
+
+  test('the header and footer content stay aligned with the page content', async ({ page }) => {
+    await page.goto('/log', { waitUntil: 'domcontentloaded' });
+    const left = (box: { x: number } | null) => box?.x;
+    const wordmark = await page.getByRole('banner').getByRole('link', { name: 'Remi Higuchi' }).boundingBox();
+    const heading = await page.getByRole('heading', { level: 1, name: 'Log' }).boundingBox();
+    const footerHeading = await page.getByRole('contentinfo').getByRole('heading').boundingBox();
+    expect(left(wordmark)).toBe(left(footerHeading));
+    expect(left(heading)).toBeLessThanOrEqual(left(wordmark) as number);
+  });
 });
 
 test('the footer links to social profiles', async ({ page }) => {
