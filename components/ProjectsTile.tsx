@@ -43,7 +43,7 @@ export const ProjectsTile = async ({
                             >
                                 {project.fields.lock ? (
                                     <div className="absolute left-2 bottom-2 rounded-full bg-black/70 p-2 transition">
-                                        <LockClosedIcon className="h-4 w-4 text-white" />
+                                        <LockClosedIcon aria-label="Locked" role="img" className="h-4 w-4 text-white" />
                                     </div>
                                 ) : null}
                             </div>

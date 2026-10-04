@@ -1,25 +1,41 @@
 import { expect, test } from '@playwright/test';
 
-test('home page shows the name and links to the main sections', async ({ page }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { level: 1, name: 'Remi Higuchi' })).toBeVisible();
+test('the nav reaches every top-level page', async ({ page }) => {
+  // Start away from the home page so the first click does not compete with its background.
+  await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+  const nav = page.getByRole('navigation');
 
-  for (const [name, path] of [
-    ['Projects', '/projects'],
-    ['LOG', '/log'],
-  ] as const) {
-    await page.getByRole('navigation').getByRole('link', { name }).click();
-    await expect(page).toHaveURL(path);
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-  }
+  await nav.getByRole('link', { name: 'LOG' }).click();
+  await expect(page).toHaveURL('/log');
+  await expect(page.getByRole('heading', { level: 1, name: 'Log' })).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Projects' }).click();
+  await expect(page).toHaveURL('/projects');
+  await expect(page.getByRole('heading', { level: 1, name: 'Projects' })).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Remi Higuchi' }).click();
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Remi Higuchi' })).toBeVisible();
 });
 
-test('home page lists featured fixture projects', async ({ page }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'Fixture Alpha' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Fixture Beta' })).toHaveCount(0);
+test('the footer links to the main pages and to social profiles', async ({ page }) => {
+  await page.goto('/log', { waitUntil: 'domcontentloaded' });
+  const footer = page.getByRole('contentinfo');
 
-  await page.getByRole('link', { name: /Fixture Alpha/ }).click();
-  await expect(page).toHaveURL('/projects/fixture-alpha');
-  await expect(page.getByText('Alpha body text.')).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
+  await expect(footer.getByRole('link', { name: 'Projects' })).toHaveAttribute('href', '/projects');
+  await expect(footer.getByRole('link', { name: 'LOG' })).toHaveAttribute('href', '/log');
+  await footer.getByRole('link', { name: 'Projects' }).click();
+  await expect(page).toHaveURL('/projects');
+});
+
+test('every link that opens a new tab is noopener', async ({ page }) => {
+  for (const path of ['/', '/projects', '/log']) {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+    const external = page.locator('a[target="_blank"]');
+    const count = await external.count();
+    for (let i = 0; i < count; i++) {
+      await expect(external.nth(i), `${path} link #${i}`).toHaveAttribute('rel', /noopener/);
+    }
+  }
 });

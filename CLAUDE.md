@@ -137,19 +137,23 @@ redesign is protected by tests.
 ### Phase 3 — E2E coverage (written against current UI, kept through redesign)
 Use role/text/`data-testid` selectors, not Tailwind classes, so the redesign
 doesn't churn tests.
-- [ ] `navigation.spec.ts`: nav links reach `/`, `/projects`, `/log`; active
-      state; footer links; external links have `rel="noopener noreferrer"`.
-- [ ] `home.spec.ts`: hero name/role render, featured projects section, "View
+- [x] `navigation.spec.ts`: nav links reach `/`, `/projects`, `/log`; footer
+      links (the active-state check moves to Phase 4 step 2, the current nav has none); external links have `rel="noopener noreferrer"`.
+- [x] `home.spec.ts`: hero name/role render, featured projects section, "View
       all" → `/projects`.
-- [ ] `projects.spec.ts`: grid shows fixture projects, card → detail page,
+- [x] `projects.spec.ts`: grid shows fixture projects, card → detail page,
       locked project renders lock state, unknown slug → 404.
-- [ ] `log.spec.ts`: entries render with formatted dates and links.
-- [ ] `responsive.spec.ts`: no horizontal overflow at 375px and 1280px on every
+- [x] `log.spec.ts`: entries render with formatted dates and links.
+- [x] `responsive.spec.ts`: no horizontal overflow at 375px and 1280px on every
       route; nav usable on mobile.
-- [ ] `a11y.spec.ts`: add `@axe-core/playwright`; zero serious/critical
+- [x] `a11y.spec.ts`: add `@axe-core/playwright`; zero serious/critical
       violations per route (also guards the colour-contrast of the new palette).
-- [ ] `reduced-motion.spec.ts`: with `reducedMotion: 'reduce'` nothing animates.
+- [x] `reduced-motion.spec.ts`: with `reducedMotion: 'reduce'` nothing animates.
 - [ ] Optional later: visual snapshot tests once the design stabilises.
+      Notes: e2e runs with `reducedMotion: 'reduce'` by default (the Galaxy
+      shader starves CI's software rendering); `reduced-motion.spec.ts`
+      overrides it per test. Tests that start on `/` or `/projects` rely on
+      that. Dates in `log.spec.ts` allow a one-day time-zone shift.
 
 ### Phase 4 — Redesign (each step its own PR, tests green)
 1. **Foundations:** tokens in `globals.css` `@theme`, fonts in `layout.tsx`,
