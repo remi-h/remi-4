@@ -38,11 +38,9 @@ export default function RootLayout({
       <body
         className={`${familjenGrotesk.variable} ${ibmPlexMono.variable} ${notoSerifJp.variable} antialiased`}
       >
-        <div className="root max-w-7xl mx-auto">
-          <Navigation />
-          {children}
-          <Footer />
-        </div>
+        <Navigation />
+        <div className="root max-w-7xl mx-auto">{children}</div>
+        <Footer />
         {/* <Cursor /> */}
         <Analytics />
       </body>
