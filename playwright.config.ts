@@ -11,6 +11,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
+    // The home page's WebGL background is too heavy for CI's software rendering and starves clicks.
+    reducedMotion: 'reduce',
     trace: 'on-first-retry',
   },
   projects: [

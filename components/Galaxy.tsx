@@ -283,8 +283,11 @@ export default function Galaxy({
     const mesh = new Mesh(gl, { geometry, program });
     let animateId: number;
 
+    // With reduced motion, draw a single frame instead of looping.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     function update(t: number) {
-      animateId = requestAnimationFrame(update);
+      if (!reduceMotion) animateId = requestAnimationFrame(update);
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.0001;
         program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
