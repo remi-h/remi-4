@@ -16,14 +16,14 @@ export const Footer = () => {
                         <div className="mb-2">
                             <h4 className="uppercase text-lg">Contact</h4>
                             <p className="text-sm">
-                                Text me on <Link href="https://linkedin.com/in/hremi" target="_blank">Linkedin</Link>
+                                Text me on <Link href="https://linkedin.com/in/hremi" target="_blank" rel="noopener noreferrer">Linkedin</Link>
                             </p>
                         </div>
                         <div className="mb-2">
                             <h4 className="uppercase text-lg">Social Media</h4>
-                            <Link href="https://linkedin.com/in/hremi" target="_blank" rel="noopener noreferrer"><LinkedInLogoIcon className="w-6 h-6 inline" /></Link>
-                            <Link href="https://instagram.com/remihiguchi" target="_blank" rel="noopener noreferrer" className="ml-2"><InstagramLogoIcon className="w-6 h-6 inline" /></Link>
-                            <Link href="https://github.com/remi-h" target="_blank" rel="noopener noreferrer" className="ml-2"><GitHubLogoIcon className="w-6 h-6 inline" /></Link>
+                            <Link href="https://linkedin.com/in/hremi" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><LinkedInLogoIcon className="w-6 h-6 inline" /></Link>
+                            <Link href="https://instagram.com/remihiguchi" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="ml-2"><InstagramLogoIcon className="w-6 h-6 inline" /></Link>
+                            <Link href="https://github.com/remi-h" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="ml-2"><GitHubLogoIcon className="w-6 h-6 inline" /></Link>
                         </div>
 
                     </div>
