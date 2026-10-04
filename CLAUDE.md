@@ -38,6 +38,11 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 - Suppress a lint rule only with a targeted `eslint-disable-next-line` plus a
   reason. Never disable a rule project-wide to get green.
 - Never skip or quarantine a test to get CI green.
+- The redesign is stacked and must not reach `main` (it deploys) until it is
+  complete: `claude/redesign` is the integration branch, each step's PR targets
+  the previous step's branch, and the bottom PR targets `claude/redesign`.
+  Merge bottom-up; after a PR merges, retarget the next one to
+  `claude/redesign`. Only the final `claude/redesign` → `main` PR deploys.
 - Don't require Contentful secrets for build, unit tests or e2e. E2E uses
   `CONTENTFUL_FIXTURES=1`.
 - Treat a PR as mergeable only when CI is green.
@@ -164,9 +169,12 @@ doesn't churn tests.
    `--background`/`--foreground` to paper/ink in step 3 and delete the alias
    in Phase 5. Font tokens must stay in `@theme inline` (next/font defines its
    variables on `<body>`).
-2. **Shell:** new `Navigation` (quiet, top or bottom, text-only with hanko
-   active marker) and `Footer`; fix the `Navigatin.tsx` filename typo (rename +
-   update imports).
+2. **Shell:** ✅ done. `Navigation` is a top header (seal, wordmark,
+   Projects / Log / Contact, vermilion dot + `aria-current` on the active
+   page) and `Footer` is the ink "Say hello." block with social links. Both
+   inherit the page colour, so they follow the surface flip in step 3. The
+   seal uses `vermilion-text` as its fill: paper on `vermilion` is 3.9:1 and
+   fails contrast for small text. `Navigatin.tsx` is now `Navigation.tsx`.
 3. **Home:** oversized name/role statement, `ma`-heavy hero, featured projects
    as an asymmetric grid with large crops and thin rules; remove Galaxy.
 4. **Projects index + tile:** `ProjectsTile` redesign (square corners, caption

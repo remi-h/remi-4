@@ -35,8 +35,8 @@ test('body text uses the display font, not the old pixel or Space Grotesk fonts'
 });
 
 test('links inherit their colour instead of forcing one', async ({ page }) => {
-  await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  const link = page.getByRole('contentinfo').getByRole('link', { name: 'Home' });
+  await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+  const link = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Log' });
   const [linkColor, parentColor] = await link.evaluate((el) => [
     getComputedStyle(el).color,
     getComputedStyle(el.parentElement as HTMLElement).color,

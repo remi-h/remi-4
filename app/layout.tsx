@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next"
 import { Familjen_Grotesk, IBM_Plex_Mono, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
-import { Navigation } from "@/components/Navigatin";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 const familjenGrotesk = Familjen_Grotesk({
@@ -39,10 +39,10 @@ export default function RootLayout({
         className={`${familjenGrotesk.variable} ${ibmPlexMono.variable} ${notoSerifJp.variable} antialiased`}
       >
         <div className="root max-w-7xl mx-auto">
+          <Navigation />
           {children}
           <Footer />
         </div>
-        <Navigation />
         {/* <Cursor /> */}
         <Analytics />
       </body>
