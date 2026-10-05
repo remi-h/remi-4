@@ -2,12 +2,13 @@ import { expect, test } from '@playwright/test';
 
 test('log entries show date, organisation and title', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  // Fixture dates are UTC midnight, so the server's time zone can shift the day by one.
-  await expect(page.getByText(/Feb (9|10), 2026/)).toBeVisible();
-  await expect(page.getByText('| Fixture Conf')).toBeVisible();
-  await expect(page.getByText('Fixture talk')).toBeVisible();
-  await expect(page.getByText(/Jun (4|5), 2025/)).toBeVisible();
-  await expect(page.getByText('Fixture article')).toBeVisible();
+  const main = page.getByRole('main');
+  await expect(main.getByText('2026-02-10')).toBeVisible();
+  await expect(main.getByText('Fixture Conf')).toBeVisible();
+  await expect(main.getByText('Fixture talk')).toBeVisible();
+  await expect(main.getByText('2025-06-05')).toBeVisible();
+  await expect(main.getByText('Fixture Weekly')).toBeVisible();
+  await expect(main.getByText('Fixture article')).toBeVisible();
 });
 
 test('an entry with a link opens it in a new tab, one without is plain text', async ({ page }) => {

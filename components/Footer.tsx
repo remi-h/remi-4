@@ -1,36 +1,33 @@
-import { LinkedInLogoIcon, InstagramLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
-import Link from "next/link";
+'use client';
 
+import { usePathname } from 'next/navigation';
+import { cwdFor } from '@/lib/terminal';
+
+const social = [
+  { href: 'https://linkedin.com/in/hremi', label: 'linkedin' },
+  { href: 'https://instagram.com/remihiguchi', label: 'instagram' },
+  { href: 'https://github.com/remi-h', label: 'github' },
+];
+
+/** A vim-style status line: mode, branch, current path, links and the stack this site is built with. */
 export const Footer = () => {
-    return (
-        <div className="p-4">
-            <footer className="font-bitcount w-full bg-linear-to-r from-slate-800 to-slate-800 p-8 text-white pb-20 rounded-4xl">
-                <div className="max-w-4xl mx-auto">
-                    <div className="grid sm:grid-cols-3">
-                        <div className="mb-2">
-                            <h4 className="uppercase text-lg">Contents</h4>
-                            <p className="text-sm"><Link href="/">Home</Link></p>
-                            <p className="text-sm"><Link href="/projects">Projects</Link></p>
-                            <p className="text-sm"><Link href="/log">LOG</Link></p>
-                        </div>
-                        <div className="mb-2">
-                            <h4 className="uppercase text-lg">Contact</h4>
-                            <p className="text-sm">
-                                Text me on <Link href="https://linkedin.com/in/hremi" target="_blank" rel="noopener noreferrer">Linkedin</Link>
-                            </p>
-                        </div>
-                        <div className="mb-2">
-                            <h4 className="uppercase text-lg">Social Media</h4>
-                            <Link href="https://linkedin.com/in/hremi" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><LinkedInLogoIcon className="w-6 h-6 inline" /></Link>
-                            <Link href="https://instagram.com/remihiguchi" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="ml-2"><InstagramLogoIcon className="w-6 h-6 inline" /></Link>
-                            <Link href="https://github.com/remi-h" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="ml-2"><GitHubLogoIcon className="w-6 h-6 inline" /></Link>
-                        </div>
+  const pathname = usePathname();
 
-                    </div>
-                    <p className="mt-12 font-bitcount text-xs text-center">2026 Remi Higuchi. All rights reserved.</p>
-                </div>
-
-            </footer>
-        </div>
-    );
-}
+  return (
+    <footer className="relative z-10 mt-16 border-t border-line bg-panel text-[13px]">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-stretch px-4 sm:px-8">
+        <span className="bg-hot px-4 py-3 font-bold text-ink">NORMAL</span>
+        <span className="px-4 py-3 text-muted">main</span>
+        <span className="px-4 py-3">{cwdFor(pathname)}</span>
+        <span className="flex-1" />
+        {social.map(({ href, label }) => (
+          <a className="px-3 py-3 text-body" href={href} key={label} rel="noopener noreferrer" target="_blank">
+            {label}
+          </a>
+        ))}
+        <span className="px-4 py-3 text-muted">Next.js · TypeScript · Tailwind</span>
+        <span className="px-4 py-3 text-muted">© 2026 Remi Higuchi</span>
+      </div>
+    </footer>
+  );
+};
