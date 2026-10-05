@@ -1,10 +1,21 @@
 /** @jest-environment node */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixtureProjects } from './contentful.fixtures';
-import { commands, cwdFor, folderMode, folderName, lsAll, schedule, shellQuote, slugify, TIMING } from './terminal';
+import {
+  commands,
+  cwdFor,
+  FOLDER_MODES,
+  folderMode,
+  folderName,
+  lsAll,
+  schedule,
+  shellQuote,
+  slugify,
+  TIMING,
+} from './terminal';
 
 const projects = fixtureProjects.map((p, i) => ({
   folder: folderName({ slug: p.fields.slug, title: p.fields.title }, i),
@@ -52,6 +63,19 @@ describe('the displayed commands are real shell commands', () => {
   it('project detail: cd projects/<folder> then cat README.md, then cd .. all succeed', () => {
     for (const { folder } of projects) {
       expect(sh(`${commands.toProject(folder)} && ${commands.readme} && ${commands.parent}`)).toContain('readme');
+    }
+  });
+
+  it('folder modes match what ls -ld prints for 755 (public) and 750 (locked)', () => {
+    for (const [locked, mode] of [
+      [false, FOLDER_MODES.public],
+      [true, FOLDER_MODES.locked],
+    ] as const) {
+      const dir = join(root, `mode-${mode.toString(8)}`);
+      mkdirSync(dir);
+      chmodSync(dir, mode);
+      // The first ten characters are the type and permission bits; some systems append . or +.
+      expect(sh(`ls -ld ${dir}`).slice(0, 10)).toBe(folderMode(locked));
     }
   });
 
@@ -113,7 +137,7 @@ describe('folder names', () => {
 
   it('shows a folder mode that matches whether it can be opened', () => {
     expect(folderMode(false)).toBe('drwxr-xr-x');
-    expect(folderMode(true)).toBe('d---------');
+    expect(folderMode(true)).toBe('drwxr-x---');
   });
 });
 

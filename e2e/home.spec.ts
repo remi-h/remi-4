@@ -40,7 +40,7 @@ test('a locked featured project shows a lock and has no page to open', async ({ 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const locked = page.getByRole('article').filter({ hasText: 'Fixture Gamma' });
   await expect(locked.getByRole('img', { name: 'Locked' })).toBeVisible();
-  await expect(locked.getByText('d---------')).toBeVisible();
+  await expect(locked.getByText('drwxr-x---')).toBeVisible();
   await expect(page.getByRole('link', { name: /Fixture Gamma/ })).toHaveCount(0);
 });
 

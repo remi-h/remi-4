@@ -80,8 +80,9 @@ alone.
   `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`,
   `cat log.txt`) and compares `ls -a` output exactly. Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
-  Folder modes are honest too: `drwxr-xr-x` for projects you can open, `d---------`
-  for locked ones. `ls` output is sorted in byte order (C locale).
+  Folder modes are honest too, and the test checks them with `ls -ld`:
+  `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
+  rwx, group r-x (the people given access), everyone else nothing. `ls` output is sorted in byte order (C locale).
 - **Motion:** each page opens with its command typed out (45ms per character),
   then its output fades in, ending on a fresh prompt with a blinking cursor.
   Pure CSS (`.t-type`, `.t-in`, `.t-cursor` in `globals.css`, timings from

@@ -63,8 +63,13 @@ export const folderName = (project: { slug?: string; title?: string }, index: nu
 /** What `ls -a` prints: . and .. first, then names in byte order, as in the C locale. */
 export const lsAll = (names: string[]) => ['.', '..', ...[...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))];
 
-/** A directory's mode: readable folders versus ones that need a login. */
-export const folderMode = (locked: boolean) => (locked ? 'd---------' : 'drwxr-xr-x');
+/**
+ * A directory's mode as `ls -l` prints it.
+ * Public: owner rwx, group r-x, others r-x (755).
+ * Locked: owner rwx, group r-x (the people given access), others nothing (750).
+ */
+export const FOLDER_MODES = { public: 0o755, locked: 0o750 } as const;
+export const folderMode = (locked: boolean) => (locked ? 'drwxr-x---' : 'drwxr-xr-x');
 
 export const commands = {
   about: 'cat about.txt',
