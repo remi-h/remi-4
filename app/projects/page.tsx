@@ -1,47 +1,19 @@
 import { ProjectsTile } from '@/components/ProjectsTile';
 import { TerminalSession } from '@/components/TerminalSession';
-import { fetchProjects } from '@/lib/contentful';
-import { commands, folderName, lsAll, schedule } from '@/lib/terminal';
+import { commands, schedule } from '@/lib/terminal';
 
 export const metadata = {
   title: 'Projects',
   description: 'Selected work and case studies.',
 };
 
-export default async function ProjectsPage() {
-  const { items } = await fetchProjects({ featuredFirst: true });
-  const folders = new Map(
-    items.map((project, i) => [
-      folderName({ slug: project.fields.slug, title: project.fields.title }, i),
-      Boolean(project.fields.lock),
-    ]),
-  );
-
-  const steps = [
-    { cwd: '~', command: commands.toProjects },
-    {
-      cwd: '~/projects',
-      command: commands.listAll,
-      // What `ls -a` prints: the two special entries, then every folder in byte order.
-      output: (
-        <ul className="flex flex-wrap gap-x-7 gap-y-1 py-1">
-          {lsAll([...folders.keys()]).map((name) => (
-            <li
-              className={name.startsWith('.') ? 'text-muted' : folders.get(name) ? 'text-hot' : 'text-cyan'}
-              key={name}
-            >
-              {name}
-            </li>
-          ))}
-        </ul>
-      ),
-    },
-  ];
-  const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: s.output != null })));
+export default function ProjectsPage() {
+  const steps = [{ cwd: '~', command: commands.toProjects }];
+  const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: false })));
 
   return (
     <main className="px-4 sm:px-8">
-      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" steps={steps} />
+      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" endCwd="~/projects" steps={steps} />
 
       <div className="t-in" style={{ '--d': `${contentAt}ms` } as React.CSSProperties}>
         <div className="flex flex-wrap items-end justify-between gap-5 pb-8 pt-12 sm:pt-16">

@@ -3,15 +3,13 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
+import { fixtureProjects } from './contentful.fixtures';
 import {
   commands,
   cwdFor,
   FOLDER_MODES,
   folderMode,
   folderName,
-  logFileName,
-  lsAll,
   schedule,
   shellQuote,
   slugify,
@@ -24,8 +22,6 @@ const projects = fixtureProjects.map((p, i) => ({
   slug: p.fields.slug,
 }));
 
-const logFiles = fixtureLogs.map((entry, i) => logFileName({ date: entry.fields.date, title: entry.fields.title }, i));
-
 describe('the displayed commands are real shell commands', () => {
   let root: string;
 
@@ -34,7 +30,6 @@ describe('the displayed commands are real shell commands', () => {
     root = mkdtempSync(join(tmpdir(), 'portfolio-'));
     writeFileSync(join(root, 'about.txt'), 'Remi Higuchi\n');
     mkdirSync(join(root, 'log'));
-    for (const name of logFiles) writeFileSync(join(root, 'log', name), `${name}\n`);
     mkdirSync(join(root, 'featured'));
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured } of projects) {
@@ -59,9 +54,8 @@ describe('the displayed commands are real shell commands', () => {
     );
   });
 
-  it('projects: cd projects then ls -a prints exactly what the page shows', () => {
-    const printed = sh(`${commands.toProjects} && ${commands.listAll}`).trim().split('\n');
-    expect(printed).toEqual(lsAll(projects.map((p) => p.folder)));
+  it('projects: cd projects succeeds and leaves you in ~/projects', () => {
+    expect(sh(`${commands.toProjects} && pwd`).trim()).toBe(join(root, 'projects'));
   });
 
   it('project detail: cd projects/<folder> then cat README.md, then cd .. all succeed', () => {
@@ -83,9 +77,8 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  it('log: cd log then ls -a prints exactly what the page shows', () => {
-    const printed = sh(`${commands.toLog} && ${commands.listAll}`).trim().split('\n');
-    expect(printed).toEqual(lsAll(logFiles));
+  it('log: cd log succeeds and leaves you in ~/log', () => {
+    expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
   });
 
   it('every command passes a shell syntax check', () => {
@@ -93,7 +86,6 @@ describe('the displayed commands are real shell commands', () => {
       commands.about,
       commands.featured,
       commands.toProjects,
-      commands.listAll,
       commands.toProject("my project's name"),
       commands.readme,
       commands.parent,
@@ -136,25 +128,9 @@ describe('folder names', () => {
     expect(folderName({}, 2)).toBe('project-03');
   });
 
-  it('lists . and .. first, then names in byte order', () => {
-    expect(lsAll(['project-02', 'alpha', 'Zed'])).toEqual(['.', '..', 'Zed', 'alpha', 'project-02']);
-  });
-
   it('shows a folder mode that matches whether it can be opened', () => {
     expect(folderMode(false)).toBe('drwxr-xr-x');
     expect(folderMode(true)).toBe('drwxr-x---');
-  });
-});
-
-describe('log file names', () => {
-  it('starts with the ISO date so ls sorts entries by date', () => {
-    expect(logFileName({ date: '2026-02-10', title: 'Fixture talk' }, 0)).toBe('2026-02-10-fixture-talk.md');
-    expect(lsAll(['2026-02-10-b.md', '2025-06-05-a.md'])).toEqual(['.', '..', '2025-06-05-a.md', '2026-02-10-b.md']);
-  });
-
-  it('falls back to the title, then a numbered name', () => {
-    expect(logFileName({ title: 'No date' }, 0)).toBe('no-date.md');
-    expect(logFileName({}, 2)).toBe('entry-03.md');
   });
 });
 

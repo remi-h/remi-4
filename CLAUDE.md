@@ -71,12 +71,11 @@ alone.
   ≥ 4.5:1. Hot is only text of 13px and up, or a fill behind ink text.
 - **Shape:** 1px lines, no radii, a faint cyan 64px grid on the page, windows
   with a titlebar for code and project cards, a vim-style status line as the
-  footer (`NORMAL · main · ~/path · links · Next.js · TypeScript · Tailwind`).
+  footer: `remi · main · ~/path` on the left, the social links and © on the right.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`,
-  `cd log`) and compares both `ls -a` outputs exactly. Never show a command that
+  `cd projects`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`). Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
   Folder modes are honest too, and the test checks them with `ls -ld`:
   `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
@@ -184,19 +183,18 @@ Built on the stacked branches, never merged to `main` until complete.
    buttons (`cd projects`, `cd log`); an `about.ts` code window built from
    the intro copy; `ls -t featured` heads the featured cards. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
-4. **Projects:** ✅ `cd projects` then `ls -a` typed, the listing is generated
-   from the same data as the cards, then `projects/` and the cards fade in.
-   `ProjectsTile` is shared with the home page.
+4. **Projects:** ✅ only `cd projects` is typed (no `ls -a`), ending on a
+   `~/projects` prompt; then `projects/` and the cards fade in. `ProjectsTile`
+   is shared with the home page.
 5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
    output is the title, summary, a frontmatter window (only fields that exist:
    date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`. `← cd ..` links back to the list.
-6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a` typed, the
-   listing shows each entry as a file named `<yyyy-mm-dd>-<title>.md`
-   (`logFileName`, so `ls` sorts by date), then `log/` + `// ログ` + the
-   description, then the entries (ISO date, organisation, title, ↗ for links)
-   fade in like the cards. Projects and Log must stay structurally identical;
-   `e2e/terminal.spec.ts` compares them.
+6. **Log:** ✅ laid out exactly like Projects: only `cd log` is typed, ending on
+   a `~/log` prompt; then `log/` + `// ログ` + the description, then the
+   entries (ISO date, organisation, title, ↗ for links) fade in like the cards.
+   Projects and Log must stay structurally identical; `e2e/terminal.spec.ts`
+   compares them.
    Project cards are full-height columns with the mode line (`drwxr-xr-x` /
    `drwxr-x---`) pinned to the bottom, so it lines up across a row.
 7. **Polish:** ☐ metadata/OG image, favicon, a terminal-style 404

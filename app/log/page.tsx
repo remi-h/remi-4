@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { TerminalSession } from '@/components/TerminalSession';
 import { fetchLogs } from '@/lib/contentful';
-import { commands, logFileName, lsAll, schedule } from '@/lib/terminal';
+import { commands, schedule } from '@/lib/terminal';
 
 export const metadata = {
   title: 'Log',
@@ -18,34 +18,16 @@ const isoDate = (value?: string) => {
 const rowClass =
   'group grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-x-6 gap-y-1 px-1 py-4 text-sm sm:grid-cols-[110px_200px_minmax(0,1fr)_auto]';
 
-// Laid out like the projects page: the commands, then the page heading, then the entries.
+// Laid out like the projects page: the command, then the page heading, then the entries.
 export default async function LogPage() {
   const { items } = await fetchLogs();
-  const files = items.map((entry, i) => logFileName({ date: entry.fields.date, title: entry.fields.title }, i));
-
-  const steps = [
-    { cwd: '~', command: commands.toLog },
-    {
-      cwd: '~/log',
-      command: commands.listAll,
-      // What `ls -a` prints: the two special entries, then every entry file in byte order.
-      output: (
-        <ul className="flex flex-wrap gap-x-7 gap-y-1 py-1">
-          {lsAll(files).map((name) => (
-            <li className={name.startsWith('.') ? 'text-muted' : 'text-fg'} key={name}>
-              {name}
-            </li>
-          ))}
-        </ul>
-      ),
-    },
-  ];
-  const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: s.output != null })));
+  const steps = [{ cwd: '~', command: commands.toLog }];
+  const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: false })));
   const at = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
 
   return (
     <main className="px-4 sm:px-8">
-      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" steps={steps} />
+      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" endCwd="~/log" steps={steps} />
 
       <div className="t-in" style={at(contentAt)}>
         <div className="flex flex-wrap items-end justify-between gap-5 pb-8 pt-12 sm:pt-16">

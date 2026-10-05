@@ -4,12 +4,9 @@ import type { ContentfulLog, ContentfulProject } from './contentful';
 // credentials. Enabled with CONTENTFUL_FIXTURES=1. Newest first, like the API.
 // The rich-text renderer needs `data` on every node and `marks` on text nodes.
 const node = (nodeType: string, content: object[]) => ({ nodeType, data: {}, content });
-const leaf = (value: string) => ({ nodeType: "text", value, marks: [], data: {} });
+const leaf = (value: string) => ({ nodeType: 'text', value, marks: [], data: {} });
 const text = (heading: string, body: string) => ({
-  ...node("document", [
-    node("heading-2", [leaf(heading)]),
-    node("paragraph", [leaf(body)]),
-  ]),
+  ...node('document', [node('heading-2', [leaf(heading)]), node('paragraph', [leaf(body)])]),
 });
 
 export const fixtureProjects: ContentfulProject[] = [

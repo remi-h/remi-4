@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { fixtureLogs, fixtureProjects } from '../lib/contentful.fixtures';
-import { commands, folderName, logFileName, lsAll } from '../lib/terminal';
+import { fixtureProjects } from '../lib/contentful.fixtures';
+import { commands, folderName } from '../lib/terminal';
 
 // Featured first, as the pages order them.
 const ordered = [...fixtureProjects].sort(
@@ -8,17 +8,16 @@ const ordered = [...fixtureProjects].sort(
 );
 const folders = ordered.map((p, i) => folderName({ slug: p.fields.slug, title: p.fields.title }, i));
 
-test('/projects types "cd projects" then "ls -a" and lists exactly what ls -a would print', async ({ page }) => {
+test('/projects types only "cd projects" and lands in ~/projects', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 
   await expect(main.getByText(commands.toProjects, { exact: true })).toHaveCount(1);
-  await expect(main.getByText(commands.listAll, { exact: true })).toHaveCount(1);
-  await expect(main.locator('li').filter({ hasText: /^\.{1,2}$|^[a-z]/ })).toHaveText(lsAll(folders));
+  await expect(main.getByText('ls -a')).toHaveCount(0);
 
-  // The prompt shows where each command ran.
-  await expect(main.getByText('remi@portfolio:~$').first()).toBeVisible();
-  await expect(main.getByText('remi@portfolio:~/projects$').first()).toBeVisible();
+  // The command runs in ~, and the closing prompt shows where it left you.
+  await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
+  await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(1);
 });
 
 test('/projects lists a folder for every card', async ({ page }) => {
@@ -34,27 +33,32 @@ test('home types "cat about.txt" and heads the featured list with "ls -t feature
   await expect(page.getByRole('heading', { name: new RegExp(commands.featured) })).toBeVisible();
 });
 
-test('/log types "cd log" then "ls -a" and lists exactly what ls -a would print', async ({ page }) => {
+test('/log types only "cd log" and lands in ~/log', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
-  const files = fixtureLogs.map((e, i) => logFileName({ date: e.fields.date, title: e.fields.title }, i));
 
   await expect(main.getByText(commands.toLog, { exact: true })).toHaveCount(1);
-  await expect(main.getByText(commands.listAll, { exact: true })).toHaveCount(1);
-  await expect(main.locator('li').filter({ hasText: /^\.{1,2}$|\.md$/ })).toHaveText(lsAll(files));
-  await expect(main.getByText('remi@portfolio:~/log$').first()).toBeVisible();
+  await expect(main.getByText('ls -a')).toHaveCount(0);
+  await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
+  await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(1);
 });
 
-test('/projects and /log share the same layout: commands, heading, then content', async ({ page }) => {
-  const layout = async (path: string) => {
+test('/projects and /log share the same layout: command, heading, then content', async ({ page }) => {
+  const layout = async (path: string, command: string) => {
     await page.goto(path, { waitUntil: 'domcontentloaded' });
     const main = page.getByRole('main');
-    const session = await main.getByText(commands.listAll, { exact: true }).boundingBox();
+    const session = await main.getByText(command, { exact: true }).boundingBox();
     const heading = await main.getByRole('heading', { level: 1 }).boundingBox();
     const headingSize = await main.getByRole('heading', { level: 1 }).evaluate((el) => getComputedStyle(el).fontSize);
-    return { sessionAboveHeading: (session?.y ?? 0) < (heading?.y ?? 0), headingSize, headingX: heading?.x };
+    return {
+      sessionY: session?.y,
+      sessionAboveHeading: (session?.y ?? 0) < (heading?.y ?? 0),
+      headingY: heading?.y,
+      headingSize,
+      headingX: heading?.x,
+    };
   };
-  expect(await layout('/log')).toEqual(await layout('/projects'));
+  expect(await layout('/log', commands.toLog)).toEqual(await layout('/projects', commands.toProjects));
 });
 
 test('a project page types "cd projects/<folder>" then "cat README.md"', async ({ page }) => {
@@ -70,10 +74,10 @@ test.describe('without a motion preference', () => {
   test('the intro animates, keeps all text in the page, and ends on a blinking cursor', async ({ page }) => {
     await page.goto('/projects', { waitUntil: 'domcontentloaded' });
 
-    // Animations are running, yet every command and listing is already in the DOM.
+    // Animations are running, yet the command and every card are already in the DOM.
     expect(await page.evaluate(() => document.getAnimations().length)).toBeGreaterThan(0);
-    await expect(page.getByText(commands.listAll, { exact: true })).toHaveCount(1);
-    await expect(page.getByText('fixture-alpha', { exact: true })).toHaveCount(1);
+    await expect(page.getByText(commands.toProjects, { exact: true })).toHaveCount(1);
+    await expect(page.getByRole('heading', { level: 2, name: 'Fixture Alpha' })).toHaveCount(1);
 
     // After the intro only the cursor's blink is still running.
     await expect

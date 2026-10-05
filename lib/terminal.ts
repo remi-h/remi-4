@@ -60,17 +60,6 @@ export const slugify = (value: string) =>
 export const folderName = (project: { slug?: string; title?: string }, index: number) =>
   project.slug || slugify(project.title ?? '') || `project-${String(index + 1).padStart(2, '0')}`;
 
-/** What `ls -a` prints: . and .. first, then names in byte order, as in the C locale. */
-export const lsAll = (names: string[]) => ['.', '..', ...[...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))];
-
-/** The file a log entry lives in, e.g. 2026-02-10-fixture-talk.md: date first, so ls sorts by date. */
-export const logFileName = (entry: { date?: string; title?: string }, index: number) => {
-  const date = entry.date ? new Date(entry.date) : null;
-  const day = date && !Number.isNaN(date.valueOf()) ? date.toISOString().slice(0, 10) : '';
-  const name = [day, slugify(entry.title ?? '')].filter(Boolean).join('-');
-  return `${name || `entry-${String(index + 1).padStart(2, '0')}`}.md`;
-};
-
 /**
  * A directory's mode as `ls -l` prints it.
  * Public: owner rwx, group r-x, others r-x (755).
@@ -83,7 +72,6 @@ export const commands = {
   about: 'cat about.txt',
   featured: 'ls -t featured',
   toProjects: 'cd projects',
-  listAll: 'ls -a',
   toProject: (folder: string) => `cd projects/${shellQuote(folder)}`,
   readme: 'cat README.md',
   parent: 'cd ..',

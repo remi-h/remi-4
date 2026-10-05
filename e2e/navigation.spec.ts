@@ -71,22 +71,33 @@ test.describe('on a wide screen', () => {
     expect(footer?.width).toBe(1800);
   });
 
+  test('the footer links sit on the right, lined up with the nav tabs', async ({ page }) => {
+    await page.goto('/log', { waitUntil: 'domcontentloaded' });
+    const links = await page.getByTestId('footer-links').boundingBox();
+    const tabs = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
+    const path = await page.getByRole('contentinfo').getByText('~/log').boundingBox();
+    const right = (box: { x: number; width: number } | null) => Math.round((box?.x ?? 0) + (box?.width ?? 0));
+    expect(right(links)).toBe(right(tabs));
+    expect(links?.x ?? 0).toBeGreaterThan((path?.x ?? 0) + 400);
+  });
+
   test('the header and footer content stay aligned with the page content', async ({ page }) => {
     await page.goto('/log', { waitUntil: 'domcontentloaded' });
     const left = (box: { x: number } | null) => box?.x;
     const wordmark = await page.getByRole('banner').getByRole('link', { name: 'Remi Higuchi' }).boundingBox();
     const heading = await page.getByRole('heading', { level: 1, name: 'Log' }).boundingBox();
-    const mode = await page.getByRole('contentinfo').getByText('NORMAL').boundingBox();
+    const mode = await page.getByRole('contentinfo').getByText('remi', { exact: true }).boundingBox();
     expect(left(wordmark)).toBe(left(mode));
     expect(left(heading)).toBe(left(wordmark));
   });
 });
 
-test('the footer is a status line with the current path, social links and the stack', async ({ page }) => {
+test('the footer is a status line: user, branch and path on the left, links on the right', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const footer = page.getByRole('contentinfo');
 
-  await expect(footer.getByText('NORMAL')).toBeVisible();
+  await expect(footer.getByText('remi', { exact: true })).toBeVisible();
+  await expect(footer.getByText('NORMAL')).toHaveCount(0);
   await expect(footer.getByText('~/projects')).toBeVisible();
   await expect(footer.getByRole('link', { name: 'LinkedIn' })).toHaveAttribute('href', 'https://linkedin.com/in/hremi');
   await expect(footer.getByRole('link', { name: 'Instagram' })).toHaveAttribute(
@@ -94,7 +105,7 @@ test('the footer is a status line with the current path, social links and the st
     'https://instagram.com/remihiguchi',
   );
   await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/remi-h');
-  await expect(footer.getByText('Next.js · TypeScript · Tailwind')).toBeVisible();
+  await expect(footer.getByText(/Next\.js|TypeScript|Tailwind/)).toHaveCount(0);
   await expect(footer.getByText('© 2026 Remi Higuchi')).toBeVisible();
 });
 

@@ -22,9 +22,18 @@ export const Prompt = ({ cwd }: { cwd: string }) => (
  * prompt with a blinking cursor. Pure CSS: the full text is in the page from the start and
  * the animation only reveals it (see .t-type and .t-in in globals.css).
  */
-export const TerminalSession = ({ steps, className }: { steps: SessionStep[]; className?: string }) => {
+export const TerminalSession = ({
+  steps,
+  className,
+  endCwd,
+}: {
+  steps: SessionStep[];
+  className?: string;
+  /** Working directory for the closing prompt, when the last command changed it (e.g. `cd`). */
+  endCwd?: string;
+}) => {
   const timing = schedule(steps.map((step) => ({ command: step.command, hasOutput: step.output != null })));
-  const endCwd = steps[steps.length - 1]?.cwd ?? '~';
+  const closingCwd = endCwd ?? steps[steps.length - 1]?.cwd ?? '~';
 
   return (
     <div className={className}>
@@ -44,7 +53,7 @@ export const TerminalSession = ({ steps, className }: { steps: SessionStep[]; cl
         </div>
       ))}
       <div aria-hidden="true" className="t-in" style={css({ '--d': `${timing.endAt}ms` })}>
-        <Prompt cwd={endCwd} />
+        <Prompt cwd={closingCwd} />
         <span className="t-cursor" style={css({ '--d': `${timing.endAt}ms` })} />
       </div>
     </div>
