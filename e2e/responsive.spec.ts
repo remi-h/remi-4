@@ -25,7 +25,7 @@ test.describe('on a phone', () => {
 
   test('the nav stays on screen and works', async ({ page }) => {
     await page.goto('/log', { waitUntil: 'domcontentloaded' });
-    const nav = page.getByRole('navigation');
+    const nav = page.getByRole('navigation', { name: 'Main' });
     await expect(nav).toBeInViewport();
     await nav.getByRole('link', { name: 'Projects' }).click();
     await expect(page).toHaveURL('/projects');

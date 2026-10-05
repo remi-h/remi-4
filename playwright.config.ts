@@ -11,7 +11,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
-    // The home page's WebGL background is too heavy for CI's software rendering and starves clicks.
+    // The terminal intro is CSS animation that honours reduced motion. Tests run with it on so
+    // assertions never race a fade-in; e2e/terminal.spec.ts and reduced-motion.spec.ts opt back in.
     reducedMotion: 'reduce',
     trace: 'on-first-retry',
   },

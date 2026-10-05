@@ -1,34 +1,30 @@
-import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next"
-import { Bitcount_Single, Noto_Serif_JP, Space_Grotesk, DotGothic16 } from "next/font/google";
-import "./globals.css";
-import { Navigation } from "@/components/Navigatin";
-import { Footer } from "@/components/Footer";
+import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
+import { DotGothic16, Familjen_Grotesk, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
 
-const notoSerifJp = Noto_Serif_JP({
-  variable: "--font-noto-serif-jp",
-  subsets: ["latin"],
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
 });
 
-const bitcountSingle = Bitcount_Single({
-  variable: "--font-bitcount-single",
-  subsets: ["latin"],
+const familjenGrotesk = Familjen_Grotesk({
+  variable: '--font-familjen-grotesk',
+  subsets: ['latin'],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-});
-
+// Pixel Japanese for the seal and small section tags.
 const dotGothic16 = DotGothic16({
-  variable: "--font-dot-gothic-16",
-  subsets: ["latin"],
-  weight: "400"
+  variable: '--font-dotgothic16',
+  weight: '400',
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "Remi Higuchi - Portfolio",
-  description: "Portfolio website of Remi Higuchi, a designer and developer.",
+  title: 'Remi Higuchi - Portfolio',
+  description: 'Portfolio website of Remi Higuchi, a designer and developer.',
 };
 
 export default function RootLayout({
@@ -38,14 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${notoSerifJp.variable} ${bitcountSingle.variable} ${spaceGrotesk.variable} ${dotGothic16.variable} antialiased`}
-      >
-        <div className="root max-w-7xl mx-auto">
-          {children}
-          <Footer />
-        </div>
+      <body className={`${jetbrainsMono.variable} ${familjenGrotesk.variable} ${dotGothic16.variable} antialiased`}>
         <Navigation />
+        <div className="root max-w-7xl mx-auto">{children}</div>
+        <Footer />
         {/* <Cursor /> */}
         <Analytics />
       </body>

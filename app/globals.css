@@ -5,101 +5,229 @@
 }
 
 :root {
-  --background: #0b052d;
-  --foreground: #FFFFFF;
+  --background: #07080c;
+  --foreground: #dfe3ee;
+  /* Time to type one character. Keep in sync with TIMING.char in lib/terminal.ts. */
+  --char: 45ms;
 }
 
+/* Design tokens: a terminal. Mono is the system (navigation, labels, paths, code),
+   grotesk is the human (summaries, intros, case studies). */
+@theme {
+  --color-ink: #07080c;
+  --color-panel: #0c0e15;
+  --color-panel-2: #11141e;
+  --color-line: #232a3b;
+  --color-line-2: #2f3a52;
+  --color-fg: #dfe3ee;
+  --color-body: #b4bacb;
+  --color-muted: #8a91a6;
+  --color-cyan: #22e5d3;
+  --color-hot: #ff4a2b;
+  --color-magenta: #ff4fa3;
+  --color-yellow: #ffd84a;
+}
+
+/* Fonts must be inline: next/font defines its variables on <body>, not :root. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-bitcount: var(--font-bitcount-single), var(--font-dot-gothic-16), sans-serif;
-  --font-serif: var(--font-noto-serif-jp);
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-grotesk: var(--font-familjen-grotesk), system-ui, sans-serif;
+  --font-jp: var(--font-dotgothic16), sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-space-grotesk);
+/* Base styles live in the base layer so Tailwind utilities (text-cyan, text-ink...) can override them. */
+@layer base {
+  body {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(rgba(34, 229, 211, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 229, 211, 0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    color: var(--foreground);
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-cyan);
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
+  }
 }
 
-a {
-  color: #ffd073 !important;
-  text-decoration: none;
+/* Terminal animation. Everything is in the page from the start, so nothing is hidden from
+   search engines or screen readers; the animations only reveal it. Each element sets
+   --d (delay in ms) and typed text also sets --n (its length in characters). */
+@keyframes t-type {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes t-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes t-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.t-type {
+  display: inline-block;
+  overflow: hidden;
+  white-space: pre;
+  vertical-align: bottom;
+  width: calc(var(--n) * 1ch);
+  animation: t-type calc(var(--n) * var(--char)) steps(var(--n), end) var(--d, 0ms) backwards;
+}
+
+.t-in {
+  animation: t-in 400ms ease var(--d, 0ms) backwards;
+}
+
+.t-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--color-cyan);
+  vertical-align: -0.12em;
+  animation:
+    t-in 1ms linear var(--d, 0ms) backwards,
+    t-blink 1.1s steps(1) var(--d, 0ms) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-type,
+  .t-in,
+  .t-cursor {
+    animation: none;
+  }
+}
+
+/* Rich text from Contentful on project pages. */
+.project-page a {
+  color: var(--color-cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.project-page h2,
+.project-page h3,
+.project-page h4 {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-weight: 700;
+  color: var(--color-fg);
+  letter-spacing: -0.02em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .project-page h2 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-top: 20px;
+  font-size: 1.6rem;
 }
 
 .project-page h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-top: 16px;
+  font-size: 1.3rem;
 }
 
 .project-page h4 {
   font-size: 1.1rem;
-  font-weight: 500;
-  margin-top: 12px;
+}
+
+.project-page h2::before {
+  content: "## ";
+  color: var(--color-cyan);
+}
+
+.project-page h3::before {
+  content: "### ";
+  color: var(--color-cyan);
+}
+
+.project-page h4::before {
+  content: "#### ";
+  color: var(--color-cyan);
 }
 
 .project-page p {
-  margin-top: 8px;
+  margin-bottom: 1.25rem;
 }
 
 .project-page blockquote {
-  border-left: 2px solid #FFF;
-  padding-left: 12px;
-  opacity: 0.8;
-  margin-bottom: 16px;
+  margin: 2rem 0;
+  color: var(--color-fg);
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.project-page blockquote::before {
+  content: "> ";
+  color: var(--color-hot);
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+.project-page blockquote p {
+  display: inline;
 }
 
 .project-page table {
   width: 100%;
-  margin: 12px 0;
+  margin: 1rem 0;
   border-collapse: collapse;
   font-size: 0.95rem;
 }
 
 .project-page thead {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-panel-2);
 }
 
 .project-page th,
 .project-page td {
   padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-line);
   text-align: left;
   vertical-align: middle;
 }
 
 .project-page table p {
-  margin-top: 0;
+  margin: 0;
 }
 
 .project-page hr {
-  margin: 24px 0;
+  margin: 2rem 0;
+  border-color: var(--color-line);
 }
 
 .project-page ul {
-  margin-top: 8px;
-  margin-left: 20px;
-  list-style: circle;
+  margin: 0 0 1.25rem 1.25rem;
+  list-style: "- ";
 }
 
 .project-page ol {
-  margin-top: 8px;
-  margin-left: 24px;
-  list-style: decimal !important;
+  margin: 0 0 1.25rem 1.5rem;
+  list-style: decimal;
 }
 
-.project-page ol li {
+.project-page li::marker {
+  color: var(--color-cyan);
+}
+
+.project-page li {
   padding-left: 4px;
-}
-
-a:hover {
-  color: #ce9eff !important;
-  transition: .3s;
 }
