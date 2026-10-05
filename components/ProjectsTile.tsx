@@ -89,7 +89,7 @@ export const ProjectsTile = async ({ featuredOnly = false, titleAs: Title = 'h3'
 
         const content = (
           <Window
-            className="h-full transition-colors group-hover:border-cyan"
+            className="flex h-full flex-col transition-colors group-hover:border-cyan"
             meta={year}
             title={
               <>
@@ -130,14 +130,14 @@ export const ProjectsTile = async ({ featuredOnly = false, titleAs: Title = 'h3'
                 </div>
               ) : null}
             </div>
-            <div className="px-[18px] pb-5 pt-[18px]">
+            <div className="flex flex-1 flex-col px-[18px] pb-5 pt-[18px]">
               <Title className="font-grotesk text-[26px] font-bold leading-tight tracking-tight">
                 {project.fields.title}
               </Title>
               {project.fields.summary ? (
                 <p className="font-grotesk mt-2 text-[19px] leading-normal text-body">{project.fields.summary}</p>
               ) : null}
-              <div className="mt-4 flex justify-between text-[13px]">
+              <div className="mt-auto flex justify-between pt-4 text-[13px]" data-testid="project-mode">
                 <span className={locked ? 'text-hot' : 'text-muted'}>{folderMode(locked)}</span>
                 <span className={locked ? 'text-muted' : 'text-cyan group-hover:underline'}>
                   {locked ? 'locked' : 'open ↵'}

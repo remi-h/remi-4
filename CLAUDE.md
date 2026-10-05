@@ -38,11 +38,9 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 - Suppress a lint rule only with a targeted `eslint-disable-next-line` plus a
   reason. Never disable a rule project-wide to get green.
 - Never skip or quarantine a test to get CI green.
-- The redesign is stacked and must not reach `main` (it deploys) until it is
-  complete: `claude/redesign` is the integration branch, each step's PR targets
-  the previous step's branch, and the bottom PR targets `claude/redesign`.
-  Merge bottom-up; after a PR merges, retarget the next one to
-  `claude/redesign`. Only the final `claude/redesign` → `main` PR deploys.
+- `main` deploys. The redesign shipped through a stack of PRs into
+  `claude/redesign` (now merged); new work goes in small branches with PRs
+  straight to `main`.
 - Don't require Contentful secrets for build, unit tests or e2e. E2E uses
   `CONTENTFUL_FIXTURES=1`.
 - Every command shown on screen must come from `lib/terminal.ts` and be covered
@@ -78,7 +76,7 @@ alone.
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
   `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`,
-  `cat log.txt`) and compares `ls -a` output exactly. Never show a command that
+  `cd log`) and compares both `ls -a` outputs exactly. Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
   Folder modes are honest too, and the test checks them with `ls -ld`:
   `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
@@ -183,7 +181,7 @@ Built on the stacked branches, never merged to `main` until complete.
    Header rule and footer background are full width; content is capped at
    `max-w-7xl`.
 3. **Home:** ✅ `cat about.txt` typed, output is the name, role, intro and two
-   buttons (`cd projects`, `cat log.txt`); an `about.ts` code window built from
+   buttons (`cd projects`, `cd log`); an `about.ts` code window built from
    the intro copy; `ls -t featured` heads the featured cards. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
 4. **Projects:** ✅ `cd projects` then `ls -a` typed, the listing is generated
@@ -193,8 +191,14 @@ Built on the stacked branches, never merged to `main` until complete.
    output is the title, summary, a frontmatter window (only fields that exist:
    date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`. `← cd ..` links back to the list.
-6. **Log:** ✅ `cat log.txt`; the output is the entries (ISO date, organisation,
-   title, ↗ for links).
+6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a` typed, the
+   listing shows each entry as a file named `<yyyy-mm-dd>-<title>.md`
+   (`logFileName`, so `ls` sorts by date), then `log/` + `// ログ` + the
+   description, then the entries (ISO date, organisation, title, ↗ for links)
+   fade in like the cards. Projects and Log must stay structurally identical;
+   `e2e/terminal.spec.ts` compares them.
+   Project cards are full-height columns with the mode line (`drwxr-xr-x` /
+   `drwxr-x---`) pinned to the bottom, so it lines up across a row.
 7. **Polish:** ☐ metadata/OG image, favicon, a terminal-style 404
    (`bash: cd: <name>: No such file or directory`), Lighthouse check
    (perf ≥ 90, a11y 100), a final read-through at 375 / 768 / 1280 / 1800.

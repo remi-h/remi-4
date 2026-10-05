@@ -31,7 +31,7 @@ const steps = [
             className="border border-line-2 px-[18px] py-3 text-sm hover:border-cyan hover:no-underline"
             href="/log"
           >
-            {commands.log}
+            {commands.toLog} ↵
           </Link>
         </div>
       </div>

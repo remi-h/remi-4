@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { fixtureProjects } from '../lib/contentful.fixtures';
-import { commands, folderName, lsAll } from '../lib/terminal';
+import { fixtureLogs, fixtureProjects } from '../lib/contentful.fixtures';
+import { commands, folderName, logFileName, lsAll } from '../lib/terminal';
 
 // Featured first, as the pages order them.
 const ordered = [...fixtureProjects].sort(
@@ -34,10 +34,27 @@ test('home types "cat about.txt" and heads the featured list with "ls -t feature
   await expect(page.getByRole('heading', { name: new RegExp(commands.featured) })).toBeVisible();
 });
 
-test('/log types "cat log.txt" and its output is the entries', async ({ page }) => {
+test('/log types "cd log" then "ls -a" and lists exactly what ls -a would print', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText(commands.log, { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
+  const main = page.getByRole('main');
+  const files = fixtureLogs.map((e, i) => logFileName({ date: e.fields.date, title: e.fields.title }, i));
+
+  await expect(main.getByText(commands.toLog, { exact: true })).toHaveCount(1);
+  await expect(main.getByText(commands.listAll, { exact: true })).toHaveCount(1);
+  await expect(main.locator('li').filter({ hasText: /^\.{1,2}$|\.md$/ })).toHaveText(lsAll(files));
+  await expect(main.getByText('remi@portfolio:~/log$').first()).toBeVisible();
+});
+
+test('/projects and /log share the same layout: commands, heading, then content', async ({ page }) => {
+  const layout = async (path: string) => {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+    const main = page.getByRole('main');
+    const session = await main.getByText(commands.listAll, { exact: true }).boundingBox();
+    const heading = await main.getByRole('heading', { level: 1 }).boundingBox();
+    const headingSize = await main.getByRole('heading', { level: 1 }).evaluate((el) => getComputedStyle(el).fontSize);
+    return { sessionAboveHeading: (session?.y ?? 0) < (heading?.y ?? 0), headingSize, headingX: heading?.x };
+  };
+  expect(await layout('/log')).toEqual(await layout('/projects'));
 });
 
 test('a project page types "cd projects/<folder>" then "cat README.md"', async ({ page }) => {

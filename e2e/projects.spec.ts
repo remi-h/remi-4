@@ -64,3 +64,30 @@ test('project pages show the README frontmatter only for fields that exist', asy
   await expect(readme).not.toContainText('role');
   await expect(readme).not.toContainText('link');
 });
+
+test('the mode line sits at the bottom of every card, even when summaries differ in length', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+  // Make the first card's summary much longer than its neighbour's.
+  await page
+    .getByRole('link', { name: /Fixture Alpha/ })
+    .locator('p')
+    .evaluate((el) => {
+      el.textContent = 'A much longer summary that wraps over several lines to make this card taller. '.repeat(4);
+    });
+
+  const cards = page.getByRole('main').locator('a.group, article.group');
+  const rows = await cards.evaluateAll((els) =>
+    els.map((el) => {
+      const card = el.getBoundingClientRect();
+      const mode = (el.querySelector('[data-testid="project-mode"]') as HTMLElement).getBoundingClientRect();
+      return { top: Math.round(card.top), gap: Math.round(card.bottom - mode.bottom), modeTop: Math.round(mode.top) };
+    }),
+  );
+  // Every mode line is the same distance from its card's bottom edge...
+  expect(new Set(rows.map((r) => r.gap)).size).toBe(1);
+  // ...so cards on the same row have their mode lines at the same height.
+  const firstRow = rows.filter((r) => r.top === rows[0].top);
+  expect(firstRow.length).toBeGreaterThan(1);
+  expect(new Set(firstRow.map((r) => r.modeTop)).size).toBe(1);
+});

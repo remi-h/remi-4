@@ -3,13 +3,14 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fixtureProjects } from './contentful.fixtures';
+import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
 import {
   commands,
   cwdFor,
   FOLDER_MODES,
   folderMode,
   folderName,
+  logFileName,
   lsAll,
   schedule,
   shellQuote,
@@ -23,14 +24,17 @@ const projects = fixtureProjects.map((p, i) => ({
   slug: p.fields.slug,
 }));
 
+const logFiles = fixtureLogs.map((entry, i) => logFileName({ date: entry.fields.date, title: entry.fields.title }, i));
+
 describe('the displayed commands are real shell commands', () => {
   let root: string;
 
   beforeAll(() => {
-    // A mirror of what the site claims exists: ~/about.txt, ~/log.txt, ~/featured and ~/projects.
+    // A mirror of what the site claims exists: ~/about.txt, ~/featured, ~/projects and ~/log.
     root = mkdtempSync(join(tmpdir(), 'portfolio-'));
     writeFileSync(join(root, 'about.txt'), 'Remi Higuchi\n');
-    writeFileSync(join(root, 'log.txt'), '2026-02-10 Fixture Conf Fixture talk\n');
+    mkdirSync(join(root, 'log'));
+    for (const name of logFiles) writeFileSync(join(root, 'log', name), `${name}\n`);
     mkdirSync(join(root, 'featured'));
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured } of projects) {
@@ -79,8 +83,9 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  it('log: cat log.txt succeeds', () => {
-    expect(sh(commands.log)).toContain('Fixture talk');
+  it('log: cd log then ls -a prints exactly what the page shows', () => {
+    const printed = sh(`${commands.toLog} && ${commands.listAll}`).trim().split('\n');
+    expect(printed).toEqual(lsAll(logFiles));
   });
 
   it('every command passes a shell syntax check', () => {
@@ -92,7 +97,7 @@ describe('the displayed commands are real shell commands', () => {
       commands.toProject("my project's name"),
       commands.readme,
       commands.parent,
-      commands.log,
+      commands.toLog,
     ];
     for (const command of all) {
       expect(() => execFileSync('sh', ['-n', '-c', command])).not.toThrow();
@@ -138,6 +143,18 @@ describe('folder names', () => {
   it('shows a folder mode that matches whether it can be opened', () => {
     expect(folderMode(false)).toBe('drwxr-xr-x');
     expect(folderMode(true)).toBe('drwxr-x---');
+  });
+});
+
+describe('log file names', () => {
+  it('starts with the ISO date so ls sorts entries by date', () => {
+    expect(logFileName({ date: '2026-02-10', title: 'Fixture talk' }, 0)).toBe('2026-02-10-fixture-talk.md');
+    expect(lsAll(['2026-02-10-b.md', '2025-06-05-a.md'])).toEqual(['.', '..', '2025-06-05-a.md', '2026-02-10-b.md']);
+  });
+
+  it('falls back to the title, then a numbered name', () => {
+    expect(logFileName({ title: 'No date' }, 0)).toBe('no-date.md');
+    expect(logFileName({}, 2)).toBe('entry-03.md');
   });
 });
 
