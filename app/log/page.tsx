@@ -1,64 +1,73 @@
-
-import Link from "next/link";
-import { fetchLogs } from "@/lib/contentful";
+import Link from 'next/link';
+import { TerminalSession } from '@/components/TerminalSession';
+import { fetchLogs } from '@/lib/contentful';
+import { commands } from '@/lib/terminal';
 
 export const metadata = {
-    title: "Log",
-    description: "Updates",
+  title: 'Log',
+  description: 'Updates',
 };
 
-export default async function ProjectsPage() {
-    const { items } = await fetchLogs();
-    return (
-        <main className="px-4 py-8 sm:px-8">
-            <h1 className="text-4xl font-bitcount">Log</h1>
-            <p className="my-3 max-w-lg text-sm">
-                Media Coverage / Conference + Things I have done and am proud of :)
-            </p>
-            <section className="mt-6 space-y-4">
-                {items.map((entry) => {
-                    const dateValue = entry.fields.date ? new Date(entry.fields.date) : null;
-                    const date =
-                        dateValue && !Number.isNaN(dateValue.valueOf())
-                            ? dateValue.toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                            })
-                            : "";
+/** yyyy-mm-dd in UTC, so the date never shifts with the server's time zone. */
+const isoDate = (value?: string) => {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.valueOf()) ? date.toISOString().slice(0, 10) : '';
+};
 
-                    const content = (
-                        <div className="">
-                            <div className="text-xs font-bitcount uppercase tracking-[0.08em] text-muted">
-                                {date} {entry.fields.org ? (
-                                    <p className="inline"> | {entry.fields.org}</p>
-                                ) : null}
-                            </div>
-                            <p className="flex items-center gap-2">
-                                <span>{entry.fields.title ?? "Untitled"}</span>
-                                <span className="font-bitcount opacity-0 transition group-hover:opacity-100">
-                                    &gt;
-                                </span>
-                            </p>
+export default async function LogPage() {
+  const { items } = await fetchLogs();
 
-                        </div>
-                    );
+  const steps = [
+    {
+      cwd: '~',
+      command: commands.log,
+      output: (
+        <ul className="mt-2 divide-y divide-line border-y border-line">
+          {items.map((entry) => {
+            const row = (
+              <>
+                <span className="text-muted">{isoDate(entry.fields.date)}</span>
+                <span className="text-yellow">{entry.fields.org ?? ''}</span>
+                <span className="font-grotesk text-xl text-fg group-hover:text-cyan">
+                  {entry.fields.title ?? 'Untitled'}
+                </span>
+                <span className="text-cyan">{entry.fields.link ? '↗' : ''}</span>
+              </>
+            );
+            const className =
+              'group grid grid-cols-[110px_minmax(0,1fr)] items-baseline gap-x-6 gap-y-1 px-1 py-4 text-sm sm:grid-cols-[110px_200px_minmax(0,1fr)_auto]';
+            return (
+              <li key={entry.sys.id}>
+                {entry.fields.link ? (
+                  <Link
+                    className={`${className} hover:bg-panel-2 hover:no-underline`}
+                    href={entry.fields.link}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {row}
+                  </Link>
+                ) : (
+                  <div className={className}>{row}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ),
+    },
+  ];
 
-                    return entry.fields.link ? (
-                        <Link
-                            className="group block"
-                            href={entry.fields.link}
-                            key={entry.sys.id}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            {content}
-                        </Link>
-                    ) : (
-                        <div key={entry.sys.id}>{content}</div>
-                    );
-                })}
-            </section>
-        </main>
-    );
+  return (
+    <main className="px-4 pb-24 sm:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-5 pb-8 pt-12 sm:pt-16">
+        <h1 className="text-[clamp(44px,8vw,112px)] font-extrabold leading-none tracking-[-0.045em]">log</h1>
+        <p className="font-grotesk max-w-sm pb-2 text-xl leading-normal text-body">
+          <span className="font-jp mb-2 block text-base text-muted">{'// ログ'}</span>
+          Media coverage, conferences, and things I have done and am proud of.
+        </p>
+      </div>
+      <TerminalSession className="text-[15px] leading-7" steps={steps} />
+    </main>
+  );
 }

@@ -2,36 +2,50 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { cwdFor, USER_HOST } from '@/lib/terminal';
 
-const links = [
-  { href: '/projects', label: 'Projects' },
-  { href: '/log', label: 'Log' },
+const tabs = [
+  { href: '/', label: 'home', n: 1 },
+  { href: '/projects', label: 'projects', n: 2 },
+  { href: '/log', label: 'log', n: 3 },
 ];
-
-const linkClass =
-  'flex items-center gap-2 py-3 text-lg font-medium hover:underline decoration-vermilion decoration-2 underline-offset-[6px]';
 
 export const Navigation = () => {
   const pathname = usePathname();
 
   return (
-    <header className="relative z-10 border-b border-current/40">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
-        <Link className="flex items-center gap-3.5 text-xl font-bold" href="/">
+    <header className="relative z-10 border-b border-line bg-ink">
+      <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 sm:px-8">
+        <Link className="flex items-center gap-3 text-sm hover:no-underline" href="/">
           <span
             aria-hidden="true"
-            className="font-jp inline-flex size-9 items-center justify-center rounded-sharp bg-vermilion-text text-[15px] font-semibold text-paper"
+            className="font-jp inline-flex size-9 items-center justify-center bg-hot text-sm text-ink"
           >
             樋口
           </span>
-          Remi Higuchi
+          <span className="sr-only">Remi Higuchi</span>
+          <span aria-hidden="true">
+            <span className="text-cyan">{USER_HOST.split('@')[0]}</span>
+            <span className="text-muted">
+              @{USER_HOST.split('@')[1]} {cwdFor(pathname)}
+            </span>
+          </span>
         </Link>
-        <nav aria-label="Main" className="flex gap-6 sm:gap-10">
-          {links.map(({ href, label }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+        <nav aria-label="Main" className="flex gap-1 text-sm">
+          {tabs.map(({ href, label, n }) => {
+            const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
             return (
-              <Link aria-current={active ? 'page' : undefined} className={linkClass} href={href} key={href}>
-                {active ? <span aria-hidden="true" className="size-2 rounded-full bg-vermilion" /> : null}
+              <Link
+                aria-current={active ? 'page' : undefined}
+                className={`px-3.5 py-2.5 hover:no-underline ${
+                  active ? 'bg-hot font-bold text-ink hover:text-ink' : 'text-muted hover:text-cyan'
+                }`}
+                href={href}
+                key={href}
+              >
+                <span aria-hidden="true" className="opacity-70">
+                  {n}
+                </span>{' '}
                 {label}
               </Link>
             );

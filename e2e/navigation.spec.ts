@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 test('the nav reaches every top-level page', async ({ page }) => {
-  // Start away from the home page so the first click does not compete with its background.
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const nav = page.getByRole('navigation', { name: 'Main' });
 
@@ -16,14 +15,23 @@ test('the nav reaches every top-level page', async ({ page }) => {
   await page.getByRole('banner').getByRole('link', { name: 'Remi Higuchi' }).click();
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Remi Higuchi' })).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Projects' }).click();
+  await nav.getByRole('link', { name: 'home' }).click();
+  await expect(page).toHaveURL('/');
 });
 
 test('the current page is marked in the nav', async ({ page }) => {
   const nav = page.getByRole('navigation', { name: 'Main' });
 
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(nav.getByRole('link', { name: 'home' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current', 'page');
+
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.getByRole('link', { name: 'Log' })).not.toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link', { name: 'home' })).not.toHaveAttribute('aria-current', 'page');
 
   await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
   await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
@@ -33,9 +41,23 @@ test('the current page is marked in the nav', async ({ page }) => {
   await expect(nav.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current', 'page');
 });
 
-test('the nav has no Contact link', async ({ page }) => {
+test('the nav is three numbered tabs and has no Contact link', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText(['Projects', 'Log']);
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
+    /1\s+home/,
+    /2\s+projects/,
+    /3\s+log/,
+  ]);
+});
+
+test('the prompt in the header shows where you are', async ({ page }) => {
+  const prompt = () => page.getByRole('banner').getByText(/remi@portfolio/);
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(prompt()).toHaveText('remi@portfolio ~');
+  await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+  await expect(prompt()).toHaveText('remi@portfolio ~/projects');
+  await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
+  await expect(prompt()).toHaveText('remi@portfolio ~/projects/fixture-alpha');
 });
 
 test.describe('on a wide screen', () => {
@@ -54,22 +76,25 @@ test.describe('on a wide screen', () => {
     const left = (box: { x: number } | null) => box?.x;
     const wordmark = await page.getByRole('banner').getByRole('link', { name: 'Remi Higuchi' }).boundingBox();
     const heading = await page.getByRole('heading', { level: 1, name: 'Log' }).boundingBox();
-    const footerHeading = await page.getByRole('contentinfo').getByRole('heading').boundingBox();
-    expect(left(wordmark)).toBe(left(footerHeading));
+    const mode = await page.getByRole('contentinfo').getByText('NORMAL').boundingBox();
+    expect(left(wordmark)).toBe(left(mode));
     expect(left(heading)).toBe(left(wordmark));
   });
 });
 
-test('the footer links to social profiles', async ({ page }) => {
-  await page.goto('/log', { waitUntil: 'domcontentloaded' });
+test('the footer is a status line with the current path, social links and the stack', async ({ page }) => {
+  await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const footer = page.getByRole('contentinfo');
 
+  await expect(footer.getByText('NORMAL')).toBeVisible();
+  await expect(footer.getByText('~/projects')).toBeVisible();
   await expect(footer.getByRole('link', { name: 'LinkedIn' })).toHaveAttribute('href', 'https://linkedin.com/in/hremi');
   await expect(footer.getByRole('link', { name: 'Instagram' })).toHaveAttribute(
     'href',
     'https://instagram.com/remihiguchi',
   );
   await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/remi-h');
+  await expect(footer.getByText('Next.js · TypeScript · Tailwind')).toBeVisible();
   await expect(footer.getByText('© 2026 Remi Higuchi')).toBeVisible();
 });
 

@@ -45,49 +45,62 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
   `claude/redesign`. Only the final `claude/redesign` → `main` PR deploys.
 - Don't require Contentful secrets for build, unit tests or e2e. E2E uses
   `CONTENTFUL_FIXTURES=1`.
+- Every command shown on screen must come from `lib/terminal.ts` and be covered
+  by the real-shell test in `lib/terminal.test.ts`. Changing a command or its
+  output means changing that test in the same PR.
+- E2E runs with `reducedMotion: 'reduce'` so assertions never race a fade-in;
+  `e2e/terminal.spec.ts` opts back in to check the animation itself.
 - Treat a PR as mergeable only when CI is green.
 
 ---
 
 ## Plan
 
-### Phase 0 — Direction (decide first, then freeze here)
-Design language: **simple + bold, with Japanese and Scandinavian restraint.**
+### Phase 0 — Direction (done)
+Design language: **a terminal that shows the engineer who designs.** Visitors
+should read "full-stack software engineer with a designer's eye" from the shell
+alone.
 
-- **Simple (Scandinavian):** generous whitespace, one column of thought at a
-  time, functional typography, soft natural light, no decoration that doesn't
-  carry meaning, calm and legible.
-- **Bold:** oversized type, strong contrast, a single confident accent colour,
-  big image crops. Boldness comes from scale and contrast, not from effects.
-- **Japanese touches:** *ma* (deliberate empty space), asymmetric balance, thin
-  rules and a vertical-rhythm grid, a vermilion (shu-iro) "hanko" seal accent,
-  small vertical Japanese text (e.g. 東京 → ストックホルム) as a quiet detail,
-  paper/sumi tones.
+- **Mono is the system, grotesk is the human.** Everything the machine says
+  (navigation, prompts, labels, paths, code, metadata) is JetBrains Mono.
+  Everything meant to be read and felt (summaries, intro, case-study prose, card
+  titles) is Familjen Grotesk. DotGothic16 (pixel Japanese) is only for the
+  樋口 seal and `// プロジェクト` / `// ログ` section tags.
+- **Colour:** ink `#07080c` page, panel `#0c0e15` (titlebars `#11141e`), line
+  `#232a3b`, text `#dfe3ee`, body `#b4bacb`, muted `#8a91a6`, cyan `#22e5d3`
+  (prompt, links, focus), hot `#ff4a2b` (active tab, seal, locked, errors),
+  magenta `#ff4fa3` and yellow `#ffd84a` (code colours). All text pairs keep
+  ≥ 4.5:1. Hot is only text of 13px and up, or a fill behind ink text.
+- **Shape:** 1px lines, no radii, a faint cyan 64px grid on the page, windows
+  with a titlebar for code and project cards, a vim-style status line as the
+  footer (`NORMAL · main · ~/path · links · Next.js · TypeScript · Tailwind`).
+- **Every command on screen is real.** Commands and their outputs live in
+  `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
+  against a mirror of the content (`cat about.txt`, `ls -t featured`,
+  `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`,
+  `cat log.txt`) and compares `ls -a` output exactly. Never show a command that
+  is not in that test, and never invent flags or output (no `ls --featured`).
+  Folder modes are honest too: `drwxr-xr-x` for projects you can open, `d---------`
+  for locked ones. `ls` output is sorted in byte order (C locale).
+- **Motion:** each page opens with its command typed out (45ms per character),
+  then its output fades in, ending on a fresh prompt with a blinking cursor.
+  Pure CSS (`.t-type`, `.t-in`, `.t-cursor` in `globals.css`, timings from
+  `schedule()` in `lib/terminal.ts`), no JavaScript, no hydration risk. All text
+  is in the DOM from the start, so search engines and screen readers see
+  everything. `prefers-reduced-motion` turns every animation off, even the
+  cursor blink. Keep `--char` in `globals.css` equal to `TIMING.char`.
+- **Kept simple:** one command per page, no interactive shell, no filters.
+- Tailwind note: base element styles (`a`, `body`, focus) live in
+  `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
+  tokens stay in `@theme inline` (next/font defines its variables on `<body>`).
 
-Proposed tokens (adjust in one place, `app/globals.css` `@theme`):
-- Colour: paper `#F4F1EA`, sumi ink `#16140F`, mid grey-warm `#8A857A`,
-  accent vermilion `#D8431F`; optional dark mode inverts paper/ink.
-- Type: one bold grotesk display (e.g. Space Grotesk, already loaded, or Inter
-  Tight) at very large sizes + Noto Serif JP / Noto Sans JP for Japanese and
-  small accents + a sparse monospace for metadata. Drop Bitcount/DotGothic
-  (pixel fonts) — they fight the calm direction.
-- Layout: 12-col grid, 8px spacing scale, thin 1px rules, small radii
-  (≤ 4px) instead of the current `rounded-4xl` pills/cards.
-- Motion: minimal; slow fades/underline reveals; respect
-  `prefers-reduced-motion`. The WebGL `Galaxy` background is removed from the
-  default theme (heavy, off-direction). Keep or retire the file once the new
-  home page ships.
-
-**Approved mockup:** https://claude.ai/artifact/Cv3eBchkaZCu4XQyWQyJUU (home
-desktop + mobile, projects, project detail, log). Decisions locked from it:
-light-only (no dark mode), pixel fonts and Galaxy fully retired, vermilion
-accent, visible-but-small Japanese details (seal 樋口, vertical 東京 →
-ストックホルム, 作品). Final tokens: Familjen Grotesk (display/body), IBM Plex
-Mono (labels, uppercase 13px), Noto Serif JP (Japanese); extra colours
-`#DDD6C7` stone, `#B9C4BD` sage, `#3F3B33` body grey, `#6B665B` muted,
-`#B8341A` accent for small text (contrast). Hero headline copy "Calm tools for a
-loud world." is a mockup suggestion, confirm before shipping. Project/log copy
-in the mockup is placeholder; real content comes from Contentful.
+**Approved mockup:** https://claude.ai/artifact/39NJtQDQLu4SSjsQAgqYGn (home,
+mobile, projects with the typing animation, project detail, log, and a System
+board). It replaces the earlier paper-and-vermilion mockup
+(https://claude.ai/artifact/Cv3eBchkaZCu4XQyWQyJUU), which is kept only for
+reference. Project and log copy in the mockup is placeholder; real content
+comes from Contentful. The location and coordinates lines were removed on
+purpose and should not come back.
 
 ### Phase 1 — Tooling baseline (mirrors `remi-h/micrographics`)
 Goal: same quality gate as micrographics, before touching visuals so the
@@ -160,46 +173,34 @@ doesn't churn tests.
       `CONTENTFUL_FIXTURES=1` on `npm run build` too (Playwright's
       `webServer.env` does this for the e2e build).
 
-### Phase 4 — Redesign (each step its own PR, tests green)
-1. **Foundations:** ✅ done. Tokens in `globals.css` (`paper`, `ink`, `stone`,
-   `sage`, `body`, `muted`, `vermilion`, `vermilion-text`; `font-display`,
-   `font-mono`, `font-jp`), fonts in `layout.tsx`, base link and focus styles,
-   `!important` link hack removed. Surfaces stay dark and `font-bitcount` is
-   an alias of the display font until steps 2-6 migrate the components; flip
-   `--background`/`--foreground` to paper/ink in step 3 and delete the alias
-   in Phase 5. Font tokens must stay in `@theme inline` (next/font defines its
-   variables on `<body>`).
-2. **Shell:** ✅ done. `Navigation` is a top header (seal, wordmark,
-   Projects / Log, vermilion dot + `aria-current` on the active
-   page) and `Footer` is the full-width ink "Say hello." block with social links. The
-   header rule and footer background span the full viewport, their content is
-   capped at `max-w-7xl`. Both
-   inherit the page colour, so they follow the surface flip in step 3. The
-   seal uses `vermilion-text` as its fill: paper on `vermilion` is 3.9:1 and
-   fails contrast for small text. `Navigatin.tsx` is now `Navigation.tsx`.
-3. **Home:** ✅ done. Hero is the name at up to 150px with the role as a mono
-   eyebrow, the vermilion disc and the vertical 東京 → ストックホルム (coordinates and
-   location lines were removed again on review: only the name, role, disc and
-   vertical Japanese remain). Featured projects reuse the project listing's
-   card and grid (`ProjectsTile`), so the two look the same. The site surface is now paper/ink; `Galaxy` and `ogl` are
-   removed. The "Calm tools for a loud world." headline from the mockup was
-   not used, because the copy is unconfirmed: the name is the h1. Older pages
-   got minimal colour fixes to stay legible on paper until steps 4-6.
-4. **Projects index + tile:** card and grid ✅ done in step 3 (`ProjectsTile`:
-   sharp image, title + `01 · year` row, summary, staggered two columns,
-   hover underline, tonal placeholders without a cover, `titleAs` for the
-   heading level). Still to do: the page header from the mockup (huge
-   "Projects" title, count, 作品) and responsive polish.
-5. **Project detail:** reading column (~65ch), big title, meta row
-   (date/duration/link), rewrite `.project-page` rich-text styles for the new
-   tokens.
-6. **Log:** typographic list/table, date column, thin rules.
-7. **Polish:** metadata/OG image, favicon, 404 page, reduced-motion pass,
-   Lighthouse check (perf ≥ 90, a11y 100).
+### Phase 4 — Redesign (terminal)
+Built on the stacked branches, never merged to `main` until complete.
+1. **Foundations:** ✅ terminal tokens, JetBrains Mono / Familjen Grotesk /
+   DotGothic16, base styles in `@layer base`, the CSS animation classes.
+2. **Shell:** ✅ `Navigation` (seal, `remi@portfolio ~/path` prompt that follows
+   the route, numbered tabs with `aria-current`) and `Footer` (the status line).
+   Header rule and footer background are full width; content is capped at
+   `max-w-7xl`.
+3. **Home:** ✅ `cat about.txt` typed, output is the name, role, intro and two
+   buttons (`cd projects`, `cat log.txt`); an `about.ts` code window built from
+   the intro copy; `ls -t featured` heads the featured cards. The mockup
+   headline "Calm tools for a loud world." was not used (unconfirmed copy).
+4. **Projects:** ✅ `cd projects` then `ls -a` typed, the listing is generated
+   from the same data as the cards, then `projects/` and the cards fade in.
+   `ProjectsTile` is shared with the home page.
+5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
+   output is the title, summary, a frontmatter window (only fields that exist:
+   date, duration, link), the cover, and Contentful rich text styled by
+   `.project-page`. `← cd ..` links back to the list.
+6. **Log:** ✅ `cat log.txt`; the output is the entries (ISO date, organisation,
+   title, ↗ for links).
+7. **Polish:** ☐ metadata/OG image, favicon, a terminal-style 404
+   (`bash: cd: <name>: No such file or directory`), Lighthouse check
+   (perf ≥ 90, a11y 100), a final read-through at 375 / 768 / 1280 / 1800.
 
 ### Phase 5 — Cleanup
 - [ ] Remove unused deps/files (`public/*.svg` Next
-      boilerplate, `Cursor.tsx` if unused, the `font-bitcount` alias).
+      boilerplate, `public/lock.png`, `Cursor.tsx`).
 - [ ] Rewrite `README.md` (stack, setup, env vars, testing, deploy) and update
       the Commands table above to "current state".
 - [ ] Add `components/*.test.tsx` for non-trivial components.

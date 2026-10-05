@@ -1,38 +1,112 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { ProjectsTile } from '@/components/ProjectsTile';
+import { TerminalSession } from '@/components/TerminalSession';
+import { Window } from '@/components/Window';
+import { commands, schedule } from '@/lib/terminal';
+
+const intro =
+  'I enjoy shaping experiences at the intersection of design and technology, and collaborating across disciplines to turn complexity into something intuitive and human.';
+
+const steps = [
+  {
+    cwd: '~',
+    command: commands.about,
+    output: (
+      <div className="pb-2 pt-5">
+        <h1 className="text-[clamp(38px,7.2vw,104px)] font-extrabold leading-none tracking-[-0.045em]">Remi Higuchi</h1>
+        <p className="mt-7 text-[clamp(16px,1.6vw,22px)] leading-normal">
+          <span className="text-hot">&gt;</span> Experience Designer <span className="text-muted">&amp;</span> Software
+          Engineer
+        </p>
+        <p className="font-grotesk mt-7 max-w-[560px] text-[21px] leading-[1.55] text-body">{intro}</p>
+        <div className="mt-9 flex flex-wrap gap-3">
+          <Link
+            className="border border-cyan px-[18px] py-3 text-sm text-cyan hover:bg-cyan hover:text-ink hover:no-underline"
+            href="/projects"
+          >
+            {commands.toProjects} ↵
+          </Link>
+          <Link
+            className="border border-line-2 px-[18px] py-3 text-sm hover:border-cyan hover:no-underline"
+            href="/log"
+          >
+            {commands.log}
+          </Link>
+        </div>
+      </div>
+    ),
+  },
+];
+
+const Code = ({ n, children }: { n: number; children: React.ReactNode }) => (
+  <div className="flex gap-4">
+    <span className="w-3.5 text-right text-muted">{n}</span>
+    <span>{children}</span>
+  </div>
+);
 
 export default function Home() {
+  const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: true })));
+  const at = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
+
   return (
     <main className="px-4 sm:px-8">
-      <section className="py-16 sm:py-28">
-        <div className="flex flex-wrap items-start justify-between gap-12">
-          <div className="min-w-0 flex-[1_1_640px]">
-            <p className="mb-8 font-mono text-[13px] uppercase tracking-[0.04em] text-muted">
-              Experience Designer &amp; Software Engineer
-            </p>
-            <h1 className="text-[clamp(52px,10.4vw,150px)] font-bold leading-[0.94] tracking-tighter">Remi Higuchi</h1>
+      <section className="flex flex-wrap items-start justify-between gap-12 py-12 sm:py-20">
+        <TerminalSession className="min-w-0 flex-[1_1_600px] text-lg" steps={steps} />
+
+        <Window
+          className="t-in min-w-[min(100%,300px)] flex-[0_1_460px]"
+          meta="[ read-only ]"
+          style={at(300)}
+          title="about.ts"
+        >
+          <div className="overflow-x-auto px-4 py-[18px] text-[13.5px] leading-[1.75]">
+            <Code n={1}>
+              <span className="text-magenta">export const</span> <span className="text-cyan">remi</span> = {'{'}
+            </Code>
+            <Code n={2}>
+              {'  '}
+              <span className="text-cyan">roles</span>: [
+              <span className="text-yellow">&quot;experience designer&quot;</span>,{' '}
+              <span className="text-yellow">&quot;software engineer&quot;</span>],
+            </Code>
+            <Code n={3}>
+              {'  '}
+              <span className="text-cyan">focus</span>:{' '}
+              <span className="text-yellow">&quot;design and technology&quot;</span>,
+            </Code>
+            <Code n={4}>
+              {'  '}
+              <span className="text-cyan">works</span>:{' '}
+              <span className="text-yellow">&quot;across disciplines&quot;</span>,
+            </Code>
+            <Code n={5}>
+              {'  '}
+              <span className="text-cyan">makes</span>:{' '}
+              <span className="text-yellow">&quot;complexity intuitive&quot;</span>,
+            </Code>
+            <Code n={6}>
+              {'}'} <span className="text-magenta">as const</span>;
+            </Code>
           </div>
-          <div aria-hidden="true" className="flex items-start gap-8">
-            <div className="size-32 rounded-full bg-vermilion" />
-            <div className="font-jp whitespace-nowrap text-[22px] leading-none tracking-[0.35em] [writing-mode:vertical-rl]">
-              東京　→　ストックホルム
-            </div>
-          </div>
-        </div>
-        <p className="mt-16 max-w-[560px] text-2xl leading-snug sm:mt-24">
-          I enjoy shaping experiences at the intersection of design and technology, and collaborating across disciplines
-          to turn complexity into something intuitive and human.
-        </p>
+        </Window>
       </section>
 
       <section className="pb-24">
-        <div className="mb-14 flex items-baseline justify-between border-t border-ink pt-5">
-          <h2 className="text-3xl font-bold tracking-tight">Featured Projects</h2>
-          <Link className="text-lg font-medium" href="/projects">
-            View all →
+        <div
+          className="t-in mb-8 flex flex-wrap items-baseline justify-between gap-3 border-t border-line pt-5"
+          style={at(contentAt)}
+        >
+          <h2 className="text-lg font-medium">
+            <span className="text-cyan">$</span> {commands.featured}
+            <span className="font-jp ml-3 text-muted">{'// プロジェクト'}</span>
+          </h2>
+          <Link className="text-sm text-cyan" href="/projects">
+            view all →
           </Link>
         </div>
-        <ProjectsTile featuredOnly />
+        <ProjectsTile delayMs={contentAt + 150} featuredOnly />
       </section>
     </main>
   );

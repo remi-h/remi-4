@@ -4,12 +4,14 @@ test('colour tokens are available as CSS variables', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const tokens = await page.evaluate(() => {
     const style = getComputedStyle(document.documentElement);
-    return ['--color-paper', '--color-ink', '--color-vermilion'].map((name) => style.getPropertyValue(name).trim());
+    return ['--color-ink', '--color-cyan', '--color-hot', '--color-magenta', '--color-yellow'].map((name) =>
+      style.getPropertyValue(name).trim(),
+    );
   });
-  expect(tokens).toEqual(['#f4f1ea', '#16140f', '#d8431f']);
+  expect(tokens).toEqual(['#07080c', '#22e5d3', '#ff4a2b', '#ff4fa3', '#ffd84a']);
 });
 
-test('font utilities resolve to the new font families', async ({ page }) => {
+test('font utilities resolve to the terminal fonts', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const families = await page.evaluate(() => {
     const probe = (className: string) => {
@@ -20,23 +22,29 @@ test('font utilities resolve to the new font families', async ({ page }) => {
       el.remove();
       return family;
     };
-    return { display: probe('font-display'), mono: probe('font-mono'), jp: probe('font-jp') };
+    return { mono: probe('font-mono'), grotesk: probe('font-grotesk'), jp: probe('font-jp') };
   });
-  expect(families.display).toMatch(/Familjen Grotesk/i);
-  expect(families.mono).toMatch(/IBM Plex Mono/i);
-  expect(families.jp).toMatch(/Noto Serif JP/i);
+  expect(families.mono).toMatch(/JetBrains Mono/i);
+  expect(families.grotesk).toMatch(/Familjen Grotesk/i);
+  expect(families.jp).toMatch(/DotGothic16/i);
 });
 
-test('body text uses the display font, not the old pixel or Space Grotesk fonts', async ({ page }) => {
-  await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(family).toMatch(/Familjen Grotesk/i);
-  expect(family).not.toMatch(/Space Grotesk|Bitcount|DotGothic/i);
+test('mono is the system font and grotesk carries the prose', async ({ page }) => {
+  await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
+  const family = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(await family('body')).toMatch(/JetBrains Mono/i);
+  expect(await family('h1')).toMatch(/JetBrains Mono/i);
+  expect(await family('.project-page')).toMatch(/Familjen Grotesk/i);
+  expect(await family('body')).not.toMatch(/IBM Plex|Space Grotesk|Bitcount/i);
 });
 
-test('links inherit their colour instead of forcing one', async ({ page }) => {
+test('links without a colour class inherit their colour', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
-  const link = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Log' });
+  const link = page.getByRole('banner').getByRole('link', { name: 'Remi Higuchi' });
   const [linkColor, parentColor] = await link.evaluate((el) => [
     getComputedStyle(el).color,
     getComputedStyle(el.parentElement as HTMLElement).color,
@@ -44,7 +52,7 @@ test('links inherit their colour instead of forcing one', async ({ page }) => {
   expect(linkColor).toBe(parentColor);
 });
 
-test('keyboard focus shows a vermilion outline', async ({ page }) => {
+test('keyboard focus shows a cyan outline', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   await page.keyboard.press('Tab');
   const outline = await page.evaluate(() => {
@@ -52,5 +60,5 @@ test('keyboard focus shows a vermilion outline', async ({ page }) => {
     return { width: style.outlineWidth, color: style.outlineColor };
   });
   expect(outline.width).toBe('2px');
-  expect(outline.color).toBe('rgb(216, 67, 31)');
+  expect(outline.color).toBe('rgb(34, 229, 211)');
 });
