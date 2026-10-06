@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Shell } from '@/components/Shell';
 import { TerminalSession } from '@/components/TerminalSession';
 import { Window } from '@/components/Window';
-import { commands, folderName } from '@/lib/terminal';
+import { commands, folderName, schedule } from '@/lib/terminal';
 import { notFound } from 'next/navigation';
 import { fetchProjectBySlug, fetchProjectSlugs, getAssetMap, resolveAssetImage } from '@/lib/contentful';
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
@@ -78,13 +79,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {project.fields.title ?? 'Project'}
       </h1>
       {project.fields.summary ? (
-        <p className="font-grotesk mt-6 max-w-3xl text-[27px] font-medium leading-[1.45] tracking-tight">
+        <p className="font-grotesk mt-6 text-[27px] font-medium leading-[1.45] tracking-tight">
           {project.fields.summary}
         </p>
       ) : null}
 
       {meta.length > 0 || project.fields.link ? (
-        <Window className="mt-8 max-w-md" meta="[ frontmatter ]" title="README.md">
+        <Window className="mt-8 max-w-md" meta="[ frontmatter ]" title="project.yml">
           <div className="px-4 py-[18px] text-sm leading-[1.9]">
             <div className="text-muted">---</div>
             {meta.map(([key, value]) => (
@@ -119,9 +120,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       ) : null}
 
       {description ? (
-        <div className="project-page font-grotesk mt-12 max-w-[700px] text-xl leading-[1.7] text-body">
-          {description}
-        </div>
+        <div className="project-page font-grotesk mt-12 text-xl leading-[1.7] text-body">{description}</div>
       ) : null}
     </div>
   );
@@ -135,10 +134,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     <main className="mx-auto max-w-4xl px-4 pb-24 sm:px-8">
       <p className="pt-8 text-[15px]">
         <Link className="text-muted" href="/projects">
-          ← {commands.parent}
+          ← {commands.back}
         </Link>
       </p>
       <TerminalSession className="pt-6 text-[15px] leading-7" steps={steps} />
+      <p className="mt-16 border-t border-line pt-6 text-[15px]">
+        <Link className="text-muted" href="/projects">
+          ← {commands.back}
+        </Link>
+      </p>
+      <Shell
+        className="mt-8 text-base leading-7"
+        cwd={['projects', folder]}
+        delayMs={schedule(steps.map((s) => ({ command: s.command, hasOutput: s.output != null }))).endAt}
+      />
     </main>
   );
 }

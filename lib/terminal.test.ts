@@ -208,7 +208,7 @@ describe('schedule', () => {
     expect(steps[1].promptAt).toBe(steps[0].outputAt);
     expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -a'.length * TIMING.char + TIMING.pause);
     expect(endAt).toBe(steps[1].outputAt + TIMING.settle);
-    expect(contentAt).toBe(steps[1].outputAt + 150);
+    expect(contentAt).toBe(steps[1].outputAt + TIMING.content);
   });
 
   it('shows commands too long to type already typed, with no typing time', () => {

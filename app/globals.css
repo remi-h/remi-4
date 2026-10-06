@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 .root {
   isolation: isolate;
@@ -8,7 +8,7 @@
   --background: #07080c;
   --foreground: #dfe3ee;
   /* Time to type one character. Keep in sync with TIMING.char in lib/terminal.ts. */
-  --char: 45ms;
+  --char: 20ms;
 }
 
 /* Design tokens: a terminal. Mono is the system (navigation, labels, paths, code),
@@ -98,7 +98,7 @@
 }
 
 .t-in {
-  animation: t-in 400ms ease var(--d, 0ms) backwards;
+  animation: t-in 250ms ease var(--d, 0ms) backwards;
 }
 
 .t-cursor {
@@ -112,10 +112,51 @@
     t-blink 1.1s steps(1) var(--d, 0ms) infinite;
 }
 
+/* The flight on the home page: the trail and bar grow a cell at a time, the plane steps
+   along with them and the percentage counts up. Ends (and starts, without motion) landed. */
+@property --pct {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 100;
+}
+
+@keyframes flight-plane {
+  from {
+    left: 0;
+  }
+}
+
+@keyframes flight-pct {
+  from {
+    --pct: 0;
+  }
+}
+
+.flight-fill {
+  overflow: hidden;
+  white-space: pre;
+  width: calc(var(--cells) * 1ch);
+  animation: t-type var(--fly) steps(var(--cells), end) var(--d, 0ms) backwards;
+}
+
+.flight-plane {
+  left: calc((var(--cells) - 1) * 1ch);
+  animation: flight-plane var(--fly) steps(calc(var(--cells) - 1), end) var(--d, 0ms) backwards;
+}
+
+.flight-pct::before {
+  counter-reset: pct var(--pct);
+  content: counter(pct) '%';
+  animation: flight-pct var(--fly) steps(100, end) var(--d, 0ms) backwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .t-type,
   .t-in,
-  .t-cursor {
+  .t-cursor,
+  .flight-fill,
+  .flight-plane,
+  .flight-pct::before {
     animation: none;
   }
 }
@@ -151,17 +192,17 @@
 }
 
 .project-page h2::before {
-  content: "## ";
+  content: '## ';
   color: var(--color-cyan);
 }
 
 .project-page h3::before {
-  content: "### ";
+  content: '### ';
   color: var(--color-cyan);
 }
 
 .project-page h4::before {
-  content: "#### ";
+  content: '#### ';
   color: var(--color-cyan);
 }
 
@@ -177,7 +218,7 @@
 }
 
 .project-page blockquote::before {
-  content: "> ";
+  content: '> ';
   color: var(--color-hot);
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
@@ -216,7 +257,7 @@
 
 .project-page ul {
   margin: 0 0 1.25rem 1.25rem;
-  list-style: "- ";
+  list-style: '- ';
 }
 
 .project-page ol {

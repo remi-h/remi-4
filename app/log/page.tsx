@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { ClosingPrompt, TerminalSession } from '@/components/TerminalSession';
+import { Shell } from '@/components/Shell';
+import { TerminalSession } from '@/components/TerminalSession';
 import { fetchLogs } from '@/lib/contentful';
-import { commands, schedule } from '@/lib/terminal';
+import { commands, schedule, TIMING } from '@/lib/terminal';
 
 export const metadata = {
   title: 'Log',
@@ -31,14 +32,14 @@ export default async function LogPage() {
 
   return (
     <main className="px-4 sm:px-8">
-      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" closing={false} steps={steps} />
+      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" steps={steps} />
 
       <div className="t-in" style={at(contentAt)}>
         <div className="flex flex-wrap items-end justify-between gap-5 pb-8 pt-12 sm:pt-16">
           <h1 className="text-[clamp(44px,8vw,112px)] font-extrabold leading-none tracking-[-0.045em]">log/</h1>
-          <p className="font-jp pb-2 text-lg text-muted">{'// ログ'}</p>
+          <p className="font-jp pb-2 text-lg text-muted">{'# ログ'}</p>
         </div>
-        <p className="font-grotesk mb-8 max-w-xl text-xl leading-normal text-body">
+        <p className="font-grotesk mb-8 text-xl leading-normal text-body">
           Media coverage, conferences, and things I have done and am proud of.
         </p>
       </div>
@@ -57,7 +58,7 @@ export default async function LogPage() {
               </>
             );
             return (
-              <li className="t-in" key={entry.sys.id} style={at(contentAt + 150 + i * 80)}>
+              <li className="t-in" key={entry.sys.id} style={at(contentAt + TIMING.content + i * TIMING.stagger)}>
                 {entry.fields.link ? (
                   <Link
                     className={`${rowClass} hover:bg-panel-2 hover:no-underline`}
@@ -74,10 +75,10 @@ export default async function LogPage() {
             );
           })}
         </ul>
-        <ClosingPrompt
-          className="mt-10 text-[15px] leading-7"
-          cwd="~/log"
-          delayMs={contentAt + 150 + items.length * 80 + 250}
+        <Shell
+          className="mt-10 text-base leading-7"
+          cwd={['log']}
+          delayMs={contentAt + TIMING.content + items.length * TIMING.stagger + 150}
         />
       </section>
     </main>

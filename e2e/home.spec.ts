@@ -8,14 +8,21 @@ test('the hero shows the name and role, without the location lines', async ({ pa
   await expect(page.getByText('35.68')).toHaveCount(0);
 });
 
-test('the code window reads from the same intro', async ({ page }) => {
+test('the flight log shows Tokyo to Stockholm, landed when motion is reduced', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  const code = page
-    .locator('div')
-    .filter({ hasText: /^about\.ts/ })
-    .first();
-  await expect(code).toContainText('experience designer');
-  await expect(code).toContainText('software engineer');
+  const log = page.getByTestId('flight-log');
+  await expect(log).toContainText('resolving route tokyo → stockholm');
+  await expect(log).toContainText('HND');
+  await expect(log).toContainText('ARN');
+  await expect(log).toContainText('landed · based in stockholm');
+  await expect(log).toContainText('100%');
+});
+
+test('the featured heading is a real command line with a # comment', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'remi@portfolio:~$ ls -t featured # プロジェクト' }),
+  ).toBeVisible();
 });
 
 test('featured projects show only featured fixtures, featured first', async ({ page }) => {
