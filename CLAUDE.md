@@ -16,8 +16,10 @@ This file has two parts: **Conventions** (how to work here, kept current) and
 ## Conventions
 
 ### Where code lives
-`app/` routes (`/`, `/projects`, `/projects/[slug]`, `/log`), `components/`
-React components, `lib/` non-React logic (Contentful). Tests sit next to the
+`app/` routes (`/`, `/projects`, `/projects/[slug]`, `/log`, the 404 in
+`not-found.tsx`, and the generated `opengraph-image.tsx`, `icon.tsx`, `apple-icon.tsx`),
+`components/` React components, `lib/` non-React logic (Contentful, terminal commands,
+OG fonts). `assets/fonts/` holds the font files the generated images need. Tests sit next to the
 file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 
 ### Commands
@@ -75,7 +77,9 @@ alone.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `cd projects`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`). Never show a command that
+  `cd projects`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`, and on the 404
+  `cd <path>` with interactive bash's `bash: cd: <path>: No such file or directory`, then
+  `cd ~`). Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
   Folder modes are honest too, and the test checks them with `ls -ld`:
   `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
@@ -87,6 +91,8 @@ alone.
   is in the DOM from the start, so search engines and screen readers see
   everything. `prefers-reduced-motion` turns every animation off, even the
   cursor blink. Keep `--char` in `globals.css` equal to `TIMING.char`.
+  Commands longer than `MAX_TYPED` (36) characters cannot wrap while typing, so they are
+  shown already typed and wrap like a terminal line.
 - **Kept simple:** one command per page, no interactive shell, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
@@ -197,14 +203,18 @@ Built on the stacked branches, never merged to `main` until complete.
    compares them.
    Project cards are full-height columns with the mode line (`drwxr-xr-x` /
    `drwxr-x---`) pinned to the bottom, so it lines up across a row.
-7. **Polish:** ☐ metadata/OG image, favicon, a terminal-style 404
-   (`bash: cd: <name>: No such file or directory`), Lighthouse check
-   (perf ≥ 90, a11y 100), a final read-through at 375 / 768 / 1280 / 1800.
+7. **Polish:** ✅ title template (`<page> · Remi Higuchi`), OG/Twitter metadata, a
+   terminal-style OG image (the home session as a 1200×630 PNG), the 樋口 seal as favicon
+   and touch icon, a terminal 404 (`cd <path>` →
+   `bash: cd: <path>: No such file or directory`, header and footer stay in `~`), and a
+   read-through at 375 / 768 / 1280 / 1800. Lighthouse: a11y 100 and SEO 100 on every
+   route, desktop perf 100. Mobile perf is 79–92 because the typing intro holds back the
+   largest paint on purpose.
 
 ### Phase 5 — Cleanup
-- [ ] Remove unused deps/files (`public/*.svg` Next
-      boilerplate, `public/lock.png`, `Cursor.tsx`).
-- [ ] Rewrite `README.md` (stack, setup, env vars, testing, deploy) and update
+- [x] Remove unused deps/files (`public/*.svg` Next
+      boilerplate, `public/lock.png`, `Cursor.tsx`, the default `favicon.ico`).
+- [x] Rewrite `README.md` (stack, setup, env vars, testing, deploy) and update
       the Commands table above to "current state".
 - [ ] Add `components/*.test.tsx` for non-trivial components.
 
