@@ -1,15 +1,19 @@
 /** @jest-environment node */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixtureProjects } from './contentful.fixtures';
 import {
+  cdError,
   commands,
   cwdFor,
   FOLDER_MODES,
   folderMode,
   folderName,
+  isTyped,
+  MAX_TYPED,
+  missingPath,
   schedule,
   shellQuote,
   slugify,
@@ -41,8 +45,9 @@ describe('the displayed commands are real shell commands', () => {
 
   afterAll(() => rmSync(root, { recursive: true, force: true }));
 
+  // HOME points at the mirror, so ~ is the site's root as in the prompt.
   const sh = (script: string, cwd = root) =>
-    execFileSync('sh', ['-c', script], { cwd, env: { ...process.env, LC_ALL: 'C' }, encoding: 'utf8' });
+    execFileSync('sh', ['-c', script], { cwd, env: { ...process.env, HOME: root, LC_ALL: 'C' }, encoding: 'utf8' });
 
   it('home: cat about.txt and ls -t featured succeed', () => {
     expect(sh(commands.about)).toContain('Remi Higuchi');
@@ -81,6 +86,26 @@ describe('the displayed commands are real shell commands', () => {
     expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
   });
 
+  it('404: cd into a missing path fails with exactly the error the page shows', () => {
+    for (const path of ['nope', 'projects/does-not-exist', "it's missing"]) {
+      // Interactive bash, as someone typing at a prompt would see it (bash -c adds "line 1:").
+      const result = spawnSync('bash', ['--norc', '--noprofile', '-i', '-c', commands.toPath(path)], {
+        cwd: root,
+        env: { ...process.env, LC_ALL: 'C' },
+        encoding: 'utf8',
+      });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr.split('\n')).toContain(cdError(path));
+    }
+  });
+
+  it('404: cd ~ takes you home, then cd projects works from there', () => {
+    expect(sh(`${commands.home} && pwd`, join(root, 'projects')).trim()).toBe(root);
+    expect(sh(`${commands.home} && ${commands.toProjects} && pwd`, join(root, 'log')).trim()).toBe(
+      join(root, 'projects'),
+    );
+  });
+
   it('every command passes a shell syntax check', () => {
     const all = [
       commands.about,
@@ -90,6 +115,8 @@ describe('the displayed commands are real shell commands', () => {
       commands.readme,
       commands.parent,
       commands.toLog,
+      commands.home,
+      commands.toPath("it's missing"),
     ];
     for (const command of all) {
       expect(() => execFileSync('sh', ['-n', '-c', command])).not.toThrow();
@@ -134,6 +161,15 @@ describe('folder names', () => {
   });
 });
 
+describe('missingPath', () => {
+  it('turns a 404 pathname into the path cd was asked for', () => {
+    expect(missingPath('/nope')).toBe('nope');
+    expect(missingPath('/projects/does-not-exist/')).toBe('projects/does-not-exist');
+    expect(missingPath('/caf%C3%A9')).toBe('café');
+    expect(missingPath('/bad%E0%A4%A')).toBe('bad%E0%A4%A');
+  });
+});
+
 describe('cwdFor', () => {
   it("maps routes to the prompt's working directory", () => {
     expect(cwdFor('/')).toBe('~');
@@ -156,6 +192,13 @@ describe('schedule', () => {
     expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -a'.length * TIMING.char + TIMING.pause);
     expect(endAt).toBe(steps[1].outputAt + TIMING.settle);
     expect(contentAt).toBe(steps[1].outputAt + 150);
+  });
+
+  it('shows commands too long to type already typed, with no typing time', () => {
+    const long = `cd projects/${'x'.repeat(MAX_TYPED)}`;
+    expect(isTyped('cd projects')).toBe(true);
+    expect(isTyped(long)).toBe(false);
+    expect(schedule([{ command: long, hasOutput: true }]).steps[0].outputAt).toBe(TIMING.typeDelay + TIMING.pause);
   });
 
   it('handles an empty session', () => {

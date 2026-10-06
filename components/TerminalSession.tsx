@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { schedule, USER_HOST } from '@/lib/terminal';
+import { isTyped, schedule, USER_HOST } from '@/lib/terminal';
 
 export type SessionStep = {
   /** Working directory shown in the prompt while this command runs. */
@@ -39,11 +39,21 @@ export const TerminalSession = ({
     <div className={className}>
       {steps.map((step, i) => (
         <div key={`${step.cwd}-${step.command}`}>
-          <div className="t-in whitespace-pre-wrap" style={css({ '--d': `${timing.steps[i].promptAt}ms` })}>
+          <div
+            className="t-in overflow-x-auto overflow-y-hidden whitespace-pre-wrap"
+            style={css({ '--d': `${timing.steps[i].promptAt}ms` })}
+          >
             <Prompt cwd={step.cwd} />
-            <span className="t-type" style={css({ '--n': step.command.length, '--d': `${timing.steps[i].typeAt}ms` })}>
-              {step.command}
-            </span>
+            {isTyped(step.command) ? (
+              <span
+                className="t-type"
+                style={css({ '--n': step.command.length, '--d': `${timing.steps[i].typeAt}ms` })}
+              >
+                {step.command}
+              </span>
+            ) : (
+              <span className="break-all">{step.command}</span>
+            )}
           </div>
           {step.output != null ? (
             <div className="t-in" style={css({ '--d': `${timing.steps[i].outputAt}ms` })}>

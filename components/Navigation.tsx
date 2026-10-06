@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cwdFor, USER_HOST } from '@/lib/terminal';
+import { useCwd } from '@/components/useCwd';
+import { USER_HOST } from '@/lib/terminal';
 
 const tabs = [
   { href: '/', label: 'home', n: 1 },
@@ -11,7 +11,7 @@ const tabs = [
 ];
 
 export const Navigation = () => {
-  const pathname = usePathname();
+  const { pathname, notFound, cwd } = useCwd();
 
   return (
     <header className="relative z-10 border-b border-line bg-ink">
@@ -27,13 +27,17 @@ export const Navigation = () => {
           <span aria-hidden="true">
             <span className="text-cyan">{USER_HOST.split('@')[0]}</span>
             <span className="text-muted">
-              @{USER_HOST.split('@')[1]} {cwdFor(pathname)}
+              @{USER_HOST.split('@')[1]} {cwd}
             </span>
           </span>
         </Link>
         <nav aria-label="Main" className="flex gap-1 text-sm">
           {tabs.map(({ href, label, n }) => {
-            const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+            const active = notFound
+              ? false
+              : href === '/'
+                ? pathname === '/'
+                : pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
                 aria-current={active ? 'page' : undefined}

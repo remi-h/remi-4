@@ -42,7 +42,7 @@ const steps = [
 const Code = ({ n, children }: { n: number; children: React.ReactNode }) => (
   <div className="flex gap-4">
     <span className="w-3.5 text-right text-muted">{n}</span>
-    <span>{children}</span>
+    <span className="whitespace-pre-wrap">{children}</span>
   </div>
 );
 
