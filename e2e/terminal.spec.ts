@@ -8,16 +8,19 @@ const ordered = [...fixtureProjects].sort(
 );
 const folders = ordered.map((p, i) => folderName({ slug: p.fields.slug, title: p.fields.title }, i));
 
-test('/projects types only "cd projects" and lands in ~/projects', async ({ page }) => {
+test('/projects types "cd projects" then "ls -a", and the cards are the listing', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 
   await expect(main.getByText(commands.toProjects, { exact: true })).toHaveCount(1);
-  await expect(main.getByText('ls -a')).toHaveCount(0);
+  await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
 
-  // The command runs in ~, and the closing prompt shows where it left you.
+  // cd runs in ~, ls -a in ~/projects, and the fresh prompt comes after the cards.
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
-  await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(1);
+  await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(2);
+  const card = await main.getByRole('heading', { level: 2, name: 'Fixture Alpha' }).boundingBox();
+  const closing = await main.getByText('remi@portfolio:~/projects$').last().boundingBox();
+  expect(closing!.y).toBeGreaterThan(card!.y);
 });
 
 test('/projects lists a folder for every card', async ({ page }) => {
@@ -33,14 +36,17 @@ test('home types "cat about.txt" and heads the featured list with "ls -t feature
   await expect(page.getByRole('heading', { name: new RegExp(commands.featured) })).toBeVisible();
 });
 
-test('/log types only "cd log" and lands in ~/log', async ({ page }) => {
+test('/log types "cd log" then "ls -a", and the entries are the listing', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 
   await expect(main.getByText(commands.toLog, { exact: true })).toHaveCount(1);
-  await expect(main.getByText('ls -a')).toHaveCount(0);
+  await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
-  await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(1);
+  await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(2);
+  const entries = await main.getByTestId('log-entries').boundingBox();
+  const closing = await main.getByText('remi@portfolio:~/log$').last().boundingBox();
+  expect(closing!.y).toBeGreaterThan(entries!.y + entries!.height - 1);
 });
 
 test('/projects and /log share the same layout: command, heading, then content', async ({ page }) => {

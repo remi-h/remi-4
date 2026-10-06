@@ -77,7 +77,7 @@ alone.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `cd projects`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`, and on the 404
+  `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`, and on the 404
   `cd <path>` with interactive bash's `bash: cd: <path>: No such file or directory`, then
   `cd ~`). Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
@@ -93,7 +93,7 @@ alone.
   cursor blink. Keep `--char` in `globals.css` equal to `TIMING.char`.
   Commands longer than `MAX_TYPED` (36) characters cannot wrap while typing, so they are
   shown already typed and wrap like a terminal line.
-- **Kept simple:** one command per page, no interactive shell, no filters.
+- **Kept simple:** a command or two per page, no interactive shell, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
   tokens stay in `@theme inline` (next/font defines its variables on `<body>`).
@@ -189,15 +189,17 @@ Built on the stacked branches, never merged to `main` until complete.
    buttons (`cd projects`, `cd log`); an `about.ts` code window built from
    the intro copy; `ls -t featured` heads the featured cards. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
-4. **Projects:** ✅ only `cd projects` is typed (no `ls -a`), ending on a
-   `~/projects` prompt; then `projects/` and the cards fade in. `ProjectsTile`
+4. **Projects:** ✅ `cd projects` then `ls -a` are typed. The page is the listing: no
+   printed output, `projects/` and the cards fade in, and the fresh `~/projects` prompt
+   with the cursor comes after the cards (`ClosingPrompt`). The real-shell test checks
+   `ls -a` lists `.`, `..` and one folder per card. `ProjectsTile`
    is shared with the home page.
 5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
    output is the title, summary, a frontmatter window (only fields that exist:
    date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`. `← cd ..` links back to the list.
-6. **Log:** ✅ laid out exactly like Projects: only `cd log` is typed, ending on
-   a `~/log` prompt; then `log/` + `// ログ` + the description, then the
+6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a`, the entries are
+   the listing, and the `~/log` prompt follows them; first `log/` + `// ログ` + the description, then the
    entries (ISO date, organisation, title, ↗ for links) fade in like the cards.
    Projects and Log must stay structurally identical; `e2e/terminal.spec.ts`
    compares them.

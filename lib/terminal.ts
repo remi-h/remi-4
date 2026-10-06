@@ -85,6 +85,7 @@ export const commands = {
   readme: 'cat README.md',
   parent: 'cd ..',
   toLog: 'cd log',
+  list: 'ls -a',
   home: 'cd ~',
   /** `cd` into a path that may not exist, as the 404 page shows it. */
   toPath: (path: string) => `cd ${shellQuote(path)}`,
