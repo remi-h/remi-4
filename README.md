@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Remi Higuchi, portfolio
 
-## Getting Started
+The portfolio of Remi Higuchi, Experience Designer & Software Engineer. It is laid out as a
+terminal session: every page opens with a real shell command typed out, then its output.
 
-First, run the development server:
+## Stack
+
+- [Next.js 16](https://nextjs.org) (App Router), React 19, TypeScript
+- Tailwind CSS v4, fonts through `next/font` (JetBrains Mono, Familjen Grotesk, DotGothic16)
+- Content (projects, log) from [Contentful](https://www.contentful.com)
+- OG image and icons generated at build time with `next/og`
+- Jest + Testing Library for unit tests, Playwright + axe for end-to-end tests
+- Deployed on Vercel from `main`
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without Contentful credentials the site still builds and runs, with empty project and log
+lists. To see sample content, run with fixtures:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+CONTENTFUL_FIXTURES=1 npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `CONTENTFUL_SPACE_ID` | for real content | none | Contentful space |
+| `CONTENTFUL_DELIVERY_TOKEN` | for real content | none | Content Delivery API token |
+| `CONTENTFUL_ENVIRONMENT` | no | `master` | Contentful environment |
+| `CONTENTFUL_PROJECT_CONTENT_TYPE` | no | `project` | Content type for projects |
+| `CONTENTFUL_LOG_CONTENT_TYPE` | no | `log` | Content type for log entries |
+| `CONTENTFUL_FIXTURES` | no | unset | `1` uses `lib/contentful.fixtures.ts` instead of Contentful (tests use this) |
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Task | Command |
+| --- | --- |
+| Dev server | `npm run dev` |
+| Lint (0 warnings) | `npm run lint` |
+| Typecheck | `npm run typecheck` |
+| Unit tests | `npm run test` |
+| E2E tests | `npm run test:e2e` |
+| Format files | `npm run format -- <paths>` |
+| Build | `npm run build` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`npm run test:e2e` starts its own server on port 3100 with `CONTENTFUL_FIXTURES=1`: the dev
+server locally, a production build when `CI=true`. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a
+Chromium that is already installed.
 
-## Deploy on Vercel
+## Project layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/          routes: /, /projects, /projects/[slug], /log, the 404, OG image and icons
+components/   React components (Navigation, Footer, TerminalSession, ProjectsTile, ...)
+lib/          Contentful client and fixtures, terminal commands and timing, OG fonts
+e2e/          Playwright specs
+assets/fonts/ font files for the generated images
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## The commands are real
+
+Every command shown on screen comes from `lib/terminal.ts`, and `lib/terminal.test.ts` runs
+each one in a real shell against a mirror of the site's content. That includes the folder
+modes (`drwxr-xr-x` for public projects, `drwxr-x---` for locked ones) and the 404's
+`bash: cd: <path>: No such file or directory`. To change a command or its output, change
+that test too.
+
+## CI and deploy
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck + build + unit tests, and
+the Playwright suite on every pull request and on `main`. Claude Code reviews pull requests
+(`.github/workflows/claude-code-review.yml`). Vercel deploys `main`.
+
+See `CLAUDE.md` for conventions and the design system.

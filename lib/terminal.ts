@@ -16,6 +16,14 @@ export const TIMING = {
   settle: 350,
 } as const;
 
+/**
+ * Longest command that is typed out. A typed line cannot wrap, and after the prompt a 375px
+ * screen fits about 38 characters, so longer commands (a long project folder, a 404 path)
+ * are shown already typed and wrap like a real terminal line.
+ */
+export const MAX_TYPED = 36;
+export const isTyped = (command: string) => command.length <= MAX_TYPED;
+
 export type ScheduleInput = { command: string; hasOutput: boolean };
 
 export type ScheduledStep = {
@@ -30,7 +38,8 @@ export const schedule = (steps: ScheduleInput[]) => {
   const scheduled: ScheduledStep[] = steps.map(({ command, hasOutput }) => {
     const promptAt = t;
     const typeAt = promptAt + TIMING.typeDelay;
-    const outputAt = typeAt + command.length * TIMING.char + TIMING.pause;
+    const typing = isTyped(command) ? command.length * TIMING.char : 0;
+    const outputAt = typeAt + typing + TIMING.pause;
     t = hasOutput ? outputAt + TIMING.settle : outputAt;
     return { promptAt, typeAt, outputAt };
   });
@@ -76,7 +85,23 @@ export const commands = {
   readme: 'cat README.md',
   parent: 'cd ..',
   toLog: 'cd log',
+  home: 'cd ~',
+  /** `cd` into a path that may not exist, as the 404 page shows it. */
+  toPath: (path: string) => `cd ${shellQuote(path)}`,
 } as const;
+
+/** What an interactive bash prints when `cd` cannot find the directory. */
+export const cdError = (path: string) => `bash: cd: ${path}: No such file or directory`;
+
+/** The path a 404 tried to reach, relative to ~ and decoded, e.g. `projects/nope`. */
+export const missingPath = (pathname: string) => {
+  const trimmed = pathname.replace(/^\/+|\/+$/g, '');
+  try {
+    return decodeURIComponent(trimmed) || '.';
+  } catch {
+    return trimmed;
+  }
+};
 
 /** The working directory shown in the prompt for a route. */
 export const cwdFor = (pathname: string) => (pathname === '/' ? '~' : `~${pathname.replace(/\/$/, '')}`);
