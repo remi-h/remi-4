@@ -10,6 +10,14 @@ export type SessionStep = {
 
 const css = (vars: Record<string, string | number>) => vars as CSSProperties;
 
+/** A fresh prompt with a blinking cursor: where a session ends. */
+export const ClosingPrompt = ({ cwd, delayMs, className }: { cwd: string; delayMs: number; className?: string }) => (
+  <div aria-hidden="true" className={`t-in ${className ?? ''}`} style={css({ '--d': `${delayMs}ms` })}>
+    <Prompt cwd={cwd} />
+    <span className="t-cursor" style={css({ '--d': `${delayMs}ms` })} />
+  </div>
+);
+
 export const Prompt = ({ cwd }: { cwd: string }) => (
   <>
     <span className="text-cyan">{USER_HOST}</span>
@@ -26,11 +34,14 @@ export const TerminalSession = ({
   steps,
   className,
   endCwd,
+  closing = true,
 }: {
   steps: SessionStep[];
   className?: string;
   /** Working directory for the closing prompt, when the last command changed it (e.g. `cd`). */
   endCwd?: string;
+  /** False when the page content is the last command's output and a ClosingPrompt follows it. */
+  closing?: boolean;
 }) => {
   const timing = schedule(steps.map((step) => ({ command: step.command, hasOutput: step.output != null })));
   const closingCwd = endCwd ?? steps[steps.length - 1]?.cwd ?? '~';
@@ -39,10 +50,7 @@ export const TerminalSession = ({
     <div className={className}>
       {steps.map((step, i) => (
         <div key={`${step.cwd}-${step.command}`}>
-          <div
-            className="t-in overflow-x-auto overflow-y-hidden whitespace-pre-wrap"
-            style={css({ '--d': `${timing.steps[i].promptAt}ms` })}
-          >
+          <div className="t-in whitespace-pre-wrap" style={css({ '--d': `${timing.steps[i].promptAt}ms` })}>
             <Prompt cwd={step.cwd} />
             {isTyped(step.command) ? (
               <span
@@ -62,10 +70,7 @@ export const TerminalSession = ({
           ) : null}
         </div>
       ))}
-      <div aria-hidden="true" className="t-in" style={css({ '--d': `${timing.endAt}ms` })}>
-        <Prompt cwd={closingCwd} />
-        <span className="t-cursor" style={css({ '--d': `${timing.endAt}ms` })} />
-      </div>
+      {closing ? <ClosingPrompt cwd={closingCwd} delayMs={timing.endAt} /> : null}
     </div>
   );
 };

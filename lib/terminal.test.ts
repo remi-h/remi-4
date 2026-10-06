@@ -3,7 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fixtureProjects } from './contentful.fixtures';
+import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
 import {
   cdError,
   commands,
@@ -20,6 +20,10 @@ import {
   TIMING,
 } from './terminal';
 
+// Log entries have no file names on the site; in the mirror each is a file named by date and title.
+const logEntryFile = (fields: { date?: string; title?: string }) =>
+  `${fields.date ?? ''}_${slugify(fields.title ?? '')}`;
+
 const projects = fixtureProjects.map((p, i) => ({
   folder: folderName({ slug: p.fields.slug, title: p.fields.title }, i),
   featured: Boolean(p.fields.featured),
@@ -34,6 +38,7 @@ describe('the displayed commands are real shell commands', () => {
     root = mkdtempSync(join(tmpdir(), 'portfolio-'));
     writeFileSync(join(root, 'about.txt'), 'Remi Higuchi\n');
     mkdirSync(join(root, 'log'));
+    for (const entry of fixtureLogs) writeFileSync(join(root, 'log', logEntryFile(entry.fields)), '');
     mkdirSync(join(root, 'featured'));
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured } of projects) {
@@ -82,6 +87,17 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
+  it('projects: ls -a in ~/projects lists . and .. plus one folder per card', () => {
+    // The cards are the listing, so the page shows ls -a without printing it.
+    expect(sh(`${commands.toProjects} && ${commands.list}`).trim().split('\n')).toEqual(
+      ['.', '..', ...projects.map((p) => p.folder)].sort(),
+    );
+  });
+
+  it('log: ls -a in ~/log lists . and .. plus one file per entry', () => {
+    expect(sh(`${commands.toLog} && ${commands.list}`).trim().split('\n')).toHaveLength(2 + fixtureLogs.length);
+  });
+
   it('log: cd log succeeds and leaves you in ~/log', () => {
     expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
   });
@@ -115,6 +131,7 @@ describe('the displayed commands are real shell commands', () => {
       commands.readme,
       commands.parent,
       commands.toLog,
+      commands.list,
       commands.home,
       commands.toPath("it's missing"),
     ];

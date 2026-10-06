@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { TerminalSession } from '@/components/TerminalSession';
+import { ClosingPrompt, TerminalSession } from '@/components/TerminalSession';
 import { fetchLogs } from '@/lib/contentful';
 import { commands, schedule } from '@/lib/terminal';
 
@@ -21,13 +21,17 @@ const rowClass =
 // Laid out like the projects page: the command, then the page heading, then the entries.
 export default async function LogPage() {
   const { items } = await fetchLogs();
-  const steps = [{ cwd: '~', command: commands.toLog }];
+  // The page itself is the output of ls -a: the heading, then one entry per item.
+  const steps = [
+    { cwd: '~', command: commands.toLog },
+    { cwd: '~/log', command: commands.list },
+  ];
   const { contentAt } = schedule(steps.map((s) => ({ command: s.command, hasOutput: false })));
   const at = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
 
   return (
     <main className="px-4 sm:px-8">
-      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" endCwd="~/log" steps={steps} />
+      <TerminalSession className="pt-10 text-[15px] leading-7 sm:pt-14" closing={false} steps={steps} />
 
       <div className="t-in" style={at(contentAt)}>
         <div className="flex flex-wrap items-end justify-between gap-5 pb-8 pt-12 sm:pt-16">
@@ -70,6 +74,11 @@ export default async function LogPage() {
             );
           })}
         </ul>
+        <ClosingPrompt
+          className="mt-10 text-[15px] leading-7"
+          cwd="~/log"
+          delayMs={contentAt + 150 + items.length * 80 + 250}
+        />
       </section>
     </main>
   );
