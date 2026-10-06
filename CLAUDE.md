@@ -85,7 +85,7 @@ alone.
   Folder modes are honest too, and the test checks them with `ls -ld`:
   `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
   rwx, group r-x (the people given access), everyone else nothing. `ls` output is sorted in byte order (C locale).
-- **Motion:** each page opens with its command typed out (20ms per character, kept quick so nobody waits; only the home flight takes its time),
+- **Motion:** each page opens with its command typed out (12ms per character, kept quick so nobody waits; only the home flight takes its time),
   then its output fades in, ending on a fresh prompt with a blinking cursor.
   Pure CSS (`.t-type`, `.t-in`, `.t-cursor` in `globals.css`, timings from
   `schedule()` in `lib/terminal.ts`), no JavaScript, no hydration risk. All text
@@ -196,9 +196,10 @@ Built on the stacked branches, never merged to `main` until complete.
    Header rule and footer background are full width; content is capped at
    `max-w-7xl`.
 3. **Home:** ✅ `cat about.txt` typed, output is the name, role, intro and two
-   buttons (`cd projects`, `cd log`); a `tokyo → stockholm` window (`FlightLog`) that
-   plays an install-style log of the flight (plane, progress bar, percentage, then
-   "landed · based in stockholm"), CSS only; `remi@portfolio:~$ ls -t featured # プロジェクト`
+   buttons (`cd projects`, `cd log`); a `tokyo → stockholm` window (`FlightLog`): a plane
+   flies a curved HND → ARN route on a CSS motion path, drawing its contrail, while a
+   progress bar, percentage and distance (8170 km) fill, then Stockholm lights up and
+   "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -t featured # プロジェクト`
    heads the featured cards, and the working prompt ends the page. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
 4. **Projects:** ✅ `cd projects` then `ls -a` are typed. The page is the listing: no

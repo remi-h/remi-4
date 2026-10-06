@@ -78,7 +78,7 @@ export default async function LogPage() {
         <Shell
           className="mt-10 text-base leading-7"
           cwd={['log']}
-          delayMs={contentAt + TIMING.content + items.length * TIMING.stagger + 150}
+          delayMs={contentAt + TIMING.content + items.length * TIMING.stagger + 80}
         />
       </section>
     </main>

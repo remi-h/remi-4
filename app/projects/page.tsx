@@ -31,7 +31,7 @@ export default function ProjectsPage() {
       </div>
       <section className="border-t border-line pb-24 pt-8">
         <ProjectsTile delayMs={contentAt + TIMING.content} threeUp titleAs="h2" />
-        <Shell className="mt-10 text-base leading-7" cwd={['projects']} delayMs={contentAt + 300} />
+        <Shell className="mt-10 text-base leading-7" cwd={['projects']} delayMs={contentAt + 150} />
       </section>
     </main>
   );

@@ -48,7 +48,7 @@ export default function Home() {
       <section className="flex flex-wrap items-start justify-between gap-12 py-12 sm:py-20">
         <TerminalSession className="min-w-0 flex-[1_1_600px] text-lg" steps={steps} />
 
-        <FlightLog className="t-in min-w-[min(100%,300px)] flex-[0_1_460px]" delayMs={450} style={at(150)} />
+        <FlightLog className="t-in min-w-[min(100%,300px)] flex-[0_1_460px]" delayMs={250} style={at(80)} />
       </section>
 
       <section className="pb-24">
@@ -65,7 +65,7 @@ export default function Home() {
           </Link>
         </div>
         <ProjectsTile delayMs={contentAt + TIMING.content} featuredOnly />
-        <Shell className="mt-10 text-base leading-7" cwd={[]} delayMs={contentAt + 300} />
+        <Shell className="mt-10 text-base leading-7" cwd={[]} delayMs={contentAt + 150} />
       </section>
     </main>
   );

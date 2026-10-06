@@ -7,17 +7,17 @@ export const USER_HOST = 'remi@portfolio';
 /** Keep in sync with --char in app/globals.css. */
 export const TIMING = {
   /** Time to type one character. */
-  char: 20,
+  char: 12,
   /** Wait before the first character of a line is typed. */
-  typeDelay: 80,
+  typeDelay: 40,
   /** Wait between finishing a command and its output (or the next prompt). */
-  pause: 120,
+  pause: 60,
   /** Wait after output before the next prompt or the final cursor. */
-  settle: 150,
+  settle: 80,
   /** Gap between a session's last output and the content that follows it. */
-  content: 60,
+  content: 30,
   /** Gap between consecutive cards or log rows fading in. */
-  stagger: 50,
+  stagger: 30,
 } as const;
 
 /**
