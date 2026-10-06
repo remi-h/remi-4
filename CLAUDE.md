@@ -197,7 +197,8 @@ Built on the stacked branches, never merged to `main` until complete.
    `max-w-7xl`.
 3. **Home:** ✅ `cat about.txt` typed, output is the name, role, intro and two
    buttons (`cd projects`, `cd log`); a `tokyo → stockholm` window (`FlightLog`): a plane
-   flies a curved HND → ARN route on a CSS motion path, drawing its contrail, while a
+   flies a full-width parabolic HND → ARN arc (steady move across plus a quadratic
+   rise and fall, tilting with the slope), drawing its contrail, while a
    progress bar, percentage and distance (8170 km) fill, then Stockholm lights up and
    "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -t featured # プロジェクト`
    heads the featured cards, and the working prompt ends the page. The mockup

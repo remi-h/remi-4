@@ -79,15 +79,24 @@ describe('the working prompt matches real bash', () => {
 
   /** Runs a line in interactive bash in ~/<cwd>; returns its output and where it ended up. */
   const bash = (cwd: string[], line: string) => {
-    const script = `cd ${JSON.stringify(join(root, ...cwd))} || exit 9\n{\n:\n${line}\n} 2>&1\necho "@@$PWD"`;
+    const dir = join(root, ...cwd);
+    // A page can open the prompt inside a locked folder (it has a page but is 750). bash is
+    // started there directly, as the page does: as root we enter it before dropping to
+    // nobody; without root it is opened for the start and locked again from inside.
+    const startsLocked = cwd.length >= 2 && cwd[0] === 'projects' && cwd[1] === gamma;
+    if (startsLocked && !isRoot) chmodSync(dir, 0o700);
+    const relock = startsLocked && !isRoot ? `${which('chmod')} 000 "$PWD"\n` : '';
+    const script = `${relock}{\n:\n${line}\n} 2>&1\necho "@@$PWD"`;
     const args = ['--norc', '--noprofile', '-i', '-c', script];
     const options = {
-      env: { PATH: bin, HOME: root, LC_ALL: 'C', NODE_ENV: 'test' as const },
+      cwd: dir,
+      env: { PATH: bin, HOME: root, PWD: dir, LC_ALL: 'C', NODE_ENV: 'test' as const },
       encoding: 'utf8' as const,
     };
     const result = isRoot
       ? spawnSync(which('setpriv'), ['--reuid=65534', '--regid=65534', '--clear-groups', BASH, ...args], options)
       : spawnSync(BASH, args, options);
+    if (startsLocked && !isRoot) chmodSync(dir, 0o000);
     const lines = result.stdout.replaceAll(root, HOME).split('\n');
     const end = lines.findIndex((l) => l.startsWith('@@'));
     const pwd = lines[end].slice(2);
@@ -105,6 +114,10 @@ describe('the working prompt matches real bash', () => {
     [[], 'ls log'],
     [[], 'ls -at log'],
     [[], 'ls -A'],
+    [[], 'ls --all'],
+    [[], 'ls --almost-all projects'],
+    [[], 'ls --reverse log'],
+    [[], 'ls -- projects'],
     [[], 'ls -r projects'],
     [[], 'ls -1t log'],
     [[], 'ls -t featured # プロジェクト'],
@@ -136,6 +149,10 @@ describe('the working prompt matches real bash', () => {
     [[], 'cd log projects'],
     [[], 'cd "log"'],
     [['projects', alpha], 'cd ..'],
+    // Leaving a locked folder works: bash takes .. off the path without touching the folder.
+    [['projects', gamma], 'cd ..'],
+    [['projects', gamma], 'cd ../../log'],
+    [['projects', gamma], 'cd'],
     [['projects', alpha], 'cd .. # go back'],
     [['projects', alpha], 'cd ../..'],
     [['projects', alpha], 'cd'],
@@ -200,6 +217,9 @@ describe('tokenize', () => {
 
   it('says plainly when a real ls option is not implemented here', () => {
     expect(run(tree, [], 'ls -l').output).toEqual(['ls: -l is not supported in this shell (try -a, -A, -t, -r)']);
+    expect(run(tree, [], 'ls --help').output).toEqual([
+      'ls: --help is not supported in this shell (try -a, -A, -t, -r)',
+    ]);
   });
 
   it('clear empties the screen and keeps the cwd', () => {

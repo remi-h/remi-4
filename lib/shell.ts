@@ -161,6 +161,29 @@ const resolve = (tree: ShellDir, cwd: string[], arg: string): Resolved => {
   return { node, path };
 };
 
+/** The `~/…` path bash's `cd -L` would try for an argument, with . and .. applied as text. */
+const logicalPath = (cwd: string[], arg: string) => {
+  let parts: string[];
+  if (arg.startsWith('/')) {
+    const home = HOME.split('/').filter(Boolean);
+    const rest = arg.split('/').filter(Boolean);
+    // Anything outside $HOME does not exist in this shell.
+    if (rest.length < home.length || home.some((p, i) => rest[i] !== p)) return arg;
+    parts = rest.slice(home.length);
+  } else if (arg === '~' || arg.startsWith('~/')) {
+    parts = arg.split('/').slice(1);
+  } else {
+    parts = [...cwd, ...arg.split('/')];
+  }
+  const path: string[] = [];
+  for (const part of parts) {
+    if (part === '' || part === '.') continue;
+    if (part === '..') path.pop();
+    else path.push(part);
+  }
+  return ['~', ...path].join('/');
+};
+
 export type ShellResult = { output: string[]; cwd: string[]; clear?: boolean };
 
 const sortEntries = (entries: [string, ShellNode][], byTime: boolean) =>
@@ -179,8 +202,19 @@ const ls = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
   let byTime = false;
   let reverse = false;
   const targets: string[] = [];
+  // GNU long options for the flags this shell has; any other long option says so.
+  const LONG: Record<string, string> = { all: 'a', 'almost-all': 'A', reverse: 'r' };
+  let optionsDone = false;
   for (const arg of args) {
-    if (arg.startsWith('-') && arg.length > 1) {
+    if (!optionsDone && arg === '--') {
+      optionsDone = true;
+    } else if (!optionsDone && arg.startsWith('--')) {
+      const flag = LONG[arg.slice(2)];
+      if (!flag) return [`ls: ${arg} is not supported in this shell (try -a, -A, -t, -r)`];
+      if (flag === 'a') all = true;
+      else if (flag === 'A') almostAll = true;
+      else reverse = true;
+    } else if (!optionsDone && arg.startsWith('-') && arg.length > 1) {
       for (const flag of arg.slice(1)) {
         if (flag === 'a') all = true;
         else if (flag === 'A') almostAll = true;
@@ -266,7 +300,9 @@ export const run = (tree: ShellDir, cwd: string[], line: string): ShellResult =>
     case 'cd': {
       if (args.length > 1) return { output: ['bash: cd: too many arguments'], cwd };
       const target = args[0] ?? '~';
-      const found = resolve(tree, cwd, target);
+      // Like bash's default `cd -L`: `..` is taken off the path as text first, so leaving a
+      // folder never needs permission on the folder you are in.
+      const found = resolve(tree, [], logicalPath(cwd, target));
       if (!('node' in found)) {
         const reason =
           found.error === 'denied'

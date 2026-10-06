@@ -1,23 +1,16 @@
 import type { CSSProperties } from 'react';
 import { Window } from '@/components/Window';
 
-const CELLS = 24;
 const FLY_MS = 2400;
 /** Tokyo (HND) to Stockholm (ARN) along the great circle, roughly. */
 const DISTANCE_KM = 8170;
 
-// The route is drawn in a fixed 300×104 box (narrow enough for a 375px phone) so the plane (an HTML element on a CSS motion
-// path) and the SVG arc share the same pixel coordinates.
-const W = 300;
-const H = 104;
-/** Where the cities sit: above their labels, at either end of the arc. */
-const GROUND = 76;
-const ROUTE = `M 12 ${GROUND} Q ${W / 2} -8 ${W - 12} ${GROUND}`;
-
 /**
- * Tokyo to Stockholm as a package-install log: the plane takes off from HND, banks along
- * the arc drawing its contrail, and lands at ARN while the distance and progress bar fill.
- * Pure CSS (.flight-* in globals.css); with reduced motion it shows the landed state.
+ * Tokyo to Stockholm as a package-install log, full width at any size: the plane climbs
+ * from HND, tilts over the top and comes down at ARN, drawing its contrail, while the
+ * progress bar fills and the distance counts up. The arc is a parabola, so the plane can
+ * follow it with a constant left-to-right move and a rise-and-fall on top (see .flight-* in
+ * globals.css). Reduced motion shows it landed.
  */
 export const FlightLog = ({
   delayMs,
@@ -28,13 +21,7 @@ export const FlightLog = ({
   className?: string;
   style?: CSSProperties;
 }) => {
-  const vars = {
-    '--cells': CELLS,
-    '--fly': `${FLY_MS}ms`,
-    '--d': `${delayMs}ms`,
-    '--km': DISTANCE_KM,
-    '--route': `path('${ROUTE}')`,
-  } as CSSProperties;
+  const vars = { '--fly': `${FLY_MS}ms`, '--d': `${delayMs}ms`, '--km': DISTANCE_KM } as CSSProperties;
   const landed = { '--d': `${delayMs + FLY_MS}ms` } as CSSProperties;
 
   return (
@@ -45,33 +32,55 @@ export const FlightLog = ({
           <span className="text-muted">→</span> <span className="text-yellow">stockholm</span>
         </div>
 
-        <div aria-hidden="true" className="relative my-2 max-w-full overflow-hidden" style={{ width: W, height: H }}>
-          <svg className="absolute inset-0" fill="none" height={H} viewBox={`0 0 ${W} ${H}`} width={W}>
-            {/* The planned route, then the contrail drawn over it as the plane flies. */}
-            <path d={ROUTE} stroke="var(--color-line-2)" strokeDasharray="2 6" strokeWidth="1.5" />
-            <path className="flight-route" d={ROUTE} pathLength={1} stroke="var(--color-cyan)" strokeWidth="1.5" />
-            <circle cx="12" cy={GROUND} fill="var(--color-yellow)" r="3.5" />
-            <circle className="flight-dest" cx={W - 12} cy={GROUND} r="3.5" />
-            <circle className="flight-ping" cx={W - 12} cy={GROUND} fill="none" r="3.5" stroke="var(--color-cyan)" />
-          </svg>
-          <svg className="flight-jet absolute left-0 top-0" height="18" viewBox="0 0 24 24" width="18">
-            {/* A plane seen from above, nose to the right. */}
-            <path
-              d="M22 12c0-.8-.7-1.4-1.5-1.4H15L10 3H7.6l2.5 7.6H5.2L3.4 8H1.6l1.2 4-1.2 4h1.8l1.8-2.6h4.9L7.6 21H10l5-7.6h5.5c.8 0 1.5-.6 1.5-1.4z"
-              fill="var(--color-hot)"
-            />
-          </svg>
+        <div aria-hidden="true" className="relative my-2 h-[104px]">
+          {/* The route box: HND at its bottom left, ARN at its bottom right. */}
+          <div className="absolute inset-x-[6px] top-[8px] h-[68px]">
+            <svg
+              className="absolute inset-0 h-full w-full overflow-visible"
+              fill="none"
+              preserveAspectRatio="none"
+              viewBox="0 0 100 100"
+            >
+              {/* A quadratic curve whose x moves evenly: the same parabola the plane flies. */}
+              <path
+                d="M 0 100 Q 50 -100 100 100"
+                stroke="var(--color-line-2)"
+                strokeDasharray="2 6"
+                strokeWidth="1.5"
+                vectorEffect="non-scaling-stroke"
+              />
+              <path
+                className="flight-trail"
+                d="M 0 100 Q 50 -100 100 100"
+                stroke="var(--color-cyan)"
+                strokeWidth="1.5"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <span className="absolute bottom-0 left-0 size-[7px] -translate-x-1/2 translate-y-1/2 rounded-full bg-yellow" />
+            <span className="flight-dest absolute bottom-0 right-0 size-[7px] translate-x-1/2 translate-y-1/2 rounded-full" />
+            <span className="flight-ping absolute bottom-0 right-0 size-[7px] translate-x-1/2 translate-y-1/2 rounded-full border border-cyan" />
+            <span className="flight-x absolute bottom-0 top-0">
+              <span className="flight-y absolute left-0">
+                <svg className="flight-tilt block" height="18" viewBox="0 0 24 24" width="18">
+                  {/* A plane seen from above, nose to the right. */}
+                  <path
+                    d="M22 12c0-.8-.7-1.4-1.5-1.4H15L10 3H7.6l2.5 7.6H5.2L3.4 8H1.6l1.2 4-1.2 4h1.8l1.8-2.6h4.9L7.6 21H10l5-7.6h5.5c.8 0 1.5-.6 1.5-1.4z"
+                    fill="var(--color-hot)"
+                  />
+                </svg>
+              </span>
+            </span>
+          </div>
           <span className="absolute bottom-0 left-0 text-[12px] leading-none text-cyan">HND</span>
           <span className="absolute bottom-0 right-0 text-[12px] leading-none text-cyan">ARN</span>
         </div>
 
-        <div className="whitespace-pre">
-          <span className="text-muted">[</span>
-          <span aria-hidden="true" className="relative inline-block align-bottom" style={{ width: `${CELLS}ch` }}>
-            <span className="text-line-2">{'░'.repeat(CELLS)}</span>
-            <span className="flight-fill absolute left-0 top-0 text-cyan">{'█'.repeat(CELLS)}</span>
+        <div className="flex items-center gap-[1ch]">
+          <span aria-hidden="true" className="flight-track relative h-[1.1em] flex-1 border border-line-2">
+            <span className="flight-fill absolute inset-y-0 left-0 bg-cyan" />
           </span>
-          <span className="text-muted">]</span> <span aria-hidden="true" className="flight-pct text-fg" />
+          <span aria-hidden="true" className="flight-pct min-w-[4ch] text-right text-fg" />
           <span className="sr-only">100%</span>
         </div>
         <div className="text-muted">
