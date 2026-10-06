@@ -10,7 +10,6 @@ import {
   FOLDER_MODES,
   folderMode,
   folderName,
-  lsAll,
   schedule,
   shellQuote,
   slugify,
@@ -27,10 +26,10 @@ describe('the displayed commands are real shell commands', () => {
   let root: string;
 
   beforeAll(() => {
-    // A mirror of what the site claims exists: ~/about.txt, ~/log.txt, ~/featured and ~/projects.
+    // A mirror of what the site claims exists: ~/about.txt, ~/featured, ~/projects and ~/log.
     root = mkdtempSync(join(tmpdir(), 'portfolio-'));
     writeFileSync(join(root, 'about.txt'), 'Remi Higuchi\n');
-    writeFileSync(join(root, 'log.txt'), '2026-02-10 Fixture Conf Fixture talk\n');
+    mkdirSync(join(root, 'log'));
     mkdirSync(join(root, 'featured'));
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured } of projects) {
@@ -55,9 +54,8 @@ describe('the displayed commands are real shell commands', () => {
     );
   });
 
-  it('projects: cd projects then ls -a prints exactly what the page shows', () => {
-    const printed = sh(`${commands.toProjects} && ${commands.listAll}`).trim().split('\n');
-    expect(printed).toEqual(lsAll(projects.map((p) => p.folder)));
+  it('projects: cd projects succeeds and leaves you in ~/projects', () => {
+    expect(sh(`${commands.toProjects} && pwd`).trim()).toBe(join(root, 'projects'));
   });
 
   it('project detail: cd projects/<folder> then cat README.md, then cd .. all succeed', () => {
@@ -79,8 +77,8 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  it('log: cat log.txt succeeds', () => {
-    expect(sh(commands.log)).toContain('Fixture talk');
+  it('log: cd log succeeds and leaves you in ~/log', () => {
+    expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
   });
 
   it('every command passes a shell syntax check', () => {
@@ -88,11 +86,10 @@ describe('the displayed commands are real shell commands', () => {
       commands.about,
       commands.featured,
       commands.toProjects,
-      commands.listAll,
       commands.toProject("my project's name"),
       commands.readme,
       commands.parent,
-      commands.log,
+      commands.toLog,
     ];
     for (const command of all) {
       expect(() => execFileSync('sh', ['-n', '-c', command])).not.toThrow();
@@ -129,10 +126,6 @@ describe('folder names', () => {
     expect(folderName({ slug: 'alpha', title: 'Alpha Project' }, 0)).toBe('alpha');
     expect(folderName({ title: 'Locked Thing' }, 1)).toBe('locked-thing');
     expect(folderName({}, 2)).toBe('project-03');
-  });
-
-  it('lists . and .. first, then names in byte order', () => {
-    expect(lsAll(['project-02', 'alpha', 'Zed'])).toEqual(['.', '..', 'Zed', 'alpha', 'project-02']);
   });
 
   it('shows a folder mode that matches whether it can be opened', () => {

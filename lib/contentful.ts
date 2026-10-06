@@ -1,4 +1,4 @@
-import { fixtureLogs, fixtureProjects } from "./contentful.fixtures";
+import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
 
 type ContentfulSys = {
   id: string;
@@ -57,15 +57,14 @@ type ContentfulRichText = {
   content?: ContentfulRichText[];
 };
 
-const fixturesEnabled = () => process.env.CONTENTFUL_FIXTURES === "1";
+const fixturesEnabled = () => process.env.CONTENTFUL_FIXTURES === '1';
 
 const getEnv = () => {
   const spaceId = process.env.CONTENTFUL_SPACE_ID;
-  const environment = process.env.CONTENTFUL_ENVIRONMENT ?? "master";
+  const environment = process.env.CONTENTFUL_ENVIRONMENT ?? 'master';
   const token = process.env.CONTENTFUL_DELIVERY_TOKEN;
-  const contentType =
-    process.env.CONTENTFUL_PROJECT_CONTENT_TYPE ?? "project";
-  const logContentType = process.env.CONTENTFUL_LOG_CONTENT_TYPE ?? "log";
+  const contentType = process.env.CONTENTFUL_PROJECT_CONTENT_TYPE ?? 'project';
+  const logContentType = process.env.CONTENTFUL_LOG_CONTENT_TYPE ?? 'log';
 
   return { spaceId, environment, token, contentType, logContentType };
 };
@@ -92,18 +91,11 @@ const fetchContentful = async (url: URL) => {
   return (await response.json()) as ContentfulResponse;
 };
 
-export const fetchProjects = async (options?: {
-  featuredOnly?: boolean;
-  featuredFirst?: boolean;
-}) => {
+export const fetchProjects = async (options?: { featuredOnly?: boolean; featuredFirst?: boolean }) => {
   if (fixturesEnabled()) {
-    const items = fixtureProjects.filter(
-      (project) => !options?.featuredOnly || project.fields.featured
-    );
+    const items = fixtureProjects.filter((project) => !options?.featuredOnly || project.fields.featured);
     if (options?.featuredFirst) {
-      items.sort(
-        (a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured))
-      );
+      items.sort((a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured)));
     }
     return { items, includes: { Asset: [] } } as ContentfulResponse;
   }
@@ -116,16 +108,14 @@ export const fetchProjects = async (options?: {
   }
 
   const url = new URL(baseUrl);
-  url.searchParams.set("content_type", contentType);
-  url.searchParams.set("include", "1");
-  url.searchParams.set("order", "-fields.date");
+  url.searchParams.set('content_type', contentType);
+  url.searchParams.set('include', '1');
+  url.searchParams.set('order', '-fields.date');
   if (options?.featuredOnly) {
-    url.searchParams.set("fields.featured", "true");
+    url.searchParams.set('fields.featured', 'true');
   }
 
-  const response =
-    (await fetchContentful(url)) ??
-    ({ items: [], includes: { Asset: [] } } as ContentfulResponse);
+  const response = (await fetchContentful(url)) ?? ({ items: [], includes: { Asset: [] } } as ContentfulResponse);
 
   if (options?.featuredFirst) {
     response.items.sort((a, b) => {
@@ -152,8 +142,8 @@ export const fetchLogs = async () => {
   }
 
   const url = new URL(baseUrl);
-  url.searchParams.set("content_type", logContentType);
-  url.searchParams.set("order", "-fields.date");
+  url.searchParams.set('content_type', logContentType);
+  url.searchParams.set('order', '-fields.date');
 
   const response = await fetchContentful(url);
   return ((response as unknown as ContentfulLogResponse) ?? { items: [] }) as ContentfulLogResponse;
@@ -173,10 +163,10 @@ export const fetchProjectBySlug = async (slug: string) => {
   }
 
   const url = new URL(baseUrl);
-  url.searchParams.set("content_type", contentType);
-  url.searchParams.set("include", "1");
-  url.searchParams.set("limit", "1");
-  url.searchParams.set("fields.slug", slug);
+  url.searchParams.set('content_type', contentType);
+  url.searchParams.set('include', '1');
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('fields.slug', slug);
 
   const response = await fetchContentful(url);
   const project = response?.items?.[0] ?? null;
@@ -187,9 +177,7 @@ export const fetchProjectBySlug = async (slug: string) => {
 
 export const fetchProjectSlugs = async () => {
   if (fixturesEnabled()) {
-    return fixtureProjects
-      .map((item) => item.fields.slug)
-      .filter((slug): slug is string => Boolean(slug));
+    return fixtureProjects.map((item) => item.fields.slug).filter((slug): slug is string => Boolean(slug));
   }
 
   const { contentType, spaceId } = getEnv();
@@ -200,16 +188,12 @@ export const fetchProjectSlugs = async () => {
   }
 
   const url = new URL(baseUrl);
-  url.searchParams.set("content_type", contentType);
-  url.searchParams.set("select", "fields.slug");
-  url.searchParams.set("limit", "200");
+  url.searchParams.set('content_type', contentType);
+  url.searchParams.set('select', 'fields.slug');
+  url.searchParams.set('limit', '200');
 
   const response = await fetchContentful(url);
-  return (
-    response?.items
-      ?.map((item) => item.fields.slug)
-      .filter((slug): slug is string => Boolean(slug)) ?? []
-  );
+  return response?.items?.map((item) => item.fields.slug).filter((slug): slug is string => Boolean(slug)) ?? [];
 };
 
 export const getAssetMap = (assets?: ContentfulAsset[]) =>
@@ -225,16 +209,16 @@ export const resolveAssetImage = (asset?: ContentfulAsset) => {
   const height = asset.fields.file?.details?.image?.height ?? 800;
 
   return {
-    url: url.startsWith("//") ? `https:${url}` : url,
+    url: url.startsWith('//') ? `https:${url}` : url,
     width,
     height,
-    title: asset.fields.title ?? "Project cover",
+    title: asset.fields.title ?? 'Project cover',
   };
 };
 
 export const richTextToPlainText = (node?: ContentfulRichText): string => {
-  if (!node) return "";
+  if (!node) return '';
   if (node.value) return node.value;
-  if (!node.content) return "";
-  return node.content.map(richTextToPlainText).join(" ").replace(/\s+/g, " ").trim();
+  if (!node.content) return '';
+  return node.content.map(richTextToPlainText).join(' ').replace(/\s+/g, ' ').trim();
 };

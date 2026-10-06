@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('log entries show date, organisation and title', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
-  const main = page.getByRole('main');
+  const main = page.getByTestId('log-entries');
   await expect(main.getByText('2026-02-10')).toBeVisible();
   await expect(main.getByText('Fixture Conf')).toBeVisible();
   await expect(main.getByText('Fixture talk')).toBeVisible();

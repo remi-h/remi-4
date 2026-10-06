@@ -53,13 +53,13 @@ test('the page is on the ink surface', async ({ page }) => {
   expect(colors).toEqual({ background: 'rgb(7, 8, 12)', text: 'rgb(223, 227, 238)' });
 });
 
-test('"cd projects" and "cat log.txt" lead to those pages', async ({ page }) => {
+test('"cd projects" and "cd log" lead to those pages', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('link', { name: /cd projects/ }).click();
   await expect(page).toHaveURL('/projects');
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('link', { name: /cat log\.txt/ }).click();
+  await page.getByRole('link', { name: /cd log/ }).click();
   await expect(page).toHaveURL('/log');
 });
 

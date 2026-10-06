@@ -60,9 +60,6 @@ export const slugify = (value: string) =>
 export const folderName = (project: { slug?: string; title?: string }, index: number) =>
   project.slug || slugify(project.title ?? '') || `project-${String(index + 1).padStart(2, '0')}`;
 
-/** What `ls -a` prints: . and .. first, then names in byte order, as in the C locale. */
-export const lsAll = (names: string[]) => ['.', '..', ...[...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))];
-
 /**
  * A directory's mode as `ls -l` prints it.
  * Public: owner rwx, group r-x, others r-x (755).
@@ -75,11 +72,10 @@ export const commands = {
   about: 'cat about.txt',
   featured: 'ls -t featured',
   toProjects: 'cd projects',
-  listAll: 'ls -a',
   toProject: (folder: string) => `cd projects/${shellQuote(folder)}`,
   readme: 'cat README.md',
   parent: 'cd ..',
-  log: 'cat log.txt',
+  toLog: 'cd log',
 } as const;
 
 /** The working directory shown in the prompt for a route. */
