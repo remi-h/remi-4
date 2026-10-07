@@ -27,9 +27,9 @@ for (const which of ['first', 'last'] as const) {
   });
 }
 
-test('the frontmatter window is project.yml and the text spans the cover width', async ({ page }) => {
+test('the facts window is labelled metadata and the text spans the cover width', async ({ page }) => {
   await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('project.yml', { exact: true })).toBeVisible();
+  await expect(page.getByText('metadata', { exact: true })).toBeVisible();
   const main = await page.getByRole('main').boundingBox();
   const body = await page.getByText('Alpha body text.').boundingBox();
   // The body runs the full width of the column, like the cover image.
@@ -65,19 +65,11 @@ test('a project card looks the same on the home page and the listing', async ({ 
   expect(await cardMetrics('/')).toEqual(await cardMetrics('/projects'));
 });
 
-test('project pages show the project.yml frontmatter only for fields that exist', async ({ page }) => {
+test('the metadata window lists only the fields that exist', async ({ page }) => {
   await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
-  const readme = page
-    .getByRole('main')
-    .locator('div')
-    .filter({ hasText: /^project\.yml/ })
-    .first();
-  await expect(readme).toContainText('date');
-  await expect(readme).toContainText('2026-03-01');
-  await expect(readme).toContainText('duration');
-  await expect(readme).toContainText('3 months');
-  await expect(readme).not.toContainText('role');
-  await expect(readme).not.toContainText('link');
+  const metadata = page.getByTestId('project-metadata');
+  await expect(metadata.locator('dt')).toHaveText(['date', 'duration']);
+  await expect(metadata.locator('dd')).toHaveText(['2026-03-01', '3 months']);
 });
 
 test('the mode line sits at the bottom of every card, even when summaries differ in length', async ({ page }) => {

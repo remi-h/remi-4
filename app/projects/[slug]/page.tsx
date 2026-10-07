@@ -68,10 +68,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     : null;
 
   const date = project.fields.date ? new Date(project.fields.date) : null;
-  const meta = [
-    date && !Number.isNaN(date.valueOf()) ? ['date', date.toISOString().slice(0, 10)] : null,
-    project.fields.duration ? ['duration', project.fields.duration] : null,
-  ].filter((entry): entry is string[] => entry !== null);
+  const facts = [
+    { key: 'date', value: date && !Number.isNaN(date.valueOf()) ? date.toISOString().slice(0, 10) : undefined },
+    { key: 'duration', value: project.fields.duration },
+    { key: 'link', value: project.fields.link },
+  ].filter((fact): fact is { key: string; value: string } => Boolean(fact.value));
 
   const content = (
     <div>
@@ -84,25 +85,28 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         </p>
       ) : null}
 
-      {meta.length > 0 || project.fields.link ? (
-        <Window className="mt-8 max-w-md" meta="[ frontmatter ]" title="project.yml">
-          <div className="px-4 py-[18px] text-sm leading-[1.9]">
-            <div className="text-muted">---</div>
-            {meta.map(([key, value]) => (
-              <div key={key}>
-                <span className="text-cyan">{key}</span>: <span className="text-yellow">{value}</span>
+      {facts.length > 0 ? (
+        // A label, not a file: it shows the project's facts without claiming a file format.
+        <Window className="mt-8 max-w-md" title="metadata">
+          <dl
+            className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-6 px-4 py-[18px] text-sm leading-[1.9]"
+            data-testid="project-metadata"
+          >
+            {facts.map(({ key, value }) => (
+              <div className="contents" key={key}>
+                <dt className="text-cyan">{key}</dt>
+                <dd className="break-all">
+                  {key === 'link' ? (
+                    <a className="text-hot" href={value} rel="noopener noreferrer" target="_blank">
+                      {value.replace(/^https?:\/\//, '')} ↗
+                    </a>
+                  ) : (
+                    <span className="text-yellow">{value}</span>
+                  )}
+                </dd>
               </div>
             ))}
-            {project.fields.link ? (
-              <div>
-                <span className="text-cyan">link</span>:{' '}
-                <a className="text-hot" href={project.fields.link} rel="noopener noreferrer" target="_blank">
-                  Visit {project.fields.title} ↗
-                </a>
-              </div>
-            ) : null}
-            <div className="text-muted">---</div>
-          </div>
+          </dl>
         </Window>
       ) : null}
 

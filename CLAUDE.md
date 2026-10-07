@@ -209,8 +209,8 @@ Built on the stacked branches, never merged to `main` until complete.
    `ls -a` lists `.`, `..` and one folder per card. `ProjectsTile`
    is shared with the home page; the listing shows three cards per row from 1024px (`threeUp`).
 5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
-   output is the title, summary, a `project.yml` frontmatter window (only fields that
-   exist: date, duration, link), the cover, and Contentful rich text styled by
+   output is the title, summary, a `metadata` window (a label, not a file name, so it
+   claims no format; only fields that exist: date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`, all as wide as the cover. `← cd .. # go back` links back to the list
    at the top and bottom.
 6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a`, the entries are
