@@ -70,13 +70,17 @@ export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir 
   });
 };
 
+/** A directory's entry by name. Own keys only, so names like `constructor` are just missing. */
+const childOf = (node: ShellDir, name: string): ShellNode | undefined =>
+  Object.hasOwn(node.children, name) ? node.children[name] : undefined;
+
 /** The page a directory has, if any. */
 export const routeFor = (path: string[], tree: ShellDir) => {
   if (path.length === 0) return '/';
   if (path.length === 1 && (path[0] === 'projects' || path[0] === 'log')) return `/${path[0]}`;
   if (path.length === 2 && path[0] === 'projects') {
     const node = tree.children.projects;
-    const project = node?.type === 'dir' ? node.children[path[1]] : undefined;
+    const project = node?.type === 'dir' ? childOf(node, path[1]) : undefined;
     return project?.type === 'dir' && project.mode === FOLDER_MODES.public ? `/projects/${path[1]}` : null;
   }
   return null;
@@ -136,8 +140,16 @@ const resolve = (tree: ShellDir, cwd: string[], arg: string): Resolved => {
   } else {
     path = [...cwd];
   }
-  let node: ShellNode = tree;
-  for (const p of path) node = (node as ShellDir).children[p];
+  // The page decides where the prompt starts; if that folder is not in the tree, nothing
+  // below it can be found either.
+  const walk = (to: string[]) => {
+    let at: ShellNode | undefined = tree;
+    for (const p of to) at = at?.type === 'dir' ? childOf(at, p) : undefined;
+    return at;
+  };
+  const start = walk(path);
+  if (!start) return { error: 'missing' };
+  let node: ShellNode = start;
   for (const [i, part] of parts.entries()) {
     if (part === '' || part === '.') {
       if (node.type !== 'dir') return { error: 'notdir' };
@@ -147,11 +159,10 @@ const resolve = (tree: ShellDir, cwd: string[], arg: string): Resolved => {
     if (!canEnter(node)) return { error: 'denied' };
     if (part === '..') {
       path = path.slice(0, -1);
-      node = tree;
-      for (const p of path) node = (node as ShellDir).children[p];
+      node = walk(path) ?? tree;
       continue;
     }
-    const child: ShellNode | undefined = node.children[part];
+    const child = childOf(node, part);
     if (!child) return { error: 'missing' };
     // A trailing slash on a file is "Not a directory".
     if (child.type === 'file' && i < parts.length - 1) return { error: 'notdir' };

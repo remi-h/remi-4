@@ -159,6 +159,12 @@ describe('the working prompt matches real bash', () => {
     [['projects', alpha], 'cd ~'],
     [['projects'], 'cd ~/log'],
     [['log'], 'cd ./../featured'],
+    // Names that are also JavaScript object properties are just missing files.
+    [['projects'], 'cd constructor'],
+    [['projects'], 'cd toString'],
+    [[], 'cat constructor'],
+    [[], 'ls __proto__'],
+    [['projects'], 'cd cat'],
     [[], 'whoami-not-a-command'],
     [[], 'sudo ls'],
   ];
