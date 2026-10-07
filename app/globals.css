@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 .root {
   isolation: isolate;
@@ -8,7 +8,7 @@
   --background: #07080c;
   --foreground: #dfe3ee;
   /* Time to type one character. Keep in sync with TIMING.char in lib/terminal.ts. */
-  --char: 45ms;
+  --char: 12ms;
 }
 
 /* Design tokens: a terminal. Mono is the system (navigation, labels, paths, code),
@@ -98,7 +98,7 @@
 }
 
 .t-in {
-  animation: t-in 400ms ease var(--d, 0ms) backwards;
+  animation: t-in 180ms ease var(--d, 0ms) backwards;
 }
 
 .t-cursor {
@@ -112,10 +112,171 @@
     t-blink 1.1s steps(1) var(--d, 0ms) infinite;
 }
 
+/* The flight on the home page. The route is the parabola y = x(1 - x), so the plane follows
+   it exactly with a steady move across (.flight-x) and a rise that slows to the top and a
+   fall that speeds up again (.flight-y, quadratic easings). The contrail is uncovered from
+   the left at the same steady pace, so its tip stays under the plane. The bar fills in 24
+   steps and the percentage and distance count up. The resting styles are the landed state,
+   which is what reduced motion shows. */
+@property --pct {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 100;
+}
+
+@property --dist {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes flight-x {
+  from {
+    left: 0;
+  }
+}
+
+@keyframes flight-y {
+  0% {
+    top: 100%;
+    animation-timing-function: cubic-bezier(0.33, 0.67, 0.67, 1);
+  }
+  50% {
+    top: 0%;
+    animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0.33);
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes flight-tilt {
+  0% {
+    transform: rotate(-38deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(38deg);
+  }
+}
+
+@keyframes flight-trail {
+  from {
+    clip-path: inset(-10% 100% -10% 0);
+  }
+}
+
+@keyframes flight-fill {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes flight-pct {
+  from {
+    --pct: 0;
+  }
+}
+
+@keyframes flight-km {
+  from {
+    --dist: 0;
+  }
+  to {
+    --dist: var(--km);
+  }
+}
+
+@keyframes flight-ping {
+  from {
+    opacity: 0.9;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 4;
+  }
+}
+
+@keyframes flight-arrive {
+  from {
+    background-color: var(--color-line-2);
+  }
+}
+
+.flight-x {
+  left: 100%;
+  animation: flight-x var(--fly) linear var(--d, 0ms) backwards;
+}
+
+.flight-y {
+  top: 100%;
+  translate: -50% -50%;
+  animation: flight-y var(--fly) linear var(--d, 0ms) backwards;
+}
+
+/* Climbing nose up, level over the top, nose down on the way in, and level once landed. */
+.flight-tilt {
+  animation: flight-tilt var(--fly) linear var(--d, 0ms) backwards;
+}
+
+.flight-trail {
+  clip-path: inset(-10% 0 -10% 0);
+  animation: flight-trail var(--fly) linear var(--d, 0ms) backwards;
+}
+
+.flight-dest {
+  background-color: var(--color-cyan);
+  animation: flight-arrive 1ms linear calc(var(--d, 0ms) + var(--fly)) backwards;
+}
+
+.flight-ping {
+  opacity: 0;
+  animation: flight-ping 900ms ease-out calc(var(--d, 0ms) + var(--fly)) 2;
+}
+
+.flight-track {
+  background-image: radial-gradient(var(--color-line-2) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+.flight-fill {
+  width: 100%;
+  animation: flight-fill var(--fly) steps(24, end) var(--d, 0ms) backwards;
+}
+
+.flight-pct::before {
+  counter-reset: pct var(--pct);
+  content: counter(pct) "%";
+  animation: flight-pct var(--fly) steps(100, end) var(--d, 0ms) backwards;
+}
+
+/* The distance has no initial value to fall back on, so it holds the end of its animation. */
+.flight-km::after {
+  counter-reset: dist var(--dist);
+  content: counter(dist) " km";
+  animation: flight-km var(--fly) steps(60, end) var(--d, 0ms) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .t-type,
   .t-in,
-  .t-cursor {
+  .t-cursor,
+  .flight-fill,
+  .flight-x,
+  .flight-y,
+  .flight-tilt,
+  .flight-trail,
+  .flight-dest,
+  .flight-ping,
+  .flight-pct::before {
+    animation: none;
+  }
+
+  .flight-km::after {
+    counter-reset: dist var(--km);
     animation: none;
   }
 }
@@ -151,17 +312,17 @@
 }
 
 .project-page h2::before {
-  content: "## ";
+  content: '## ';
   color: var(--color-cyan);
 }
 
 .project-page h3::before {
-  content: "### ";
+  content: '### ';
   color: var(--color-cyan);
 }
 
 .project-page h4::before {
-  content: "#### ";
+  content: '#### ';
   color: var(--color-cyan);
 }
 
@@ -177,7 +338,7 @@
 }
 
 .project-page blockquote::before {
-  content: "> ";
+  content: '> ';
   color: var(--color-hot);
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
@@ -216,7 +377,7 @@
 
 .project-page ul {
   margin: 0 0 1.25rem 1.25rem;
-  list-style: "- ";
+  list-style: '- ';
 }
 
 .project-page ol {

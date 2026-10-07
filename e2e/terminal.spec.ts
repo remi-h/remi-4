@@ -15,11 +15,12 @@ test('/projects types "cd projects" then "ls -a", and the cards are the listing'
   await expect(main.getByText(commands.toProjects, { exact: true })).toHaveCount(1);
   await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
 
-  // cd runs in ~, ls -a in ~/projects, and the fresh prompt comes after the cards.
+  // cd runs in ~, ls -a in ~/projects, and the working prompt comes after the cards.
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
-  await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(2);
+  await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(1);
+  await expect(main.getByTestId('shell')).toContainText('guest@portfolio:~/projects$');
   const card = await main.getByRole('heading', { level: 2, name: 'Fixture Alpha' }).boundingBox();
-  const closing = await main.getByText('remi@portfolio:~/projects$').last().boundingBox();
+  const closing = await main.getByTestId('shell').boundingBox();
   expect(closing!.y).toBeGreaterThan(card!.y);
 });
 
@@ -43,9 +44,10 @@ test('/log types "cd log" then "ls -a", and the entries are the listing', async 
   await expect(main.getByText(commands.toLog, { exact: true })).toHaveCount(1);
   await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
-  await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(2);
+  await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(1);
+  await expect(main.getByTestId('shell')).toContainText('guest@portfolio:~/log$');
   const entries = await main.getByTestId('log-entries').boundingBox();
-  const closing = await main.getByText('remi@portfolio:~/log$').last().boundingBox();
+  const closing = await main.getByTestId('shell').boundingBox();
   expect(closing!.y).toBeGreaterThan(entries!.y + entries!.height - 1);
 });
 

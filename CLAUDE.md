@@ -65,7 +65,7 @@ alone.
   (navigation, prompts, labels, paths, code, metadata) is JetBrains Mono.
   Everything meant to be read and felt (summaries, intro, case-study prose, card
   titles) is Familjen Grotesk. DotGothic16 (pixel Japanese) is only for the
-  樋口 seal and `// プロジェクト` / `// ログ` section tags.
+  樋口 seal and the `# プロジェクト` / `# ログ` tags (shell comments start with `#`, never `//`).
 - **Colour:** ink `#07080c` page, panel `#0c0e15` (titlebars `#11141e`), line
   `#232a3b`, text `#dfe3ee`, body `#b4bacb`, muted `#8a91a6`, cyan `#22e5d3`
   (prompt, links, focus), hot `#ff4a2b` (active tab, seal, locked, errors),
@@ -77,14 +77,15 @@ alone.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`, `cd ..`, `cd log`, and on the 404
+  `ls -t featured # プロジェクト`, `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`,
+  `cd .. # go back`, `cd log`, and on the 404
   `cd <path>` with interactive bash's `bash: cd: <path>: No such file or directory`, then
   `cd ~`). Never show a command that
   is not in that test, and never invent flags or output (no `ls --featured`).
   Folder modes are honest too, and the test checks them with `ls -ld`:
   `drwxr-xr-x` (755) for public projects, `drwxr-x---` (750) for locked ones: owner
   rwx, group r-x (the people given access), everyone else nothing. `ls` output is sorted in byte order (C locale).
-- **Motion:** each page opens with its command typed out (45ms per character),
+- **Motion:** each page opens with its command typed out (12ms per character, kept quick so nobody waits; only the home flight takes its time),
   then its output fades in, ending on a fresh prompt with a blinking cursor.
   Pure CSS (`.t-type`, `.t-in`, `.t-cursor` in `globals.css`, timings from
   `schedule()` in `lib/terminal.ts`), no JavaScript, no hydration risk. All text
@@ -93,7 +94,16 @@ alone.
   cursor blink. Keep `--char` in `globals.css` equal to `TIMING.char`.
   Commands longer than `MAX_TYPED` (36) characters cannot wrap while typing, so they are
   shown already typed and wrap like a terminal line.
-- **Kept simple:** a command or two per page, no interactive shell, no filters.
+- **The working prompt:** every page ends on a prompt the visitor can type into
+  (`components/Shell.tsx` → `ShellPrompt.tsx`, logic in `lib/shell.ts`). The visitor is
+  `guest@portfolio` (HOME is still `~`), so locked folders (750) refuse them. It knows
+  `ls` (-a -A -t -r -1), `cd`, `cat`, `pwd`, `clear` and `#` comments over a virtual copy of
+  the site (about.txt, featured/, projects/<folder>/README.md, log/<date>_<title>.md).
+  `cd` into a folder with a page opens it. `lib/shell.test.ts` writes the same tree to disk
+  and checks every case against interactive bash run as an unprivileged user, with a PATH
+  holding only ls and cat. Add a case there for any new command or flag. Unimplemented
+  real ls flags say so ("not supported in this shell") rather than faking output.
+- **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
   tokens stay in `@theme inline` (next/font defines its variables on `<body>`).
@@ -103,8 +113,8 @@ mobile, projects with the typing animation, project detail, log, and a System
 board). It replaces the earlier paper-and-vermilion mockup
 (https://claude.ai/artifact/Cv3eBchkaZCu4XQyWQyJUU), which is kept only for
 reference. Project and log copy in the mockup is placeholder; real content
-comes from Contentful. The location and coordinates lines were removed on
-purpose and should not come back.
+comes from Contentful. The old location and coordinates lines were removed on
+purpose; Tokyo → Stockholm now lives only in the home page's flight log (no coordinates).
 
 ### Phase 1 — Tooling baseline (mirrors `remi-h/micrographics`)
 Goal: same quality gate as micrographics, before touching visuals so the
@@ -186,20 +196,25 @@ Built on the stacked branches, never merged to `main` until complete.
    Header rule and footer background are full width; content is capped at
    `max-w-7xl`.
 3. **Home:** ✅ `cat about.txt` typed, output is the name, role, intro and two
-   buttons (`cd projects`, `cd log`); an `about.ts` code window built from
-   the intro copy; `ls -t featured` heads the featured cards. The mockup
+   buttons (`cd projects`, `cd log`); a `tokyo → stockholm` window (`FlightLog`): a plane
+   flies a full-width parabolic HND → ARN arc (steady move across plus a quadratic
+   rise and fall, tilting with the slope), drawing its contrail, while a
+   progress bar, percentage and distance (8170 km) fill, then Stockholm lights up and
+   "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -t featured # プロジェクト`
+   heads the featured cards, and the working prompt ends the page. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
 4. **Projects:** ✅ `cd projects` then `ls -a` are typed. The page is the listing: no
-   printed output, `projects/` and the cards fade in, and the fresh `~/projects` prompt
-   with the cursor comes after the cards (`ClosingPrompt`). The real-shell test checks
+   printed output, `projects/` and the cards fade in, and the working prompt comes
+   after the cards. The real-shell test checks
    `ls -a` lists `.`, `..` and one folder per card. `ProjectsTile`
-   is shared with the home page.
+   is shared with the home page; the listing shows three cards per row from 1024px (`threeUp`).
 5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
-   output is the title, summary, a frontmatter window (only fields that exist:
-   date, duration, link), the cover, and Contentful rich text styled by
-   `.project-page`. `← cd ..` links back to the list.
+   output is the title, summary, a `metadata` window (a label, not a file name, so it
+   claims no format; only fields that exist: date, duration, link), the cover, and Contentful rich text styled by
+   `.project-page`, all as wide as the cover. `← cd .. # go back` links back to the list
+   at the top and bottom.
 6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a`, the entries are
-   the listing, and the `~/log` prompt follows them; first `log/` + `// ログ` + the description, then the
+   the listing, and the working prompt follows them; first `log/` + `# ログ` + the description, then the
    entries (ISO date, organisation, title, ↗ for links) fade in like the cards.
    Projects and Log must stay structurally identical; `e2e/terminal.spec.ts`
    compares them.

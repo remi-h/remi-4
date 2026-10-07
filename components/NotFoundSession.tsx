@@ -47,5 +47,5 @@ export const NotFoundSession = () => {
     },
   ];
 
-  return <TerminalSession className="pb-24 pt-10 text-[15px] leading-7 sm:pt-14" steps={steps} />;
+  return <TerminalSession className="pb-2 pt-10 text-[15px] leading-7 sm:pt-14" steps={steps} />;
 };

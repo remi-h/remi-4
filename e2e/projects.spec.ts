@@ -15,10 +15,25 @@ test('a project card opens its detail page with title, summary and body', async 
   await expect(page.getByText('Beta body text.')).toBeVisible();
 });
 
-test('"cd .." on a project page returns to the list', async ({ page }) => {
+for (const which of ['first', 'last'] as const) {
+  test(`"cd .. # go back" at the ${which === 'first' ? 'top' : 'bottom'} of a project page returns to the list`, async ({
+    page,
+  }) => {
+    await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
+    const links = page.getByRole('link', { name: '← cd .. # go back' });
+    await expect(links).toHaveCount(2);
+    await links[which]().click();
+    await expect(page).toHaveURL('/projects');
+  });
+}
+
+test('the facts window is labelled metadata and the text spans the cover width', async ({ page }) => {
   await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('link', { name: /cd \.\./ }).click();
-  await expect(page).toHaveURL('/projects');
+  await expect(page.getByText('metadata', { exact: true })).toBeVisible();
+  const main = await page.getByRole('main').boundingBox();
+  const body = await page.getByText('Alpha body text.').boundingBox();
+  // The body runs the full width of the column, like the cover image.
+  expect(body!.width).toBeGreaterThan(main!.width - 100);
 });
 
 test('a locked project shows a lock and has no page to open', async ({ page }) => {
@@ -50,19 +65,11 @@ test('a project card looks the same on the home page and the listing', async ({ 
   expect(await cardMetrics('/')).toEqual(await cardMetrics('/projects'));
 });
 
-test('project pages show the README frontmatter only for fields that exist', async ({ page }) => {
+test('the metadata window lists only the fields that exist', async ({ page }) => {
   await page.goto('/projects/fixture-alpha', { waitUntil: 'domcontentloaded' });
-  const readme = page
-    .getByRole('main')
-    .locator('div')
-    .filter({ hasText: /^README\.md/ })
-    .first();
-  await expect(readme).toContainText('date');
-  await expect(readme).toContainText('2026-03-01');
-  await expect(readme).toContainText('duration');
-  await expect(readme).toContainText('3 months');
-  await expect(readme).not.toContainText('role');
-  await expect(readme).not.toContainText('link');
+  const metadata = page.getByTestId('project-metadata');
+  await expect(metadata.locator('dt')).toHaveText(['date', 'duration']);
+  await expect(metadata.locator('dd')).toHaveText(['2026-03-01', '3 months']);
 });
 
 test('the mode line sits at the bottom of every card, even when summaries differ in length', async ({ page }) => {
@@ -90,4 +97,18 @@ test('the mode line sits at the bottom of every card, even when summaries differ
   const firstRow = rows.filter((r) => r.top === rows[0].top);
   expect(firstRow.length).toBeGreaterThan(1);
   expect(new Set(firstRow.map((r) => r.modeTop)).size).toBe(1);
+});
+
+test.describe('on a laptop', () => {
+  test.use({ viewport: { width: 1280, height: 900 } });
+
+  test('/projects shows three cards in a row', async ({ page }) => {
+    await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+    const tops = await page
+      .getByTestId('project-grid')
+      .locator(':scope > *')
+      .evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top)));
+    expect(tops).toHaveLength(3);
+    expect(new Set(tops).size).toBe(1);
+  });
 });

@@ -1,7 +1,8 @@
 # Remi Higuchi, portfolio
 
 The portfolio of Remi Higuchi, Experience Designer & Software Engineer. It is laid out as a
-terminal session: every page opens with a real shell command typed out, then its output.
+terminal session: every page opens with a real shell command typed out, then its output,
+and ends on a prompt visitors can type into (`ls`, `cd`, `cat`, `pwd`, `clear`).
 
 ## Stack
 
@@ -70,6 +71,10 @@ each one in a real shell against a mirror of the site's content. That includes t
 modes (`drwxr-xr-x` for public projects, `drwxr-x---` for locked ones) and the 404's
 `bash: cd: <path>: No such file or directory`. To change a command or its output, change
 that test too.
+
+The working prompt (`lib/shell.ts`) runs over a virtual copy of the site. `lib/shell.test.ts`
+writes that copy to disk and compares every supported command with interactive bash, run as
+an unprivileged user so locked folders really refuse it.
 
 ## CI and deploy
 

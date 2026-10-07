@@ -10,41 +10,20 @@ export type SessionStep = {
 
 const css = (vars: Record<string, string | number>) => vars as CSSProperties;
 
-/** A fresh prompt with a blinking cursor: where a session ends. */
-export const ClosingPrompt = ({ cwd, delayMs, className }: { cwd: string; delayMs: number; className?: string }) => (
-  <div aria-hidden="true" className={`t-in ${className ?? ''}`} style={css({ '--d': `${delayMs}ms` })}>
-    <Prompt cwd={cwd} />
-    <span className="t-cursor" style={css({ '--d': `${delayMs}ms` })} />
-  </div>
-);
-
-export const Prompt = ({ cwd }: { cwd: string }) => (
+export const Prompt = ({ cwd, user = USER_HOST }: { cwd: string; user?: string }) => (
   <>
-    <span className="text-cyan">{USER_HOST}</span>
+    <span className="text-cyan">{user}</span>
     <span className="text-muted">:{cwd}$</span>{' '}
   </>
 );
 
 /**
- * A few commands typed one after another, each followed by its output, ending on a fresh
- * prompt with a blinking cursor. Pure CSS: the full text is in the page from the start and
+ * A few commands typed one after another, each followed by its output. Each page ends
+ * with the working prompt (components/Shell.tsx) instead of a closing prompt here. Pure CSS: the full text is in the page from the start and
  * the animation only reveals it (see .t-type and .t-in in globals.css).
  */
-export const TerminalSession = ({
-  steps,
-  className,
-  endCwd,
-  closing = true,
-}: {
-  steps: SessionStep[];
-  className?: string;
-  /** Working directory for the closing prompt, when the last command changed it (e.g. `cd`). */
-  endCwd?: string;
-  /** False when the page content is the last command's output and a ClosingPrompt follows it. */
-  closing?: boolean;
-}) => {
+export const TerminalSession = ({ steps, className }: { steps: SessionStep[]; className?: string }) => {
   const timing = schedule(steps.map((step) => ({ command: step.command, hasOutput: step.output != null })));
-  const closingCwd = endCwd ?? steps[steps.length - 1]?.cwd ?? '~';
 
   return (
     <div className={className}>
@@ -70,7 +49,6 @@ export const TerminalSession = ({
           ) : null}
         </div>
       ))}
-      {closing ? <ClosingPrompt cwd={closingCwd} delayMs={timing.endAt} /> : null}
     </div>
   );
 };

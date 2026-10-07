@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { fetchProjects, getAssetMap, resolveAssetImage, type ContentfulProject } from '@/lib/contentful';
-import { folderMode, folderName } from '@/lib/terminal';
+import { folderMode, folderName, TIMING } from '@/lib/terminal';
 import { Window } from './Window';
 
 const grid = (color: string, size: number) =>
@@ -67,9 +67,16 @@ type ProjectsTileProps = {
   titleAs?: 'h2' | 'h3';
   /** Delay before the cards start fading in, so they follow the page's terminal intro. */
   delayMs?: number;
+  /** The listing shows three across from laptop width; elsewhere cards fit by width. */
+  threeUp?: boolean;
 };
 
-export const ProjectsTile = async ({ featuredOnly = false, titleAs: Title = 'h3', delayMs = 0 }: ProjectsTileProps) => {
+export const ProjectsTile = async ({
+  featuredOnly = false,
+  titleAs: Title = 'h3',
+  delayMs = 0,
+  threeUp = false,
+}: ProjectsTileProps) => {
   const data = await fetchProjects({ featuredOnly, featuredFirst: true });
   const assets = getAssetMap(data.includes?.Asset);
 
@@ -78,7 +85,10 @@ export const ProjectsTile = async ({ featuredOnly = false, titleAs: Title = 'h3'
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-8">
+    <div
+      className={`grid gap-8 ${threeUp ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))]'}`}
+      data-testid="project-grid"
+    >
       {data.items.map((project, index) => {
         const cover = resolveAssetImage(assets.get(project.fields.cover?.sys.id ?? ''));
         const slug = project.fields.slug;
@@ -147,7 +157,7 @@ export const ProjectsTile = async ({ featuredOnly = false, titleAs: Title = 'h3'
           </Window>
         );
 
-        const wrapperStyle = { '--d': `${delayMs + index * 120}ms` } as CSSProperties;
+        const wrapperStyle = { '--d': `${delayMs + index * TIMING.stagger}ms` } as CSSProperties;
 
         return slug ? (
           <Link
