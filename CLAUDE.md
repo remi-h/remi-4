@@ -97,7 +97,8 @@ alone.
 - **The working prompt:** every page ends on a prompt the visitor can type into
   (`components/Shell.tsx` → `ShellPrompt.tsx`, logic in `lib/shell.ts`). The visitor is
   `guest@portfolio` (HOME is still `~`), so locked folders (750) refuse them. It knows
-  `ls` (-a -A -t -r -1), `cd`, `cat`, `pwd`, `clear` and `#` comments over a virtual copy of
+  `ls` (-a -A -d -l -t -r -1; `-l` prints GNU's long format with remi as owner and group,
+  ext4-style sizes and UTC dates), `cd`, `cat`, `pwd`, `clear` and `#` comments over a virtual copy of
   the site (about.txt, featured/, projects/<folder>/README.md, log/<date>_<title>.md).
   `cd` into a folder with a page opens it. `lib/shell.test.ts` writes the same tree to disk
   and checks every case against interactive bash run as an unprivileged user, with a PATH
