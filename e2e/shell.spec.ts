@@ -26,6 +26,10 @@ test('the prompt answers like bash: listing, reading, and refusing locked folder
   await type(page, 'cat about.txt');
   await expect(shell).toContainText('Experience Designer & Software Engineer');
 
+  await type(page, 'ls -l projects');
+  await expect(shell).toContainText('drwxr-x--- 2 remi remi 4096');
+  await expect(shell).toContainText('fixture-gamma');
+
   await type(page, 'cd projects/fixture-gamma');
   await expect(shell).toContainText('bash: cd: projects/fixture-gamma: Permission denied');
 

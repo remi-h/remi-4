@@ -50,6 +50,10 @@ export const logFileName = (log: ShellLog) => `${log.date ?? 'undated'}_${slugif
 const logContent = (log: ShellLog) =>
   `# ${log.title ?? 'Untitled'}\n\n${[log.org, log.link].filter(Boolean).join('\n')}\n`;
 
+/** A folder's last change is its newest entry's, as on disk once its files are written. */
+const newest = (children: Record<string, ShellNode>) =>
+  Math.max(0, ...Object.values(children).map((child) => child.mtime));
+
 /** Projects in page order (featured first), as the cards and their folder names use them. */
 export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir => {
   const projectDirs: Record<string, ShellNode> = {};
@@ -62,12 +66,13 @@ export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir 
     if (project.featured) featured[name] = dir({}, mode, mtime);
   });
   const logFiles = Object.fromEntries(logs.map((log) => [logFileName(log), file(logContent(log), time(log.date))]));
-  return dir({
-    'about.txt': file(aboutTxt()),
-    featured: dir(featured),
-    log: dir(logFiles),
-    projects: dir(projectDirs),
-  });
+  const folders = {
+    featured: dir(featured, FOLDER_MODES.public, newest(featured)),
+    log: dir(logFiles, FOLDER_MODES.public, newest(logFiles)),
+    projects: dir(projectDirs, FOLDER_MODES.public, newest(projectDirs)),
+  };
+  const updated = newest(folders);
+  return dir({ 'about.txt': file(aboutTxt(), updated), ...folders }, FOLDER_MODES.public, updated);
 };
 
 /** A directory's entry by name. Own keys only, so names like `constructor` are just missing. */
@@ -206,24 +211,79 @@ const sortEntries = (entries: [string, ShellNode][], byTime: boolean) =>
 // Every short option GNU ls accepts. This shell implements a few; the rest say so plainly
 // instead of pretending to be invalid.
 const GNU_LS_FLAGS = 'aAbBcCdDfFgGhHiIkLlmnNopqQrRsStTuUvwxXZ1';
+const HINT = '-a, -A, -d, -l, -t, -r';
 
-const ls = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
+/** Owner and group shown by `ls -l`: Remi owns the portfolio. */
+export type ShellUser = { owner: string; group: string };
+const REMI: ShellUser = { owner: 'remi', group: 'remi' };
+
+const FILE_MODE = 0o644;
+// The portfolio sits on an ext4-like disk: folders take one 4 KiB block, files whole blocks.
+const BLOCK = 4096;
+const sizeOf = (node: ShellNode) => (node.type === 'dir' ? BLOCK : new TextEncoder().encode(node.content).length);
+const blocksOf = (node: ShellNode) => (Math.ceil(sizeOf(node) / BLOCK) * BLOCK) / 1024;
+const linksOf = (node: ShellNode) =>
+  node.type === 'dir' ? 2 + Object.values(node.children).filter((c) => c.type === 'dir').length : 1;
+
+const modeString = (node: ShellNode) => {
+  const mode = node.type === 'dir' ? node.mode : FILE_MODE;
+  const bits = [6, 3, 0].map((shift) => {
+    const m = (mode >> shift) & 7;
+    return `${m & 4 ? 'r' : '-'}${m & 2 ? 'w' : '-'}${m & 1 ? 'x' : '-'}`;
+  });
+  return `${node.type === 'dir' ? 'd' : '-'}${bits.join('')}`;
+};
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** GNU ls's date column (UTC, C locale): the time within the last six months, else the year. */
+const dateString = (mtime: number, now: number) => {
+  const d = new Date(mtime * 1000);
+  const day = String(d.getUTCDate()).padStart(2, ' ');
+  const recent = mtime > now - 31556952 / 2 && mtime <= now;
+  const tail = recent
+    ? `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
+    : ` ${d.getUTCFullYear()}`;
+  return `${MONTHS[d.getUTCMonth()]} ${day} ${tail}`;
+};
+
+/** `ls -l` lines for a group of entries, with columns padded across the group like GNU ls. */
+const longLines = (entries: [string, ShellNode][], user: ShellUser, now: number, alsoFits: ShellNode[] = []) => {
+  const fit = alsoFits.map((node) => ({ links: String(linksOf(node)), size: String(sizeOf(node)) }));
+  const rows = entries.map(([name, node]) => ({
+    mode: modeString(node),
+    links: String(linksOf(node)),
+    size: String(sizeOf(node)),
+    date: dateString(node.mtime, now),
+    name,
+  }));
+  const width = (key: 'links' | 'size') => Math.max(0, ...[...rows, ...fit].map((r) => r[key].length));
+  const [links, size] = [width('links'), width('size')];
+  return rows.map(
+    (r) =>
+      `${r.mode} ${r.links.padStart(links)} ${user.owner} ${user.group} ${r.size.padStart(size)} ${r.date} ${r.name}`,
+  );
+};
+
+const ls = (tree: ShellDir, cwd: string[], args: string[], user: ShellUser, now: number): string[] => {
   let all = false;
+  let long = false;
+  let directory = false;
   let almostAll = false;
   let byTime = false;
   let reverse = false;
   const targets: string[] = [];
   // GNU long options for the flags this shell has; any other long option says so.
-  const LONG: Record<string, string> = { all: 'a', 'almost-all': 'A', reverse: 'r' };
+  const LONG: Record<string, string> = { all: 'a', 'almost-all': 'A', reverse: 'r', directory: 'd' };
   let optionsDone = false;
   for (const arg of args) {
     if (!optionsDone && arg === '--') {
       optionsDone = true;
     } else if (!optionsDone && arg.startsWith('--')) {
       const flag = LONG[arg.slice(2)];
-      if (!flag) return [`ls: ${arg} is not supported in this shell (try -a, -A, -t, -r)`];
+      if (!flag) return [`ls: ${arg} is not supported in this shell (try ${HINT})`];
       if (flag === 'a') all = true;
       else if (flag === 'A') almostAll = true;
+      else if (flag === 'd') directory = true;
       else reverse = true;
     } else if (!optionsDone && arg.startsWith('-') && arg.length > 1) {
       for (const flag of arg.slice(1)) {
@@ -231,26 +291,36 @@ const ls = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
         else if (flag === 'A') almostAll = true;
         else if (flag === 't') byTime = true;
         else if (flag === 'r') reverse = true;
+        else if (flag === 'l') long = true;
+        else if (flag === 'd') directory = true;
         else if (flag === '1') continue;
-        else if (GNU_LS_FLAGS.includes(flag))
-          return [`ls: -${flag} is not supported in this shell (try -a, -A, -t, -r)`];
+        else if (GNU_LS_FLAGS.includes(flag)) return [`ls: -${flag} is not supported in this shell (try ${HINT})`];
         else return [`ls: invalid option -- '${flag}'`, "Try 'ls --help' for more information."];
       }
     } else targets.push(arg);
   }
+  const order = (entries: [string, ShellNode][]) => {
+    const sorted = sortEntries(entries, byTime);
+    return reverse ? sorted.reverse() : sorted;
+  };
+  const show = (entries: [string, ShellNode][], alsoFits: ShellNode[] = []) =>
+    long ? longLines(entries, user, now, alsoFits) : entries.map(([name]) => name);
   const list = (node: ShellDir, path: string[]) => {
     let entries = Object.entries(node.children);
     if (all && !almostAll) {
       const parent = resolve(tree, path, '..');
       entries = [['.', node], ['..', 'node' in parent ? parent.node : node], ...entries];
     }
-    const sorted = sortEntries(entries, byTime).map(([name]) => name);
-    return reverse ? sorted.reverse() : sorted;
+    const sorted = order(entries);
+    const total = long ? [`total ${sorted.reduce((sum, [, child]) => sum + blocksOf(child), 0)}`] : [];
+    return [...total, ...show(sorted)];
   };
   const names = targets.length ? targets : ['.'];
   const errors: string[] = [];
-  const files: string[] = [];
+  const files: [string, ShellNode][] = [];
   const dirs: { name: string; lines: string[] }[] = [];
+  // GNU ls sizes the columns of file arguments over every argument it stat'ed, folders too.
+  const statted: ShellNode[] = [];
   for (const name of names) {
     const found = resolve(tree, cwd, name);
     if (!('node' in found)) {
@@ -261,17 +331,20 @@ const ls = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
             ? `ls: cannot access '${name}': Not a directory`
             : `ls: cannot access '${name}': No such file or directory`,
       );
-    } else if (found.node.type === 'file') {
-      files.push(name);
+    } else if (found.node.type === 'file' || directory) {
+      statted.push(found.node);
+      // With -d a folder is listed as itself, which needs no permission on the folder.
+      files.push([name, found.node]);
     } else if (!canRead(found.node)) {
       errors.push(`ls: cannot open directory '${name}': Permission denied`);
     } else {
+      statted.push(found.node);
       dirs.push({ name, lines: list(found.node, found.path) });
     }
   }
   const byName = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   dirs.sort((a, b) => byName(a.name, b.name));
-  const out = [...errors, ...files.sort(byName)];
+  const out = [...errors, ...show(order(files), statted)];
   const many = names.length > 1;
   dirs.forEach((d, i) => {
     if (many && (i > 0 || files.length)) out.push('');
@@ -296,12 +369,17 @@ const cat = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
 };
 
 /** Runs one line typed at the prompt. */
-export const run = (tree: ShellDir, cwd: string[], line: string): ShellResult => {
+export const run = (
+  tree: ShellDir,
+  cwd: string[],
+  line: string,
+  { user = REMI, now = Math.floor(Date.now() / 1000) }: { user?: ShellUser; now?: number } = {},
+): ShellResult => {
   const [command, ...args] = tokenize(line);
   if (!command) return { output: [], cwd };
   switch (command) {
     case 'ls':
-      return { output: ls(tree, cwd, args), cwd };
+      return { output: ls(tree, cwd, args, user, now), cwd };
     case 'cat':
       return { output: args.length ? cat(tree, cwd, args) : [], cwd };
     case 'pwd':

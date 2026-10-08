@@ -33,6 +33,10 @@ const [alpha, gamma, beta] = folders;
 // closed to them for real. Without root the owner is the only user we can be, so locked
 // folders get mode 000 instead: the owner is then refused the same way, with the same message.
 const isRoot = process.getuid?.() === 0;
+const owner = {
+  owner: execFileSync('id', ['-un'], { encoding: 'utf8' }).trim(),
+  group: execFileSync('id', ['-gn'], { encoding: 'utf8' }).trim(),
+};
 // bash and setpriv run with a bare PATH, so start them by their full paths.
 const which = (tool: string) => execFileSync('sh', ['-c', `command -v ${tool}`], { encoding: 'utf8' }).trim();
 const BASH = which('bash');
@@ -42,6 +46,7 @@ const write = (node: ShellDir, path: string) => {
     const target = join(path, name);
     if (child.type === 'file') {
       writeFileSync(target, child.content);
+      chmodSync(target, 0o644);
       utimesSync(target, child.mtime, child.mtime);
     } else {
       mkdirSync(target);
@@ -97,7 +102,11 @@ describe('the working prompt matches real bash', () => {
       ? spawnSync(which('setpriv'), ['--reuid=65534', '--regid=65534', '--clear-groups', BASH, ...args], options)
       : spawnSync(BASH, args, options);
     if (startsLocked && !isRoot) chmodSync(dir, 0o000);
-    const lines = result.stdout.replaceAll(root, HOME).split('\n');
+    const lines = result.stdout
+      .replaceAll(root, HOME)
+      .split('\n')
+      // Without root, locked folders stand in as 000 (see above); ls -l shows their real 750.
+      .map((l) => (isRoot ? l : l.replace(/^d---------/, 'drwxr-x---')));
     const end = lines.findIndex((l) => l.startsWith('@@'));
     const pwd = lines[end].slice(2);
     const relative = pwd === HOME ? [] : pwd.slice(HOME.length + 1).split('/');
@@ -126,6 +135,22 @@ describe('the working prompt matches real bash', () => {
     [[], 'ls about.txt'],
     [[], 'ls about.txt/'],
     [[], 'ls -j'],
+    // Long listings, compared column for column (owner and group are this machine's).
+    [[], 'ls -l'],
+    [[], 'ls -l projects'],
+    [[], 'ls -la projects'],
+    [[], 'ls -lt projects'],
+    [[], 'ls -ltr log'],
+    [[], 'ls -l featured'],
+    [[], 'ls -l about.txt'],
+    [[], 'ls -ld projects'],
+    [[], `ls -ld projects/${gamma}`],
+    [[], `ls -l projects/${gamma}`],
+    [[], `ls -l projects/${alpha}`],
+    [[], 'ls -ld'],
+    [[], 'ls -d projects log'],
+    [[], 'ls -l about.txt projects'],
+    [['projects'], 'ls -l'],
     [[], 'ls projects log'],
     [[], `ls projects/${gamma}`],
     [[], `ls projects/${alpha}`],
@@ -171,7 +196,8 @@ describe('the working prompt matches real bash', () => {
 
   it.each(cases)('in ~/%j: %s', (cwd, line) => {
     const real = bash(cwd, line);
-    const ours = run(tree, cwd, line);
+    // ls -l names the files' real owner here; the site shows remi.
+    const ours = run(tree, cwd, line, { user: owner, now: Math.floor(Date.now() / 1000) });
     expect({ output: ours.output, cwd: ours.cwd }).toEqual(real);
   });
 
@@ -222,9 +248,14 @@ describe('tokenize', () => {
   });
 
   it('says plainly when a real ls option is not implemented here', () => {
-    expect(run(tree, [], 'ls -l').output).toEqual(['ls: -l is not supported in this shell (try -a, -A, -t, -r)']);
-    expect(run(tree, [], 'ls --help').output).toEqual([
-      'ls: --help is not supported in this shell (try -a, -A, -t, -r)',
+    const hint = '(try -a, -A, -d, -l, -t, -r)';
+    expect(run(tree, [], 'ls -R').output).toEqual([`ls: -R is not supported in this shell ${hint}`]);
+    expect(run(tree, [], 'ls --help').output).toEqual([`ls: --help is not supported in this shell ${hint}`]);
+  });
+
+  it('shows remi as owner and group on the site', () => {
+    expect(run(tree, [], 'ls -ld projects', { now: Date.parse('2026-10-07') / 1000 }).output).toEqual([
+      'drwxr-xr-x 5 remi remi 4096 Mar  1  2026 projects',
     ]);
   });
 
