@@ -135,7 +135,7 @@ redesign is protected by tests.
       tree style (the repo is mixed 2/4-space today, so no repo-wide format
       check in CI — same stance as micrographics).
 - [x] Jest: `jest.config.mjs` via `next/jest`, `jsdom`, `jest.setup.ts` with
-      `@testing-library/jest-dom`; ignore `e2e/`. Deps: jest@29,
+      `@testing-library/jest-dom`; ignore `e2e/`. Deps: jest@30,
       jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom,
       @types/jest.
 - [x] Playwright: `playwright.config.ts` (chromium, port 3100,
