@@ -1,0 +1,16 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch({ channel: 'chrome', headless: false, args: ['--enable-unsafe-webgpu'] });
+const p = await b.newPage({ viewport: { width: 1000, height: 700 }, reducedMotion: 'reduce' });
+const errs = []; p.on('console', m => ['error','warning'].includes(m.type()) && errs.push(m.text().slice(0,200))); p.on('pageerror', e => errs.push(e.message));
+await p.goto('http://localhost:3000/.secret');
+await p.waitForFunction(() => !document.querySelector('[data-testid=secret-flight] button[disabled]'), null, { timeout: 60000 });
+await p.getByRole('button', { name: '[ board ]' }).click();
+await p.waitForTimeout(800);
+console.log('slider', await p.getByRole('slider').inputValue());
+await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight');
+await p.waitForTimeout(300);
+console.log('slider after arrows', await p.getByRole('slider').inputValue());
+await p.screenshot({ path: process.argv[2] });
+await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
+console.log('page:', (await p.getByTestId('secret-flight').innerText()).replace(/\n/g, ' | '));
+console.log('errors', errs); await b.close();

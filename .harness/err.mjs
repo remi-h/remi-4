@@ -1,0 +1,11 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch({ channel: 'chrome', headless: false, args: ['--enable-unsafe-webgpu'] });
+const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+p.on('console', m => ['error','warning'].includes(m.type()) && console.log(m.type(), m.text().slice(0, 1500)));
+p.on('pageerror', e => console.log('PAGEERR', e.message.slice(0, 800)));
+await p.goto('http://localhost:3000/.secret');
+await p.waitForFunction(() => !document.querySelector('[data-testid=secret-flight] button[disabled]'), null, { timeout: 60000 });
+await p.getByRole('button', { name: '[ board ]' }).click();
+await p.keyboard.press('Escape');
+await p.waitForTimeout(3000);
+await b.close();
