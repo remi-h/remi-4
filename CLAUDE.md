@@ -109,6 +109,14 @@ alone.
   `lib/shell.ts`, checked against real bash in `lib/shell.test.ts`). The header has a `0 .secret`
   tab before `1 home` that is invisible until hover or keyboard focus (and hidden on phones). It is `noindex` and not
   in any sitemap, but anyone can type the URL; dot-prefixed route folders work in Next 16.
+  Its content is a WebGPU canvas (`components/SecretField.tsx`, a client component) drawn with
+  **vgpu**: the render code is `lib/secret-field.ts`, the shader `lib/secret-field.wgsl` (a
+  placeholder noise field for now). `.wgsl` imports go through `wgslTurbopackRule()` in
+  `next.config.ts` and are typed by `wgsl-env.d.ts`. Read the installed version's docs with
+  `npm exec --no -- vgpu docs …` (never bare `npx vgpu`, which may download another version), and
+  validate shaders with `npm exec --no -- vgpu check <file> --require-validation` (build does not).
+  Without WebGPU the canvas stays blank; reduced motion draws one still frame. The canvas is
+  `aria-hidden`.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font

@@ -52,3 +52,10 @@ test('ls hides it, ls -a finds it, and cd .secret opens it', async ({ page }) =>
   await expect(page).toHaveURL('/.secret');
   await expect(page.getByTestId('shell')).toContainText('guest@portfolio:~/.secret$');
 });
+
+test('/.secret has the decorative vgpu canvas, hidden from screen readers', async ({ page }) => {
+  await page.goto('/.secret', { waitUntil: 'domcontentloaded' });
+  const field = page.getByTestId('secret-field');
+  await expect(field).toBeVisible();
+  await expect(field).toHaveAttribute('aria-hidden', 'true');
+});

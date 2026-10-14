@@ -10,6 +10,7 @@ and ends on a prompt visitors can type into (`ls`, `cd`, `cat`, `pwd`, `clear`).
 - Tailwind CSS v4, fonts through `next/font` (JetBrains Mono, Familjen Grotesk, DotGothic16)
 - Content (projects, log) from [Contentful](https://www.contentful.com)
 - OG image and icons generated at build time with `next/og`
+- WebGPU on the hidden `/.secret` page with [vgpu](https://www.npmjs.com/package/vgpu); `.wgsl` files are prepared at build time by `@vgpu/wgsl` (the `turbopack.rules` entry in `next.config.ts`). Check a shader on a real device with `npm exec --no -- vgpu check <file.wgsl> --require-validation`
 - Jest + Testing Library for unit tests, Playwright + axe for end-to-end tests
 - Deployed on Vercel from `main`
 
@@ -59,7 +60,7 @@ Chromium that is already installed.
 ```
 app/          routes: /, /projects, /projects/[slug], /log, the 404, OG image and icons
 components/   React components (Navigation, Footer, TerminalSession, ProjectsTile, ...)
-lib/          Contentful client and fixtures, terminal commands and timing, OG fonts
+lib/          Contentful client and fixtures, terminal commands and timing, OG fonts, WebGPU shaders
 e2e/          Playwright specs
 assets/fonts/ font files for the generated images
 ```
