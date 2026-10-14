@@ -18,16 +18,14 @@ import {
 } from './shell';
 import { FOLDER_MODES, folderName } from './terminal';
 
-// Featured first, as the pages order them.
-const projects = [...fixtureProjects]
-  .sort((a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured)))
-  .map((p) => p.fields);
+// Newest first, as the pages order them (the fixtures are already in that order).
+const projects = fixtureProjects.map((p) => p.fields);
 const tree = buildTree(
   projects,
   fixtureLogs.map((l) => l.fields),
 );
 const folders = projects.map((p, i) => folderName(p, i));
-const [alpha, gamma, beta] = folders;
+const [alpha, beta, gamma] = folders;
 
 // The visitor is "other" on every folder. As root we drop to nobody, so a 750 folder is
 // closed to them for real. Without root the owner is the only user we can be, so locked

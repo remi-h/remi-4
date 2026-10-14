@@ -54,7 +54,7 @@ const logContent = (log: ShellLog) =>
 const newest = (children: Record<string, ShellNode>) =>
   Math.max(0, ...Object.values(children).map((child) => child.mtime));
 
-/** Projects in page order (featured first), as the cards and their folder names use them. */
+/** Projects in page order (newest first), as the cards and their folder names use them. */
 export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir => {
   const projectDirs: Record<string, ShellNode> = {};
   const featured: Record<string, ShellNode> = {};

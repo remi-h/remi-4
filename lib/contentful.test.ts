@@ -43,10 +43,9 @@ describe('fixture mode', () => {
     expect(items.length).toBeGreaterThan(0);
   });
 
-  it('puts featured projects first', async () => {
-    const { items } = await fetchProjects({ featuredFirst: true });
-    const flags = items.map((p) => Boolean(p.fields.featured));
-    expect(flags).toEqual([...flags].sort((a, b) => Number(b) - Number(a)));
+  it('keeps projects newest first, featured or not', async () => {
+    const dates = (await fetchProjects()).items.map((p) => p.fields.date);
+    expect(dates).toEqual([...dates].sort().reverse());
   });
 
   it('finds a project by slug and misses unknown slugs', async () => {
@@ -69,25 +68,26 @@ describe('with credentials', () => {
     process.env.CONTENTFUL_DELIVERY_TOKEN = 'token';
   });
 
-  it('queries the delivery API and sorts featured first', async () => {
+  it('queries the delivery API for featured projects, newest first', async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         items: [
-          { sys: { id: 'a' }, fields: { featured: false } },
+          { sys: { id: 'a' }, fields: { featured: true } },
           { sys: { id: 'b' }, fields: { featured: true } },
         ],
       }),
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
-    const { items } = await fetchProjects({ featuredOnly: true, featuredFirst: true });
+    const { items } = await fetchProjects({ featuredOnly: true });
 
     const url = new URL(fetchMock.mock.calls[0][0]);
     expect(url.pathname).toBe('/spaces/space/environments/master/entries');
     expect(url.searchParams.get('fields.featured')).toBe('true');
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer token');
-    expect(items.map((p) => p.sys.id)).toEqual(['b', 'a']);
+    expect(url.searchParams.get('order')).toBe('-fields.date');
+    expect(items.map((p) => p.sys.id)).toEqual(['a', 'b']);
   });
 
   it('falls back to empty content when the API errors', async () => {

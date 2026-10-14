@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
@@ -28,7 +28,12 @@ const projects = fixtureProjects.map((p, i) => ({
   folder: folderName({ slug: p.fields.slug, title: p.fields.title }, i),
   featured: Boolean(p.fields.featured),
   slug: p.fields.slug,
+  locked: Boolean(p.fields.lock),
+  date: p.fields.date ?? '',
 }));
+
+// ls -t orders by modification time, so the mirror gives every item the date the site shows for it.
+const touch = (path: string, date: string) => utimesSync(path, new Date(date), new Date(date));
 
 describe('the displayed commands are real shell commands', () => {
   let root: string;
@@ -38,13 +43,23 @@ describe('the displayed commands are real shell commands', () => {
     root = mkdtempSync(join(tmpdir(), 'portfolio-'));
     writeFileSync(join(root, 'about.txt'), 'Remi Higuchi\n');
     mkdirSync(join(root, 'log'));
-    for (const entry of fixtureLogs) writeFileSync(join(root, 'log', logEntryFile(entry.fields)), '');
+    for (const entry of fixtureLogs) {
+      const file = join(root, 'log', logEntryFile(entry.fields));
+      writeFileSync(file, '');
+      touch(file, entry.fields.date ?? '');
+    }
     mkdirSync(join(root, 'featured'));
     mkdirSync(join(root, 'projects'));
-    for (const { folder, featured } of projects) {
+    for (const { folder, featured, locked, date } of projects) {
       mkdirSync(join(root, 'projects', folder));
       writeFileSync(join(root, 'projects', folder, 'README.md'), '# readme\n');
-      if (featured) mkdirSync(join(root, 'featured', folder));
+      chmodSync(join(root, 'projects', folder), locked ? FOLDER_MODES.locked : FOLDER_MODES.public);
+      touch(join(root, 'projects', folder), date);
+      if (featured) {
+        mkdirSync(join(root, 'featured', folder));
+        chmodSync(join(root, 'featured', folder), locked ? FOLDER_MODES.locked : FOLDER_MODES.public);
+        touch(join(root, 'featured', folder), date);
+      }
     }
   });
 
@@ -54,14 +69,16 @@ describe('the displayed commands are real shell commands', () => {
   const sh = (script: string, cwd = root) =>
     execFileSync('sh', ['-c', script], { cwd, env: { ...process.env, HOME: root, LC_ALL: 'C' }, encoding: 'utf8' });
 
-  it('home: cat about.txt and ls -t featured succeed', () => {
+  it('home: cat about.txt succeeds', () => {
     expect(sh(commands.about)).toContain('Remi Higuchi');
-    expect(sh(commands.featured).trim().split('\n').sort()).toEqual(
-      projects
-        .filter((p) => p.featured)
-        .map((p) => p.folder)
-        .sort(),
-    );
+  });
+
+  it('home: ls -lt featured lists the featured folders newest first, with the modes the cards show', () => {
+    const lines = sh(commands.featured).trim().split('\n').slice(1);
+    const featured = projects.filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date));
+    expect(lines.map((line) => line.split(' ').pop())).toEqual(featured.map((p) => p.folder));
+    // The first ten characters are the type and permission bits; some systems append . or +.
+    expect(lines.map((line) => line.slice(0, 10))).toEqual(featured.map((p) => folderMode(p.locked)));
   });
 
   it('projects: cd projects succeeds and leaves you in ~/projects', () => {
@@ -87,15 +104,21 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  it('projects: ls -a in ~/projects lists . and .. plus one folder per card', () => {
-    // The cards are the listing, so the page shows ls -a without printing it.
-    expect(sh(`${commands.toProjects} && ${commands.list}`).trim().split('\n')).toEqual(
-      ['.', '..', ...projects.map((p) => p.folder)].sort(),
-    );
+  it("projects: ls -lt in ~/projects lists one folder per card, newest first, with the cards' modes", () => {
+    // The cards are the listing, so the page shows ls -lt without printing it.
+    const lines = sh(`${commands.toProjects} && ${commands.list}`).trim().split('\n').slice(1);
+    const newestFirst = [...projects].sort((a, b) => b.date.localeCompare(a.date));
+    expect(lines.map((line) => line.split(' ').pop())).toEqual(newestFirst.map((p) => p.folder));
+    expect(lines.map((line) => line.slice(0, 10))).toEqual(newestFirst.map((p) => folderMode(p.locked)));
+    // The page lists projects in this same order (fixtureProjects is newest first).
+    expect(newestFirst.map((p) => p.folder)).toEqual(projects.map((p) => p.folder));
   });
 
-  it('log: ls -a in ~/log lists . and .. plus one file per entry', () => {
-    expect(sh(`${commands.toLog} && ${commands.list}`).trim().split('\n')).toHaveLength(2 + fixtureLogs.length);
+  it('log: ls -r in ~/log lists one file per entry, newest first', () => {
+    // fixtureLogs is newest first, like the page; the file names start with the date.
+    expect(sh(`${commands.toLog} && ${commands.listLog}`).trim().split('\n')).toEqual(
+      fixtureLogs.map((e) => logEntryFile(e.fields)),
+    );
   });
 
   it('log: cd log succeeds and leaves you in ~/log', () => {
@@ -132,6 +155,7 @@ describe('the displayed commands are real shell commands', () => {
       commands.parent,
       commands.toLog,
       commands.list,
+      commands.listLog,
       commands.home,
       commands.toPath("it's missing"),
     ];
@@ -200,13 +224,13 @@ describe('schedule', () => {
   it('types each command after its prompt and shows output after a pause', () => {
     const { steps, endAt, contentAt } = schedule([
       { command: 'cd projects', hasOutput: false },
-      { command: 'ls -a', hasOutput: true },
+      { command: 'ls -l', hasOutput: true },
     ]);
     const typed1 = TIMING.typeDelay + 'cd projects'.length * TIMING.char;
     expect(steps[0]).toEqual({ promptAt: 0, typeAt: TIMING.typeDelay, outputAt: typed1 + TIMING.pause });
     // With no output, the next prompt follows straight after the pause.
     expect(steps[1].promptAt).toBe(steps[0].outputAt);
-    expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -a'.length * TIMING.char + TIMING.pause);
+    expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -l'.length * TIMING.char + TIMING.pause);
     expect(endAt).toBe(steps[1].outputAt + TIMING.settle);
     expect(contentAt).toBe(steps[1].outputAt + TIMING.content);
   });
