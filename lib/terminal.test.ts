@@ -104,17 +104,14 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  // ls -l prints "total N", then one line per entry with the name as the last field.
-  const listed = (script: string) =>
-    sh(script)
-      .trim()
-      .split('\n')
-      .slice(1)
-      .map((line) => line.split(' ').pop());
-
-  it('projects: ls -l in ~/projects lists one folder per card', () => {
-    // The cards are the listing, so the page shows ls -l without printing it.
-    expect(listed(`${commands.toProjects} && ${commands.list}`)).toEqual(projects.map((p) => p.folder).sort());
+  it("projects: ls -lt in ~/projects lists one folder per card, newest first, with the cards' modes", () => {
+    // The cards are the listing, so the page shows ls -lt without printing it.
+    const lines = sh(`${commands.toProjects} && ${commands.list}`).trim().split('\n').slice(1);
+    const newestFirst = [...projects].sort((a, b) => b.date.localeCompare(a.date));
+    expect(lines.map((line) => line.split(' ').pop())).toEqual(newestFirst.map((p) => p.folder));
+    expect(lines.map((line) => line.slice(0, 10))).toEqual(newestFirst.map((p) => folderMode(p.locked)));
+    // The page lists projects in this same order (fixtureProjects is newest first).
+    expect(newestFirst.map((p) => p.folder)).toEqual(projects.map((p) => p.folder));
   });
 
   it('log: ls -r in ~/log lists one file per entry, newest first', () => {

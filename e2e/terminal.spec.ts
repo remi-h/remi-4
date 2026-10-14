@@ -2,13 +2,10 @@ import { expect, test } from '@playwright/test';
 import { fixtureProjects } from '../lib/contentful.fixtures';
 import { commands, folderName } from '../lib/terminal';
 
-// Featured first, as the pages order them.
-const ordered = [...fixtureProjects].sort(
-  (a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured)),
-);
-const folders = ordered.map((p, i) => folderName({ slug: p.fields.slug, title: p.fields.title }, i));
+// Newest first, as the pages order them (the fixtures are already in that order).
+const folders = fixtureProjects.map((p, i) => folderName({ slug: p.fields.slug, title: p.fields.title }, i));
 
-test('/projects types "cd projects" then "ls -l", and the cards are the listing', async ({ page }) => {
+test('/projects types "cd projects" then "ls -lt", and the cards are the listing', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 

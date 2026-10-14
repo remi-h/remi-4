@@ -77,7 +77,7 @@ export const ProjectsTile = async ({
   delayMs = 0,
   threeUp = false,
 }: ProjectsTileProps) => {
-  const data = await fetchProjects({ featuredOnly, featuredFirst: true });
+  const data = await fetchProjects({ featuredOnly });
   const assets = getAssetMap(data.includes?.Asset);
 
   if (data.items.length === 0) {

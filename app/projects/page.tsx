@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default function ProjectsPage() {
-  // The page itself is the output of ls -l: the heading, then one entry per item.
+  // The page itself is the output of ls -lt: the heading, then one entry per item.
   const steps = [
     { cwd: '~', command: commands.toProjects },
     { cwd: '~/projects', command: commands.list },

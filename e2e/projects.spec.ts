@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('the grid lists every fixture project', async ({ page }) => {
+test('the grid lists every fixture project, newest first', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const titles = page.getByRole('main').getByRole('heading', { level: 2 });
-  await expect(titles).toHaveText(['Fixture Alpha', 'Fixture Gamma', 'Fixture Beta']);
+  await expect(titles).toHaveText(['Fixture Alpha', 'Fixture Beta', 'Fixture Gamma']);
 });
 
 test('a project card opens its detail page with title, summary and body', async ({ page }) => {

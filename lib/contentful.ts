@@ -91,12 +91,9 @@ const fetchContentful = async (url: URL) => {
   return (await response.json()) as ContentfulResponse;
 };
 
-export const fetchProjects = async (options?: { featuredOnly?: boolean; featuredFirst?: boolean }) => {
+export const fetchProjects = async (options?: { featuredOnly?: boolean }) => {
   if (fixturesEnabled()) {
     const items = fixtureProjects.filter((project) => !options?.featuredOnly || project.fields.featured);
-    if (options?.featuredFirst) {
-      items.sort((a, b) => Number(Boolean(b.fields.featured)) - Number(Boolean(a.fields.featured)));
-    }
     return { items, includes: { Asset: [] } } as ContentfulResponse;
   }
 
@@ -115,18 +112,7 @@ export const fetchProjects = async (options?: { featuredOnly?: boolean; featured
     url.searchParams.set('fields.featured', 'true');
   }
 
-  const response = (await fetchContentful(url)) ?? ({ items: [], includes: { Asset: [] } } as ContentfulResponse);
-
-  if (options?.featuredFirst) {
-    response.items.sort((a, b) => {
-      const aFeatured = Boolean(a.fields.featured);
-      const bFeatured = Boolean(b.fields.featured);
-      if (aFeatured === bFeatured) return 0;
-      return aFeatured ? -1 : 1;
-    });
-  }
-
-  return response;
+  return (await fetchContentful(url)) ?? ({ items: [], includes: { Asset: [] } } as ContentfulResponse);
 };
 
 export const fetchLogs = async () => {

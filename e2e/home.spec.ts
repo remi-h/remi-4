@@ -25,7 +25,7 @@ test('the featured heading is a real command line with a # comment', async ({ pa
   ).toBeVisible();
 });
 
-test('featured projects show only featured fixtures, featured first', async ({ page }) => {
+test('featured projects show only featured fixtures, newest first', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /ls -lt featured/ })).toBeVisible();
 
