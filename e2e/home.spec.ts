@@ -21,13 +21,13 @@ test('the flight log shows Tokyo to Stockholm, landed when motion is reduced', a
 test('the featured heading is a real command line with a # comment', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(
-    page.getByRole('heading', { level: 2, name: 'remi@portfolio:~$ ls -t featured # プロジェクト' }),
+    page.getByRole('heading', { level: 2, name: 'remi@portfolio:~$ ls -lt featured # プロジェクト' }),
   ).toBeVisible();
 });
 
 test('featured projects show only featured fixtures, featured first', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /ls -t featured/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /ls -lt featured/ })).toBeVisible();
 
   const titles = page.getByRole('main').getByRole('heading', { level: 3 });
   await expect(titles).toHaveText(['Fixture Alpha', 'Fixture Gamma']);

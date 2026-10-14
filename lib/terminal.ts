@@ -83,7 +83,7 @@ export const folderMode = (locked: boolean) => (locked ? 'drwxr-x---' : 'drwxr-x
 
 export const commands = {
   about: 'cat about.txt',
-  featured: 'ls -t featured',
+  featured: 'ls -lt featured',
   toProjects: 'cd projects',
   toProject: (folder: string) => `cd projects/${shellQuote(folder)}`,
   readme: 'cat README.md',
@@ -91,6 +91,8 @@ export const commands = {
   back: 'cd .. # go back',
   toLog: 'cd log',
   list: 'ls -l',
+  /** Log files are named <date>_<title>, so reverse name order is newest first, like the page. */
+  listLog: 'ls -r',
   home: 'cd ~',
   /** `cd` into a path that may not exist, as the 404 page shows it. */
   toPath: (path: string) => `cd ${shellQuote(path)}`,

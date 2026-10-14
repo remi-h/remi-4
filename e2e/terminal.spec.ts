@@ -31,18 +31,18 @@ test('/projects lists a folder for every card', async ({ page }) => {
   }
 });
 
-test('home types "cat about.txt" and heads the featured list with "ls -t featured"', async ({ page }) => {
+test('home types "cat about.txt" and heads the featured list with "ls -lt featured"', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText(commands.about, { exact: true })).toHaveCount(1);
   await expect(page.getByRole('heading', { name: new RegExp(commands.featured) })).toBeVisible();
 });
 
-test('/log types "cd log" then "ls -l", and the entries are the listing', async ({ page }) => {
+test('/log types "cd log" then "ls -r", and the entries are the listing', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 
   await expect(main.getByText(commands.toLog, { exact: true })).toHaveCount(1);
-  await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
+  await expect(main.getByText(commands.listLog, { exact: true })).toHaveCount(1);
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
   await expect(main.getByText('remi@portfolio:~/log$')).toHaveCount(1);
   await expect(main.getByTestId('shell')).toContainText('guest@portfolio:~/log$');

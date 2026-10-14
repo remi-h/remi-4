@@ -76,8 +76,8 @@ alone.
   footer: `remi · main · ~/path` on the left, the social links and © on the right.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
-  against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `ls -t featured # プロジェクト`, `cd projects`, `ls -l`, `cd projects/<folder>`, `cat README.md`,
+  against a mirror of the content (`cat about.txt`, `ls -lt featured`,
+  `ls -lt featured # プロジェクト`, `cd projects`, `ls -l`, `cd projects/<folder>`, `cat README.md`,
   `cd .. # go back`, `cd log`, and on the 404
   `cd <path>` with interactive bash's `bash: cd: <path>: No such file or directory`, then
   `cd ~`). Never show a command that
@@ -201,7 +201,7 @@ Built on the stacked branches, never merged to `main` until complete.
    flies a full-width parabolic HND → ARN arc (steady move across plus a quadratic
    rise and fall, tilting with the slope), drawing its contrail, while a
    progress bar, percentage and distance (8170 km) fill, then Stockholm lights up and
-   "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -t featured # プロジェクト`
+   "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -lt featured # プロジェクト`
    heads the featured cards, and the working prompt ends the page. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
 4. **Projects:** ✅ `cd projects` then `ls -l` are typed. The page is the listing: no
@@ -214,7 +214,7 @@ Built on the stacked branches, never merged to `main` until complete.
    claims no format; only fields that exist: date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`, all as wide as the cover. `← cd .. # go back` links back to the list
    at the top and bottom.
-6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -l`, the entries are
+6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -r`, the entries are
    the listing, and the working prompt follows them; first `log/` + `# ログ` + the description, then the
    entries (ISO date, organisation, title, ↗ for links) fade in like the cards.
    Projects and Log must stay structurally identical; `e2e/terminal.spec.ts`
