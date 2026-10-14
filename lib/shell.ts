@@ -72,7 +72,12 @@ export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir 
     projects: dir(projectDirs, FOLDER_MODES.public, newest(projectDirs)),
   };
   const updated = newest(folders);
-  return dir({ 'about.txt': file(aboutTxt(), updated), ...folders }, FOLDER_MODES.public, updated);
+  // A hidden page: ls only shows it with -a or -A, and cd opens it.
+  return dir(
+    { 'about.txt': file(aboutTxt(), updated), '.secret': dir({}, FOLDER_MODES.public, updated), ...folders },
+    FOLDER_MODES.public,
+    updated,
+  );
 };
 
 /** A directory's entry by name. Own keys only, so names like `constructor` are just missing. */
@@ -82,7 +87,7 @@ const childOf = (node: ShellDir, name: string): ShellNode | undefined =>
 /** The page a directory has, if any. */
 export const routeFor = (path: string[], tree: ShellDir) => {
   if (path.length === 0) return '/';
-  if (path.length === 1 && (path[0] === 'projects' || path[0] === 'log')) return `/${path[0]}`;
+  if (path.length === 1 && (path[0] === 'projects' || path[0] === 'log' || path[0] === '.secret')) return `/${path[0]}`;
   if (path.length === 2 && path[0] === 'projects') {
     const node = tree.children.projects;
     const project = node?.type === 'dir' ? childOf(node, path[1]) : undefined;
@@ -306,7 +311,8 @@ const ls = (tree: ShellDir, cwd: string[], args: string[], user: ShellUser, now:
   const show = (entries: [string, ShellNode][], alsoFits: ShellNode[] = []) =>
     long ? longLines(entries, user, now, alsoFits) : entries.map(([name]) => name);
   const list = (node: ShellDir, path: string[]) => {
-    let entries = Object.entries(node.children);
+    // Names starting with a dot are hidden unless -a or -A asks for them.
+    let entries = Object.entries(node.children).filter(([name]) => all || almostAll || !name.startsWith('.'));
     if (all && !almostAll) {
       const parent = resolve(tree, path, '..');
       entries = [['.', node], ['..', 'node' in parent ? parent.node : node], ...entries];

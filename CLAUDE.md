@@ -104,6 +104,11 @@ alone.
   and checks every case against interactive bash run as an unprivileged user, with a PATH
   holding only ls and cat. Add a case there for any new command or flag. Unimplemented
   real ls flags say so ("not supported in this shell") rather than faking output.
+- **The hidden page:** `/.secret` is a blank page for now. It is the folder `~/.secret`:
+  `ls` hides it, `ls -a` / `ls -A` list it, `cd .secret` opens it (the shell tree in
+  `lib/shell.ts`, checked against real bash in `lib/shell.test.ts`). The header has a `0 .secret`
+  tab before `1 home` that is invisible until hover or keyboard focus (and hidden on phones). It is `noindex` and not
+  in any sitemap, but anyone can type the URL; dot-prefixed route folders work in Next 16.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font

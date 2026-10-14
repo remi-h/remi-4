@@ -114,6 +114,18 @@ describe('the working prompt matches real bash', () => {
   const cases: [string[], string][] = [
     [[], 'ls'],
     [[], 'ls -a'],
+    [[], 'ls -lA'],
+    [[], 'ls -t'],
+    [[], 'ls .secret'],
+    [[], 'ls -a .secret'],
+    [['.secret'], 'ls -a'],
+    [['.secret'], 'ls'],
+    [['.secret'], 'pwd'],
+    [['.secret'], 'cd ..'],
+    [[], 'cd .secret'],
+    [[], 'cd ./.secret'],
+    [[], 'cd ~/.secret'],
+    [[], 'cat .secret'],
     [[], 'ls -t featured'],
     [[], 'ls projects'],
     [[], 'ls -a projects'],
@@ -222,6 +234,7 @@ describe('routes', () => {
     expect(routeFor([], tree)).toBe('/');
     expect(routeFor(['projects'], tree)).toBe('/projects');
     expect(routeFor(['log'], tree)).toBe('/log');
+    expect(routeFor(['.secret'], tree)).toBe('/.secret');
     expect(routeFor(['projects', alpha], tree)).toBe(`/projects/${alpha}`);
     // Locked projects and featured/ have no page of their own.
     expect(routeFor(['projects', gamma], tree)).toBeNull();
@@ -232,6 +245,7 @@ describe('routes', () => {
     expect(pathForRoute('/')).toEqual([]);
     expect(pathForRoute('/projects/fixture-alpha')).toEqual(['projects', 'fixture-alpha']);
     expect(displayCwd(['log'])).toBe('~/log');
+    expect(pathForRoute('/.secret')).toEqual(['.secret']);
     expect(displayCwd([])).toBe('~');
   });
 });

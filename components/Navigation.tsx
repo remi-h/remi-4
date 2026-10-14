@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useCwd } from '@/components/useCwd';
 import { USER_HOST } from '@/lib/terminal';
 
+// `hidden` tabs show only on hover or focus, and not at all on phones (no hover); `ls -a` finds the page too.
 const tabs = [
+  { href: '/.secret', label: '.secret', n: 0, hidden: true },
   { href: '/', label: 'home', n: 1 },
   { href: '/projects', label: 'projects', n: 2 },
   { href: '/log', label: 'log', n: 3 },
@@ -32,7 +34,7 @@ export const Navigation = () => {
           </span>
         </Link>
         <nav aria-label="Main" className="flex gap-1 text-sm">
-          {tabs.map(({ href, label, n }) => {
+          {tabs.map(({ href, label, n, hidden }) => {
             const active = notFound
               ? false
               : href === '/'
@@ -43,7 +45,7 @@ export const Navigation = () => {
                 aria-current={active ? 'page' : undefined}
                 className={`px-3.5 py-2.5 hover:no-underline ${
                   active ? 'bg-hot font-bold text-ink hover:text-ink' : 'text-muted hover:text-cyan'
-                }`}
+                } ${hidden && !active ? 'opacity-0 hover:opacity-100 focus-visible:opacity-100 max-sm:hidden' : ''}`}
                 href={href}
                 key={href}
               >
