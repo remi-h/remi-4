@@ -90,6 +90,7 @@ export const commands = {
   parent: 'cd ..',
   back: 'cd .. # go back',
   toLog: 'cd log',
+  toSecret: 'cd .secret',
   /** Projects are shown newest first, which is what -t prints; -l adds the modes the cards show. */
   list: 'ls -lt',
   /** Log files are named <date>_<title>, so reverse name order is newest first, like the page. */

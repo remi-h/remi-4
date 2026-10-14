@@ -49,6 +49,7 @@ describe('the displayed commands are real shell commands', () => {
       touch(file, entry.fields.date ?? '');
     }
     mkdirSync(join(root, 'featured'));
+    mkdirSync(join(root, '.secret'));
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured, locked, date } of projects) {
       mkdirSync(join(root, 'projects', folder));
@@ -121,6 +122,12 @@ describe('the displayed commands are real shell commands', () => {
     );
   });
 
+  it('secret: cd .secret succeeds, and ls only shows it with -a', () => {
+    expect(sh(`${commands.toSecret} && pwd`).trim()).toBe(join(root, '.secret'));
+    expect(sh('ls').split('\n')).not.toContain('.secret');
+    expect(sh('ls -a').split('\n')).toContain('.secret');
+  });
+
   it('log: cd log succeeds and leaves you in ~/log', () => {
     expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
   });
@@ -154,6 +161,7 @@ describe('the displayed commands are real shell commands', () => {
       commands.readme,
       commands.parent,
       commands.toLog,
+      commands.toSecret,
       commands.list,
       commands.listLog,
       commands.home,
