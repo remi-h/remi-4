@@ -8,14 +8,14 @@ const ordered = [...fixtureProjects].sort(
 );
 const folders = ordered.map((p, i) => folderName({ slug: p.fields.slug, title: p.fields.title }, i));
 
-test('/projects types "cd projects" then "ls -a", and the cards are the listing', async ({ page }) => {
+test('/projects types "cd projects" then "ls -l", and the cards are the listing', async ({ page }) => {
   await page.goto('/projects', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 
   await expect(main.getByText(commands.toProjects, { exact: true })).toHaveCount(1);
   await expect(main.getByText(commands.list, { exact: true })).toHaveCount(1);
 
-  // cd runs in ~, ls -a in ~/projects, and the working prompt comes after the cards.
+  // cd runs in ~, ls -l in ~/projects, and the working prompt comes after the cards.
   await expect(main.getByText('remi@portfolio:~$')).toHaveCount(1);
   await expect(main.getByText('remi@portfolio:~/projects$')).toHaveCount(1);
   await expect(main.getByTestId('shell')).toContainText('guest@portfolio:~/projects$');
@@ -37,7 +37,7 @@ test('home types "cat about.txt" and heads the featured list with "ls -t feature
   await expect(page.getByRole('heading', { name: new RegExp(commands.featured) })).toBeVisible();
 });
 
-test('/log types "cd log" then "ls -a", and the entries are the listing', async ({ page }) => {
+test('/log types "cd log" then "ls -l", and the entries are the listing', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   const main = page.getByRole('main');
 

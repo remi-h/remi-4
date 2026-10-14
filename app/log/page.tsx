@@ -22,7 +22,7 @@ const rowClass =
 // Laid out like the projects page: the command, then the page heading, then the entries.
 export default async function LogPage() {
   const { items } = await fetchLogs();
-  // The page itself is the output of ls -a: the heading, then one entry per item.
+  // The page itself is the output of ls -l: the heading, then one entry per item.
   const steps = [
     { cwd: '~', command: commands.toLog },
     { cwd: '~/log', command: commands.list },

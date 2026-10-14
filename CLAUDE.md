@@ -77,7 +77,7 @@ alone.
 - **Every command on screen is real.** Commands and their outputs live in
   `lib/terminal.ts`; `lib/terminal.test.ts` runs every one in a real shell
   against a mirror of the content (`cat about.txt`, `ls -t featured`,
-  `ls -t featured # プロジェクト`, `cd projects`, `ls -a`, `cd projects/<folder>`, `cat README.md`,
+  `ls -t featured # プロジェクト`, `cd projects`, `ls -l`, `cd projects/<folder>`, `cat README.md`,
   `cd .. # go back`, `cd log`, and on the 404
   `cd <path>` with interactive bash's `bash: cd: <path>: No such file or directory`, then
   `cd ~`). Never show a command that
@@ -204,17 +204,17 @@ Built on the stacked branches, never merged to `main` until complete.
    "landed · based in stockholm" appears; CSS only, about 2.4s; `remi@portfolio:~$ ls -t featured # プロジェクト`
    heads the featured cards, and the working prompt ends the page. The mockup
    headline "Calm tools for a loud world." was not used (unconfirmed copy).
-4. **Projects:** ✅ `cd projects` then `ls -a` are typed. The page is the listing: no
+4. **Projects:** ✅ `cd projects` then `ls -l` are typed. The page is the listing: no
    printed output, `projects/` and the cards fade in, and the working prompt comes
    after the cards. The real-shell test checks
-   `ls -a` lists `.`, `..` and one folder per card. `ProjectsTile`
+   `ls -l` lists one folder per card. `ProjectsTile`
    is shared with the home page; the listing shows three cards per row from 1024px (`threeUp`).
 5. **Project detail:** ✅ `cd projects/<folder>` then `cat README.md`; the
    output is the title, summary, a `metadata` window (a label, not a file name, so it
    claims no format; only fields that exist: date, duration, link), the cover, and Contentful rich text styled by
    `.project-page`, all as wide as the cover. `← cd .. # go back` links back to the list
    at the top and bottom.
-6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -a`, the entries are
+6. **Log:** ✅ laid out exactly like Projects: `cd log` then `ls -l`, the entries are
    the listing, and the working prompt follows them; first `log/` + `# ログ` + the description, then the
    entries (ISO date, organisation, title, ↗ for links) fade in like the cards.
    Projects and Log must stay structurally identical; `e2e/terminal.spec.ts`

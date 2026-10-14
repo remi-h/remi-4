@@ -87,15 +87,23 @@ describe('the displayed commands are real shell commands', () => {
     }
   });
 
-  it('projects: ls -a in ~/projects lists . and .. plus one folder per card', () => {
-    // The cards are the listing, so the page shows ls -a without printing it.
-    expect(sh(`${commands.toProjects} && ${commands.list}`).trim().split('\n')).toEqual(
-      ['.', '..', ...projects.map((p) => p.folder)].sort(),
-    );
+  // ls -l prints "total N", then one line per entry with the name as the last field.
+  const listed = (script: string) =>
+    sh(script)
+      .trim()
+      .split('\n')
+      .slice(1)
+      .map((line) => line.split(' ').pop());
+
+  it('projects: ls -l in ~/projects lists one folder per card', () => {
+    // The cards are the listing, so the page shows ls -l without printing it.
+    expect(listed(`${commands.toProjects} && ${commands.list}`)).toEqual(projects.map((p) => p.folder).sort());
   });
 
-  it('log: ls -a in ~/log lists . and .. plus one file per entry', () => {
-    expect(sh(`${commands.toLog} && ${commands.list}`).trim().split('\n')).toHaveLength(2 + fixtureLogs.length);
+  it('log: ls -l in ~/log lists one file per entry', () => {
+    expect(listed(`${commands.toLog} && ${commands.list}`)).toEqual(
+      fixtureLogs.map((e) => logEntryFile(e.fields)).sort(),
+    );
   });
 
   it('log: cd log succeeds and leaves you in ~/log', () => {
@@ -200,13 +208,13 @@ describe('schedule', () => {
   it('types each command after its prompt and shows output after a pause', () => {
     const { steps, endAt, contentAt } = schedule([
       { command: 'cd projects', hasOutput: false },
-      { command: 'ls -a', hasOutput: true },
+      { command: 'ls -l', hasOutput: true },
     ]);
     const typed1 = TIMING.typeDelay + 'cd projects'.length * TIMING.char;
     expect(steps[0]).toEqual({ promptAt: 0, typeAt: TIMING.typeDelay, outputAt: typed1 + TIMING.pause });
     // With no output, the next prompt follows straight after the pause.
     expect(steps[1].promptAt).toBe(steps[0].outputAt);
-    expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -a'.length * TIMING.char + TIMING.pause);
+    expect(steps[1].outputAt).toBe(steps[1].promptAt + TIMING.typeDelay + 'ls -l'.length * TIMING.char + TIMING.pause);
     expect(endAt).toBe(steps[1].outputAt + TIMING.settle);
     expect(contentAt).toBe(steps[1].outputAt + TIMING.content);
   });

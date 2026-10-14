@@ -90,7 +90,7 @@ export const commands = {
   parent: 'cd ..',
   back: 'cd .. # go back',
   toLog: 'cd log',
-  list: 'ls -a',
+  list: 'ls -l',
   home: 'cd ~',
   /** `cd` into a path that may not exist, as the 404 page shows it. */
   toPath: (path: string) => `cd ${shellQuote(path)}`,
