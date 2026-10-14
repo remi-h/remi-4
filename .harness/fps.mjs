@@ -1,0 +1,12 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch({ channel: 'chrome', headless: false, args: ['--enable-unsafe-webgpu'] });
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto('http://localhost:3000/.secret');
+await p.waitForFunction(() => !document.querySelector('[data-testid=secret-flight] button[disabled]'), null, { timeout: 60000 });
+await p.waitForTimeout(1500);
+await p.getByRole('button', { name: '[ board ]' }).click();
+await p.keyboard.press('Escape'); await p.waitForTimeout(2500);
+const fps = () => p.evaluate(() => new Promise(r => { let n = 0; const s = performance.now(); const f = () => { n++; if (performance.now() - s < 3000) requestAnimationFrame(f); else r(Math.round(n / 3)); }; requestAnimationFrame(f); }));
+const at = async (v) => { await p.getByRole('slider').fill(String(v)); await p.waitForTimeout(1500); return fps(); };
+console.log('dusk', await at(0.03), 'night', await at(0.35), 'sunrise', await at(0.86));
+await b.close();

@@ -23,6 +23,8 @@ export const FlightLog = ({
 }) => {
   const vars = { '--fly': `${FLY_MS}ms`, '--d': `${delayMs}ms`, '--km': DISTANCE_KM } as CSSProperties;
   const landed = { '--d': `${delayMs + FLY_MS}ms` } as CSSProperties;
+  // A beat after landing, a hint for the curious: the flight home is on the hidden page.
+  const hint = { '--d': `${delayMs + FLY_MS + 700}ms` } as CSSProperties;
 
   return (
     <Window className={className} meta="[ relocating ]" style={style} title="tokyo → stockholm">
@@ -89,6 +91,9 @@ export const FlightLog = ({
         </div>
         <div className="t-in" style={landed}>
           <span className="text-cyan">✓</span> landed <span className="text-muted">·</span> based in stockholm
+        </div>
+        <div className="t-in text-muted" data-testid="flight-hint" style={hint}>
+          <span className="text-yellow">?</span> secret flight simulator exists <span>·</span> good luck
         </div>
       </div>
     </Window>

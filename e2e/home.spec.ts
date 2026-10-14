@@ -15,6 +15,7 @@ test('the flight log shows Tokyo to Stockholm, landed when motion is reduced', a
   await expect(log).toContainText('HND');
   await expect(log).toContainText('ARN');
   await expect(log).toContainText('landed · based in stockholm');
+  await expect(log.getByTestId('flight-hint')).toHaveText('? secret flight simulator exists · good luck');
   await expect(log).toContainText('100%');
 });
 

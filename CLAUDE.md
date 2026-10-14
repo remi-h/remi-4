@@ -104,11 +104,27 @@ alone.
   and checks every case against interactive bash run as an unprivileged user, with a PATH
   holding only ls and cat. Add a case there for any new command or flag. Unimplemented
   real ls flags say so ("not supported in this shell") rather than faking output.
-- **The hidden page:** `/.secret` is a blank page for now. It is the folder `~/.secret`:
+- **The hidden page:** `/.secret` is the folder `~/.secret`:
   `ls` hides it, `ls -a` / `ls -A` list it, `cd .secret` opens it (the shell tree in
   `lib/shell.ts`, checked against real bash in `lib/shell.test.ts`). The header has a `0 .secret`
   tab before `1 home` that is invisible until hover or keyboard focus (and hidden on phones). It is `noindex` and not
   in any sitemap, but anyone can type the URL; dot-prefixed route folders work in Next 16.
+  Its content is a flight home, Stockholm → Tokyo (`components/SecretFlight.tsx`, logic in `lib/flight/`),
+  drawn with **vgpu**. A `stockholm → tokyo` window holds the plane on its runway and `[ board ]`; WebGPU,
+  every pipeline and the sky's lookup tables warm up as soon as the page loads. Boarding
+  (`boarding.wgsl`) runs over a canvas redraw of the page (`snapshot.ts`): its 64px tiles flip like a
+  departures board, the plane rolls and takes off as the page tilts into city lights, then flies away
+  into the dusk with a contrail. The real sky dissolves in under that shot and the cockpit frame closes in
+  from beyond the screen: a physically based sky with volumetric clouds (`lib/flight/atmosphere/`, adapted
+  from vgpu's MIT Atmosphere & Clouds example, see its NOTICE.md), stars, aurora, city lights and Fuji,
+  driven along the route by `route.ts`, seen through thick windshield glass (edge refraction, dust, wiper
+  scratches and frost, `cockpit.wgsl`) under a cyan head-up display. The landing board says おかえり.
+  Keep it at about 60 fps on a laptop: measure before raising cloud detail or the render width. Pointer looks around, ← → and the slider move along the route; Esc or reaching Tokyo
+  lands: the board flips to `LANDED` and back to the page, which then says it landed. Timings live in
+  `timeline.ts`. Read the installed version's docs with `npm exec --no -- vgpu docs …` (never bare
+  `npx vgpu`), and validate every changed shader with `npm exec --no -- vgpu check <file>
+  --require-validation` (the build does not). Without WebGPU the button says so; reduced motion skips
+  straight to a still cockpit. The canvas is `aria-hidden`; the HUD readout and slider are real elements.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
