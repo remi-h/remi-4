@@ -1,7 +1,7 @@
 /**
  * Redraws what is on screen into a canvas so the boarding shader can take the page apart:
  * the ink page and its 64px grid, every element's background and borders, and every visible
- * character at the exact position the browser laid it out. SVGs are skipped on purpose, so
+ * character at the exact position the browser laid it out, and same-origin images. SVGs are skipped on purpose, so
  * the plane on the runway leaves the snapshot and the shader draws it instead.
  */
 export function snapshotPage(dpr: number): HTMLCanvasElement {
@@ -45,6 +45,7 @@ function walk(ctx: CanvasRenderingContext2D, el: Element, parentOpacity: number,
       ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
     }
     drawBorders(ctx, rect, style);
+    if (el instanceof HTMLImageElement) drawImage(ctx, el, rect, style);
   }
 
   for (const child of el.childNodes) {
@@ -54,6 +55,34 @@ function walk(ctx: CanvasRenderingContext2D, el: Element, parentOpacity: number,
       walk(ctx, child, opacity, width, height);
     }
   }
+}
+
+/**
+ * A loaded image, fitted like the browser fits it (object-fit cover or contain, else stretched). Only
+ * same-origin images (next/image serves covers from /_next/image): another origin would taint the
+ * canvas, and WebGPU refuses to read a tainted one.
+ */
+function drawImage(ctx: CanvasRenderingContext2D, img: HTMLImageElement, r: DOMRect, s: CSSStyleDeclaration) {
+  if (
+    !img.complete ||
+    !img.naturalWidth ||
+    new URL(img.currentSrc || img.src, location.href).origin !== location.origin
+  )
+    return;
+  const [iw, ih] = [img.naturalWidth, img.naturalHeight];
+  const fit = s.objectFit;
+  if (fit !== 'cover' && fit !== 'contain') {
+    ctx.drawImage(img, r.left, r.top, r.width, r.height);
+    return;
+  }
+  const scale = (fit === 'cover' ? Math.max : Math.min)(r.width / iw, r.height / ih);
+  const [w, h] = [iw * scale, ih * scale];
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(r.left, r.top, r.width, r.height);
+  ctx.clip();
+  ctx.drawImage(img, r.left + (r.width - w) / 2, r.top + (r.height - h) / 2, w, h);
+  ctx.restore();
 }
 
 function drawBorders(ctx: CanvasRenderingContext2D, r: DOMRect, s: CSSStyleDeclaration) {

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('the hero shows the name and role, without the location lines', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { level: 1, name: 'Remi Higuchi' })).toBeVisible();
-  await expect(page.getByText('Experience Designer & Software Engineer')).toBeVisible();
+  await expect(page.getByText('Software Engineer & Designer')).toBeVisible();
   await expect(page.getByText('From Tokyo, Based in Stockholm')).toHaveCount(0);
   await expect(page.getByText('35.68')).toHaveCount(0);
 });

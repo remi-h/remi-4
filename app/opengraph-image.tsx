@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { ogFonts, palette as c } from '@/lib/og';
 import { commands, USER_HOST } from '@/lib/terminal';
 
-export const alt = 'Remi Higuchi, Experience Designer & Software Engineer, shown as a terminal session';
+export const alt = 'Remi Higuchi, Software Engineer & Designer, shown as a terminal session';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -73,9 +73,9 @@ export default async function OpengraphImage() {
         </div>
         <div style={{ display: 'flex', marginTop: 30, fontSize: 32 }}>
           <span style={{ color: c.hot }}>&gt;&nbsp;</span>
-          <span>Experience Designer&nbsp;</span>
+          <span>Software Engineer&nbsp;</span>
           <span style={{ color: c.muted }}>&amp;</span>
-          <span>&nbsp;Software Engineer</span>
+          <span>&nbsp;Designer</span>
         </div>
         <div style={{ marginTop: 22, fontFamily: 'Familjen Grotesk', fontSize: 30, color: c.body }}>
           I enjoy shaping experiences at the intersection of design and technology.

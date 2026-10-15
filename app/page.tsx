@@ -16,8 +16,7 @@ const steps = [
       <div className="pb-2 pt-5">
         <h1 className="text-[clamp(38px,7.2vw,104px)] font-extrabold leading-none tracking-[-0.045em]">{ABOUT.name}</h1>
         <p className="mt-7 text-[clamp(16px,1.6vw,22px)] leading-normal">
-          <span className="text-hot">&gt;</span> Experience Designer <span className="text-muted">&amp;</span> Software
-          Engineer
+          <span className="text-hot">&gt;</span> Software Engineer <span className="text-muted">&amp;</span> Designer
         </p>
         <p className="font-grotesk mt-7 max-w-[560px] text-[21px] leading-[1.55] text-body">{ABOUT.intro}</p>
         <div className="mt-9 flex flex-wrap gap-3">

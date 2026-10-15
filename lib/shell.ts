@@ -1,6 +1,7 @@
 // The working prompt at the end of each page: a tiny shell over a virtual copy of the site.
 // lib/shell.test.ts writes the same tree to disk and runs every supported command through
 // real bash, so what this prints is what bash and GNU coreutils print.
+import { bonsai, bonsaiMtime } from './bonsai';
 import { FOLDER_MODES, folderName, slugify } from './terminal';
 
 /** Who types at the working prompt: a visitor, so locked folders (750) are closed to them. */
@@ -10,7 +11,7 @@ export const HOME = '/home/remi';
 
 export const ABOUT = {
   name: 'Remi Higuchi',
-  role: 'Experience Designer & Software Engineer',
+  role: 'Software Engineer & Designer',
   intro:
     'I enjoy shaping experiences at the intersection of design and technology, and collaborating across disciplines to turn complexity into something intuitive and human.',
 } as const;
@@ -74,11 +75,22 @@ export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir 
   const updated = newest(folders);
   // A hidden page: ls only shows it with -a or -A, and cd opens it. Inside it, more pages (card/).
   const secret = dir({ card: dir({}, FOLDER_MODES.public, updated) }, FOLDER_MODES.public, updated);
-  return dir(
-    { 'about.txt': file(aboutTxt(), updated), '.secret': secret, ...folders },
-    FOLDER_MODES.public,
-    updated,
-  );
+  return dir({ 'about.txt': file(aboutTxt(), updated), '.secret': secret, ...folders }, FOLDER_MODES.public, updated);
+};
+
+/**
+ * The tree with today's ~/.secret/bonsai.txt in it. The bonsai grows every day (lib/bonsai.ts), so it is
+ * planted when a command runs rather than when the page is built; the folder changed when the file did.
+ */
+export const plantBonsai = (tree: ShellDir, now: number): ShellDir => {
+  const secret = tree.children['.secret'];
+  if (secret?.type !== 'dir') return tree;
+  const mtime = bonsaiMtime(now);
+  const children = { ...secret.children, 'bonsai.txt': file(bonsai(now), mtime) };
+  return {
+    ...tree,
+    children: { ...tree.children, '.secret': { ...secret, mtime: Math.max(secret.mtime, mtime), children } },
+  };
 };
 
 /** A directory's entry by name. Own keys only, so names like `constructor` are just missing. */
@@ -207,7 +219,140 @@ const logicalPath = (cwd: string[], arg: string) => {
   return ['~', ...path].join('/');
 };
 
-export type ShellResult = { output: string[]; cwd: string[]; clear?: boolean };
+export type ShellResult = { output: string[]; cwd: string[]; clear?: boolean; effect?: 'collapse' };
+
+const notFound = (command: string, cwd: string[]): ShellResult => ({
+  output: [`bash: ${command}: command not found`],
+  cwd,
+});
+
+type RmOptions = { recursive: boolean; force: boolean; operands: string[] } | { error: string[] };
+
+const RM_HINT = '-r, -f';
+// Every short option GNU rm accepts; this shell implements -r, -R and -f.
+const GNU_RM_FLAGS = 'dfiIrRv';
+
+const RM_FLAGS: Record<string, 'r' | 'f'> = { r: 'r', R: 'r', f: 'f', '--recursive': 'r', '--force': 'f' };
+
+/** One option of rm: which it sets, or what rm prints for it. */
+const rmFlag = (flag: string): 'r' | 'f' | string[] => {
+  if (Object.hasOwn(RM_FLAGS, flag)) return RM_FLAGS[flag];
+  const long = flag.startsWith('--');
+  if (long || GNU_RM_FLAGS.includes(flag))
+    return [`rm: ${long ? flag : `-${flag}`} is not supported in this shell (try ${RM_HINT})`];
+  return [`rm: invalid option -- '${flag}'`, "Try 'rm --help' for more information."];
+};
+
+/** rm's options and operands, or what rm prints for a bad option. */
+const rmOptions = (args: string[]): RmOptions => {
+  const set = new Set<string>();
+  const operands: string[] = [];
+  let optionsDone = false;
+  for (const arg of args) {
+    if (optionsDone || arg === '-' || !arg.startsWith('-')) {
+      operands.push(arg);
+      continue;
+    }
+    if (arg === '--') {
+      optionsDone = true;
+      continue;
+    }
+    for (const flag of arg.startsWith('--') ? [arg] : [...arg.slice(1)]) {
+      const parsed = rmFlag(flag);
+      if (Array.isArray(parsed)) return { error: parsed };
+      set.add(parsed);
+    }
+  }
+  return { recursive: set.has('r'), force: set.has('f'), operands };
+};
+
+/** Bash's tilde expansion: ~ and ~/… are $HOME. */
+const expandTilde = (word: string) => (word === '~' || word.startsWith('~/') ? HOME + word.slice(1) : word);
+
+/** The visible names in a folder the guest can read, in byte order; empty when there are none. */
+const visibleNames = (tree: ShellDir, cwd: string[], dir: string): string[] => {
+  const found = resolve(tree, cwd, dir || '.');
+  if (!('node' in found) || found.node.type !== 'dir' || !canRead(found.node)) return [];
+  return Object.keys(found.node.children)
+    .filter((name) => !name.startsWith('.'))
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+};
+
+/** What bash hands rm for a word: ~ expanded, and a bare * (or dir/*) globbed in byte order. */
+const expandForRm = (tree: ShellDir, cwd: string[], word: string): string[] => {
+  const expanded = expandTilde(word);
+  if (expanded !== '*' && !expanded.endsWith('/*')) return [expanded];
+  const dir = expanded.slice(0, -1);
+  const names = visibleNames(tree, cwd, dir);
+  // A glob that matches nothing is passed on as it was typed.
+  return names.length ? names.map((name) => dir + name) : [expanded];
+};
+
+const denied = (path: string) => `rm: cannot remove '${path}': Permission denied`;
+
+/**
+ * rm -r over a folder the guest cannot write: every file is refused, so are empty and unreadable folders;
+ * folders that still hold something are skipped quietly, as GNU rm does once a descendant failed.
+ */
+const removeTree = (node: ShellDir, path: string): string[] => {
+  if (!canRead(node) || !canEnter(node)) return [denied(path)];
+  const entries = sortEntries(Object.entries(node.children), false);
+  if (!entries.length) return [denied(path)];
+  return entries.flatMap(([name, child]) => {
+    const childPath = `${path.replace(/\/$/, '')}/${name}`;
+    return child.type === 'dir' ? removeTree(child, childPath) : [denied(childPath)];
+  });
+};
+
+const isRoot = (path: string) => path.startsWith('/') && path.split('/').every((p) => p === '' || p === '.');
+
+const isDirectory = (operand: string) => `rm: cannot remove '${operand}': Is a directory`;
+
+/** rm's own guards, before it looks anything up: it never removes `.` or `..`, nor `/` (preserve-root). */
+const guarded = (operand: string, recursive: boolean): string[] | null => {
+  const base = operand.replace(/\/+$/, '').split('/').pop();
+  const dots = base === '.' || base === '..';
+  if (!dots && !isRoot(operand)) return null;
+  if (!recursive) return [isDirectory(operand)];
+  if (dots) return [`rm: refusing to remove '.' or '..' directory: skipping '${operand}'`];
+  return [
+    operand === '/'
+      ? "rm: it is dangerous to operate recursively on '/'"
+      : `rm: it is dangerous to operate recursively on '${operand}' (same as '/')`,
+    'rm: use --no-preserve-root to override this failsafe',
+  ];
+};
+
+/** What rm says for an operand that cannot be reached; -f keeps quiet about missing ones. */
+const unreachable = (error: 'missing' | 'notdir' | 'denied', operand: string, force: boolean) => {
+  if (error === 'missing') return force ? [] : [`rm: cannot remove '${operand}': No such file or directory`];
+  return [error === 'notdir' ? `rm: cannot remove '${operand}': Not a directory` : denied(operand)];
+};
+
+/** One operand of rm, as GNU rm answers a guest who owns nothing here. */
+const removeOne = (tree: ShellDir, cwd: string[], operand: string, recursive: boolean, force: boolean) => {
+  const guard = guarded(operand, recursive);
+  if (guard) return guard;
+  const found = resolve(tree, cwd, operand);
+  if (!('node' in found)) return unreachable(found.error, operand, force);
+  if (found.node.type === 'file') return [denied(operand)];
+  return recursive ? removeTree(found.node, operand) : [isDirectory(operand)];
+};
+
+/** rm for the guest: nothing here is theirs, so it refuses, in GNU rm's words. */
+const rm = (tree: ShellDir, cwd: string[], args: string[]): ShellResult => {
+  const options = rmOptions(args);
+  if ('error' in options) return { output: options.error, cwd };
+  const { recursive, force } = options;
+  const operands = options.operands.flatMap((word) => expandForRm(tree, cwd, word));
+  const output = operands.length
+    ? operands.flatMap((operand) => removeOne(tree, cwd, operand, recursive, force))
+    : force
+      ? [] // like GNU rm: -f with nothing to remove says nothing
+      : ['rm: missing operand', "Try 'rm --help' for more information."];
+  // rm -rf: rm has answered as itself, and then the site plays along (lib/collapse.ts).
+  return { output, cwd, effect: recursive && force ? 'collapse' : undefined };
+};
 
 const sortEntries = (entries: [string, ShellNode][], byTime: boolean) =>
   [...entries].sort(([a, na], [b, nb]) => {
@@ -378,14 +523,17 @@ const cat = (tree: ShellDir, cwd: string[], args: string[]): string[] => {
 
 /** Runs one line typed at the prompt. */
 export const run = (
-  tree: ShellDir,
+  site: ShellDir,
   cwd: string[],
   line: string,
   { user = REMI, now = Math.floor(Date.now() / 1000) }: { user?: ShellUser; now?: number } = {},
 ): ShellResult => {
   const [command, ...args] = tokenize(line);
   if (!command) return { output: [], cwd };
+  const tree = plantBonsai(site, now);
   switch (command) {
+    case 'rm':
+      return rm(tree, cwd, args);
     case 'ls':
       return { output: ls(tree, cwd, args, user, now), cwd };
     case 'cat':
@@ -414,7 +562,7 @@ export const run = (
       return { output: [], cwd: found.path };
     }
     default:
-      return { output: [`bash: ${command}: command not found`], cwd };
+      return notFound(command, cwd);
   }
 };
 
