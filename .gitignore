@@ -43,3 +43,5 @@ next-env.d.ts
 # tests
 /playwright-report/
 /test-results/
+.fallow/
+fallow.json

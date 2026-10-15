@@ -22,6 +22,38 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  fallow:
+    name: Fallow (dead code, duplication, complexity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Hotspots are measured over the git history, so fetch all of it.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Analyse once to JSON (type-aware analysis only writes JSON-backed formats), then render it for GitHub.
+      # Fails on any unused code or duplication, and on complexity beyond fallow-baselines/health.json.
+      - name: Analyse
+        id: fallow
+        run: |
+          set +e
+          npm run --silent fallow -- --format json > fallow.json
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - name: Annotate the diff and write the job summary
+        if: always()
+        run: |
+          npx fallow report --from fallow.json --format github-annotations
+          npx fallow report --from fallow.json --format github-summary >> "$GITHUB_STEP_SUMMARY"
+      - name: Fail on findings
+        if: steps.fallow.outputs.status != '0'
+        run: |
+          echo "fallow found issues (exit ${{ steps.fallow.outputs.status }}); run npm run fallow locally for details."
+          exit 1
+
   build-and-unit-test:
     name: Build, typecheck & unit tests
     runs-on: ubuntu-latest

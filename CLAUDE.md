@@ -31,6 +31,7 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
 | Unit tests | `npm run test` |
 | E2E tests | `npm run test:e2e` (own server on port 3100; dev server locally, production build when `CI=true`) |
 | Format files | `npm run format -- <paths>` |
+| Unused code, duplication, complexity | `npm run fallow` |
 | Build | `npm run build` |
 
 ### Rules
@@ -50,6 +51,11 @@ file they cover (`*.test.ts(x)`); Playwright specs live in `e2e/`.
   output means changing that test in the same PR.
 - E2E runs with `reducedMotion: 'reduce'` so assertions never race a fade-in;
   `e2e/terminal.spec.ts` opts back in to check the animation itself.
+- `npm run fallow` must pass: no unused files, exports or dependencies, no duplication, and no
+  complexity beyond `fallow-baselines/health.json`. Fix findings (delete or un-export dead code, split a
+  complex function) rather than adding `fallow-ignore` comments; never re-save the baseline to absorb new
+  complexity, only after paying some down. Type-aware analysis is on (`.fallowrc.json`) because the flight
+  page reaches its engine through a React ref.
 - Treat a PR as mergeable only when CI is green.
 
 ---
@@ -117,7 +123,8 @@ alone.
   into the dusk with a contrail. The real sky dissolves in under that shot and the cockpit frame closes in
   from beyond the screen: a physically based sky with volumetric clouds (`lib/flight/atmosphere/`, adapted
   from vgpu's MIT Atmosphere & Clouds example, see its NOTICE.md), stars, aurora, city lights and Fuji,
-  driven along the route by `route.ts`, seen through thick windshield glass (edge refraction, dust, wiper
+  driven along the route by `route.ts`, over ground that scrolls past with the clouds (a baked tile the
+  terrain shaders read at the distance flown; `terrain-shift.ts`), seen through thick windshield glass (edge refraction, dust, wiper
   scratches and frost, `cockpit.wgsl`) under a cyan head-up display. The landing board says おかえり.
   Keep it at about 60 fps on a laptop: measure before raising cloud detail or the render width. Pointer looks around, ← → and the slider move along the route; Esc or reaching Tokyo
   lands: the board flips to `LANDED` and back to the page, which then says it landed. Timings live in
@@ -163,6 +170,7 @@ redesign is protected by tests.
       `main`, `concurrency` cancel-in-progress, Node 22, `npm ci` with cache:
       - `lint` job: `npm run lint`
       - `build-and-unit-test` job: `typecheck`, `build`, `test -- --ci`
+      - `fallow` job: `npm run fallow` to JSON, rendered as diff annotations and the job summary
       - `e2e-test` job: `npx playwright install --with-deps chromium`,
         `npm run test:e2e` with `CI=true`, upload `playwright-report/` on
         failure

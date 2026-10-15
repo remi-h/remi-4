@@ -1,0 +1,273 @@
+{
+  "kind": "health",
+  "finding_counts": {
+    "app/log/page.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "app/projects/[slug]/page.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/Navigation.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "components/NotFoundSession.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "components/ProjectsTile.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/SecretFlight.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "components/ShellPrompt.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/camera.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/renderer.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "lib/flight/engine.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/flight/snapshot.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/flight/sound.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    }
+  },
+  "identity_finding_counts": {
+    "app/log/page.tsx\u0000<arrow>": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "app/projects/[slug]/page.tsx\u0000ProjectPage": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/Navigation.tsx\u0000<arrow>": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "components/NotFoundSession.tsx\u0000NotFoundSession": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "components/ProjectsTile.tsx\u0000<arrow>": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/SecretFlight.tsx\u0000<arrow>": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "components/SecretFlight.tsx\u0000SecretFlight": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/SecretFlight.tsx\u0000onKey": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "components/ShellPrompt.tsx\u0000ShellPrompt": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "components/ShellPrompt.tsx\u0000onKeyDown": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/camera.ts\u0000terrainSector": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/renderer.ts\u0000applyState": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/renderer.ts\u0000cloudUpdateUniforms": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/renderer.ts\u0000destroyGraph": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/flight/atmosphere/renderer.ts\u0000encodeClouds": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/flight/engine.ts\u0000frame": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/flight/snapshot.ts\u0000drawBorders": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/flight/snapshot.ts\u0000drawText": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/flight/snapshot.ts\u0000visible": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/flight/snapshot.ts\u0000walk": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/flight/sound.ts\u0000board": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.test.ts\u0000bash": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts\u0000logicalPath": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts\u0000ls": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts\u0000resolve": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts\u0000run": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "lib/shell.ts\u0000tokenize": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    }
+  },
+  "runtime_coverage_findings": [],
+  "target_keys": [
+    "lib/shell.ts:high impact",
+    "components/useCwd.ts:high impact",
+    "components/SecretFlight.tsx:complexity",
+    "lib/flight/snapshot.ts:untested risk"
+  ]
+}

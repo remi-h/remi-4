@@ -1,6 +1,6 @@
 import { fixtureLogs, fixtureProjects } from './contentful.fixtures';
 
-type ContentfulSys = {
+export type ContentfulSys = {
   id: string;
 };
 
@@ -32,7 +32,7 @@ export type ContentfulProject = {
   };
 };
 
-type ContentfulResponse = {
+export type ContentfulResponse = {
   items: ContentfulProject[];
   includes?: { Asset?: ContentfulAsset[] };
 };
@@ -47,11 +47,11 @@ export type ContentfulLog = {
   };
 };
 
-type ContentfulLogResponse = {
+export type ContentfulLogResponse = {
   items: ContentfulLog[];
 };
 
-type ContentfulRichText = {
+export type ContentfulRichText = {
   nodeType?: string;
   value?: string;
   content?: ContentfulRichText[];

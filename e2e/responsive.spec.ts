@@ -31,3 +31,15 @@ test.describe('on a phone', () => {
     await expect(page).toHaveURL('/projects');
   });
 });
+
+test.describe('the footer sits at the bottom of the window on short pages', () => {
+  for (const route of ['/.secret', '/nope']) {
+    test(route, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 1400 });
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      const box = await page.getByRole('contentinfo').boundingBox();
+      expect(box).not.toBeNull();
+      expect(Math.abs(box!.y + box!.height - 1400)).toBeLessThanOrEqual(1);
+    });
+  }
+});

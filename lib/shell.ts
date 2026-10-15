@@ -43,7 +43,7 @@ const dir = (children: Record<string, ShellNode>, mode: number = FOLDER_MODES.pu
 });
 
 export const aboutTxt = () => `${ABOUT.name}\n${ABOUT.role}\n\n${ABOUT.intro}\n`;
-export const readmeFor = (project: ShellProject) =>
+const readmeFor = (project: ShellProject) =>
   `# ${project.title ?? 'Untitled'}\n${project.summary ? `\n${project.summary}\n` : ''}`;
 /** Log entries have no file names on the page; in the shell each is `<date>_<title>.md`. */
 export const logFileName = (log: ShellLog) => `${log.date ?? 'undated'}_${slugify(log.title ?? '') || 'entry'}.md`;

@@ -43,7 +43,7 @@ function upload(gpu: Gpu, source: HTMLCanvasElement, label: string): Texture {
 const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 /** The internal size the sky renders at for a canvas of `cssSize`. */
-export function renderSize(cssSize: readonly [number, number]): readonly [number, number] {
+function renderSize(cssSize: readonly [number, number]): readonly [number, number] {
   const scale = Math.min(1, MAX_RENDER_WIDTH / Math.max(1, cssSize[0]));
   return [Math.max(1, Math.round(cssSize[0] * scale)), Math.max(1, Math.round(cssSize[1] * scale))];
 }

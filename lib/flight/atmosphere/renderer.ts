@@ -21,7 +21,7 @@ import {
   type Target,
   type Texture,
 } from 'vgpu';
-import { cameraUniforms, sunDirection, terrainSector, type CameraUniformValues } from './camera';
+import { cameraUniforms, sunDirection, terrainSector, type CameraUniformValues, type Vec3 } from './camera';
 import {
   ATMOSPHERE_PHYSICS,
   CLOUD_TUNING,
@@ -43,6 +43,7 @@ import blurWgsl from './blur.wgsl';
 import cockpitWgsl from './cockpit.wgsl';
 import glassDirtWgsl from './glass-dirt.wgsl';
 import airlinerWgsl from './airliner.wgsl';
+import { terrainShift, type TerrainState } from '../terrain-shift';
 import cloudShapeNoiseWgsl from './cloud-shape-noise.wgsl';
 import cloudDetailNoiseWgsl from './cloud-detail-noise.wgsl';
 import weatherMapWgsl from './weather-map.wgsl';
@@ -57,10 +58,9 @@ import cloudShadowBlurWgsl from './cloud-shadow-blur.wgsl';
 import hazeMarchWgsl from './haze-march.wgsl';
 import hazeResolveWgsl from './haze-resolve.wgsl';
 
-type Output = Surface | Target;
-type Vec3 = readonly [number, number, number];
+export type Output = Surface | Target;
 
-type AtmosphereUniformValues = {
+export type AtmosphereUniformValues = {
   rayleighScattering: Vec3;
   rayleighScaleHeight: number;
   mieScattering: Vec3;
@@ -77,7 +77,7 @@ type AtmosphereUniformValues = {
   atmosphereRadius: number;
 };
 
-type CloudUpdateUniformValues = {
+export type CloudUpdateUniformValues = {
   frame: number;
   valid: number;
   blend: number;
@@ -90,8 +90,8 @@ type CloudUpdateUniformValues = {
   pad2: number;
 };
 
-type TerrainMeshUniformValues = { columnOffset: number; columns: number };
-type NightUniformValues = {
+export type TerrainMeshUniformValues = { columnOffset: number; columns: number };
+export type NightUniformValues = {
   time: number;
   travel: number;
   stars: number;
@@ -101,7 +101,14 @@ type NightUniformValues = {
   pad0: number;
   pad1: number;
 };
-type FeatureUniformValues = { fuji: number; pad0: number; pad1: number; pad2: number };
+/** The distance flown over the terrain, Fuji's camera-relative position, and the flight since shadows were rendered (km). */
+export type TerrainShiftUniformValues = {
+  offset: readonly [number, number];
+  fujiCenter: readonly [number, number];
+  shadowDelta: readonly [number, number];
+  fuji: number;
+  pad: number;
+};
 type CockpitUniformValues = {
   res: readonly [number, number];
   intro: number;
@@ -146,10 +153,10 @@ export interface FlightView {
   /** How far the takeoff shot has dissolved into the sky (1 = all sky). */
   readonly dissolve: number;
 }
-type HazeUpdateUniformValues = { phase: number; blend: number; valid: number; pad: number };
+export type HazeUpdateUniformValues = { phase: number; blend: number; valid: number; pad: number };
 
 /** Column-major 4x4 matrices mapping a position relative to the ground point under the camera axis to each cascade's clip space. */
-type SunShadowUniformValues = {
+export type SunShadowUniformValues = {
   toShadow0: readonly number[];
   toShadow1: readonly number[];
   toShadow2: readonly number[];
@@ -158,9 +165,9 @@ type SunShadowUniformValues = {
   radii: readonly [number, number, number, number];
   bias: readonly [number, number, number, number];
 };
-type CascadeUniformValues = { index: number; pad0: number; pad1: number; pad2: number };
+export type CascadeUniformValues = { index: number; pad0: number; pad1: number; pad2: number };
 
-type CloudUniformValues = {
+export type CloudUniformValues = {
   bottom: number;
   top: number;
   coverage: number;
@@ -256,9 +263,9 @@ export interface AtmosphereGraph {
   readonly livery: Texture;
   airlinerVisible: number;
   readonly night: SharedUniforms<NightUniformValues>;
-  readonly features: SharedUniforms<FeatureUniformValues>;
-  readonly heightmapCompute: Compute;
-  bakedFuji: number;
+  readonly terrainShift: SharedUniforms<TerrainShiftUniformValues>;
+  /** Shadow-map and Fuji bookkeeping for the moving ground (lib/flight/terrain-shift.ts). */
+  terrain: TerrainState;
   /** March step budget, 0 (fast) to 1 (twice the steps): lowered on slow GPUs. */
   cloudDetail: number;
   readonly sampler: GPUSampler;
@@ -295,8 +302,8 @@ export interface AtmosphereGraph {
 }
 
 /** Frames needed for every cloud texel to be re-marched at least once, at rest and right after a change. */
-export const CLOUD_CONVERGENCE_FRAMES = 16;
-export const CLOUD_FAST_REFRESH_PERIOD = 1;
+const CLOUD_CONVERGENCE_FRAMES = 16;
+const CLOUD_FAST_REFRESH_PERIOD = 1;
 /** Smallest weight of a re-marched texel against its history at rest; keeps the slow wind advection from lagging. */
 const CLOUD_BLEND_FLOOR = 0.1;
 
@@ -540,6 +547,13 @@ export async function createGraph(
     set: { source: cloudShadowNearRaw, filtered: cloudShadowNearMap, linearSampler: sampler },
   });
   const frameConstants = createStorage(gpu, FRAME_CONSTANTS_BYTES, 'read-write');
+  const terrainShift = createUniforms<TerrainShiftUniformValues>(gpu, {
+    offset: [0, 0],
+    fujiCenter: [0, 1000],
+    shadowDelta: [0, 0],
+    fuji: 0,
+    pad: 0,
+  });
   const frameConstantsCompute = createCompute(gpu, frameConstantsWgsl, {
     label: `${label}-frame-constants`,
     set: {
@@ -550,6 +564,8 @@ export async function createGraph(
       lutSampler: sampler,
       frameConstants,
       terrainMap,
+      terrainShift,
+      terrainSampler: noiseSampler,
     },
   });
   const terrainSunDepthDraws = cascadeUniforms.map((cascade, index) =>
@@ -559,7 +575,16 @@ export async function createGraph(
       geometry: { topology: 'triangle-strip', vertexCount: 2 * (TERRAIN_MESH_RINGS + 1) },
       depth: { compare: 'less' },
       writeMask: [],
-      set: { atmosphere, mesh: sunMesh, terrainMap, lutSampler: sampler, sunShadow: sunShadowUniforms, cascade },
+      set: {
+        atmosphere,
+        mesh: sunMesh,
+        terrainMap,
+        lutSampler: sampler,
+        sunShadow: sunShadowUniforms,
+        cascade,
+        terrainShift,
+        terrainSampler: noiseSampler,
+      },
     }),
   );
   const terrainDraw = createDraw(gpu, {
@@ -568,7 +593,15 @@ export async function createGraph(
     geometry: { topology: 'triangle-strip', vertexCount: 2 * (TERRAIN_MESH_RINGS + 1) },
     depth: { compare: 'greater' },
     writeMask: [],
-    set: { atmosphere, camera, mesh: terrainMesh, terrainMap, lutSampler: sampler },
+    set: {
+      atmosphere,
+      camera,
+      mesh: terrainMesh,
+      terrainMap,
+      lutSampler: sampler,
+      terrainShift,
+      terrainSampler: noiseSampler,
+    },
   });
   const hazeMarchEffect = createEffect(gpu, hazeMarchWgsl, {
     label: `${label}-haze-march`,
@@ -607,6 +640,8 @@ export async function createGraph(
     label: `${label}-scene`,
     set: {
       night,
+      terrainShift,
+      terrainSampler: noiseSampler,
       atmosphere,
       camera,
       transmittanceLut: transmittance,
@@ -683,10 +718,10 @@ export async function createGraph(
     1,
   );
   // The heightfield is baked once too: the terrain march then costs one texture tap per step instead of a 6-octave fbm.
-  const features = createUniforms<FeatureUniformValues>(gpu, { fuji: 0, pad0: 0, pad1: 0, pad2: 0 });
+  // One tile of relief, baked once; the shaders scroll through it as the plane flies (terrain.wgsl).
   const heightmapCompute = createCompute(gpu, terrainHeightmapWgsl, {
     label: `${label}-terrain-heightmap`,
-    set: { terrainMap, albedoMap: terrainAlbedoMap, features },
+    set: { terrainMap, albedoMap: terrainAlbedoMap },
   });
   heightmapCompute.dispatch(TERRAIN_MAP_SIZE / WEATHER_WORKGROUP, TERRAIN_MAP_SIZE / WEATHER_WORKGROUP, 1);
   const beauty = createTarget(gpu, { size: output.size, format: HDR_FORMAT, label: `${label}-beauty` });
@@ -829,9 +864,8 @@ export async function createGraph(
     livery,
     airlinerVisible: 0,
     night,
-    features,
-    heightmapCompute,
-    bakedFuji: 0,
+    terrainShift,
+    terrain: { shadowTravel: 0 },
     cloudDetail: 0.25,
     lutPhase: 'stale',
     bakedHaze: 1,
@@ -879,7 +913,7 @@ function dispatchMultiScatter(graph: AtmosphereGraph): void {
   graph.lutPhase = 'ready';
 }
 
-export function applyState(graph: AtmosphereGraph, state: AtmosphereState, size: readonly [number, number]): void {
+function applyState(graph: AtmosphereGraph, state: AtmosphereState, size: readonly [number, number]): void {
   const haze = Math.max(0.01, state.haze);
   graph.sunDirection = sunDirection(state);
   graph.atmosphere.set({
@@ -956,7 +990,7 @@ export function renderGraph(frame: Frame, graph: AtmosphereGraph, output: Output
  * The sun's shadow map depends only on the sun (the heightmap is static): re-rendered when the sun moves. It is a render
  * pass, so this frame's compute dispatches (the aerial LUT) read last frame's map, a frame late while the sun drags.
  */
-export function encodeSunShadow(frame: Frame, graph: AtmosphereGraph): void {
+function encodeSunShadow(frame: Frame, graph: AtmosphereGraph): void {
   if (sameDirection(graph.bakedSunDirection, graph.sunDirection)) return;
   graph.sunShadowUniforms.set(sunShadowUniformValues(graph.sunDirection));
   graph.sunShadows.forEach((target, index) => {
@@ -974,7 +1008,7 @@ export function encodeSunShadow(frame: Frame, graph: AtmosphereGraph): void {
  * radius around the camera axis and SUN_SHADOW_HEIGHT tall; the depth range of every cascade reaches back to the
  * whole terrain toward the sun, since a far peak shadows the near disc along the light just the same.
  */
-export function sunShadowUniformValues(sun: Vec3): SunShadowUniformValues {
+function sunShadowUniformValues(sun: Vec3): SunShadowUniformValues {
   let right = cross([0, 1, 0], sun);
   if (Math.hypot(...right) < 1e-4) right = [1, 0, 0];
   right = normalize(right);
@@ -1051,14 +1085,14 @@ function normalize(v: Vec3): Vec3 {
 }
 
 /** The cloud shadow map follows the wind and the sun, so it is rebuilt every frame the clouds cast shadows at all. */
-export function encodeCloudShadow(graph: AtmosphereGraph): void {
+function encodeCloudShadow(graph: AtmosphereGraph): void {
   if (!graph.cloudShadows) return;
   const groups = CLOUD_SHADOW_MAP_SIZE / WEATHER_WORKGROUP;
   graph.cloudShadowCompute.dispatch(groups, groups, 2);
   graph.cloudShadowBlurCompute.dispatch(groups, groups, 1);
 }
 
-export function encodeAerial(graph: AtmosphereGraph): void {
+function encodeAerial(graph: AtmosphereGraph): void {
   graph.aerialCompute.dispatch(
     LUT_SIZES.aerial[0] / AERIAL_WORKGROUP,
     LUT_SIZES.aerial[1] / AERIAL_WORKGROUP,
@@ -1067,16 +1101,16 @@ export function encodeAerial(graph: AtmosphereGraph): void {
 }
 
 /** Reads the sky-view LUT of the previous frame; stills pre-render one sky-view pass so it is already current. */
-export function encodeFrameConstants(graph: AtmosphereGraph): void {
+function encodeFrameConstants(graph: AtmosphereGraph): void {
   graph.frameConstantsCompute.dispatch(1);
 }
 
-export function encodeSkyView(frame: Frame, graph: AtmosphereGraph): void {
+function encodeSkyView(frame: Frame, graph: AtmosphereGraph): void {
   frame.pass({ target: graph.skyView, clear: CLEAR }, (pass) => pass.draw(graph.skyViewEffect));
 }
 
 /** Terrain depth, temporally filtered haze, then full-resolution surface/sky shading. */
-export function encodeScene(frame: Frame, graph: AtmosphereGraph): void {
+function encodeScene(frame: Frame, graph: AtmosphereGraph): void {
   frame.pass({ target: graph.terrainDepth, clear: [0, 0, 0, 0], clearDepth: 0 }, (pass) => {
     if (graph.terrainColumns > 0) pass.draw(graph.terrainDraw, { instances: graph.terrainColumns });
   });
@@ -1099,7 +1133,7 @@ export function encodeScene(frame: Frame, graph: AtmosphereGraph): void {
  * follows a change) are marched packed into a viewport of the compact size, then the resolve pass scatters them
  * into the history and keeps the rest from last frame's buffer.
  */
-export function encodeClouds(frame: Frame, graph: AtmosphereGraph): void {
+function encodeClouds(frame: Frame, graph: AtmosphereGraph): void {
   // In flight the clouds stream past every frame, so every texel is re-marched every frame (the example's
   // one-in-sixteen accumulation would smear them). A light blend with last frame's texel averages the march noise:
   // at a few metres of travel per frame, clouds kilometres away barely move between frames.
@@ -1134,7 +1168,7 @@ function compactCloudSize(size: readonly [number, number], period: number): read
   return size;
 }
 
-export function encodePresent(frame: Frame, graph: AtmosphereGraph, output: Output): void {
+function encodePresent(frame: Frame, graph: AtmosphereGraph, output: Output): void {
   graph.presentEffect.set({ cloudsHdr: graph.cloudsTargets.write });
   frame.pass({ target: graph.beauty, clear: CLEAR }, (pass) => pass.draw(graph.presentEffect));
   // The plane, over the sky and under the bloom, so its lights and glints glow like everything else.
@@ -1174,23 +1208,7 @@ export function applyFlight(graph: AtmosphereGraph, view: FlightView, size: read
     sunAzimuth: Math.round(view.atmosphere.sunAzimuth / SUN_STEP) * SUN_STEP,
   };
   applyState(graph, state, size);
-  // Bank: turn the camera about its forward axis (the example's camera has no roll).
-  const camera = graph.currentCamera!;
-  const c = Math.cos(view.roll);
-  const sn = Math.sin(view.roll);
-  const rolled = {
-    ...camera,
-    right: [
-      camera.right[0] * c + camera.up[0] * sn,
-      camera.right[1] * c + camera.up[1] * sn,
-      camera.right[2] * c + camera.up[2] * sn,
-    ] as Vec3,
-    up: [
-      camera.up[0] * c - camera.right[0] * sn,
-      camera.up[1] * c - camera.right[1] * sn,
-      camera.up[2] * c - camera.right[2] * sn,
-    ] as Vec3,
-  };
+  const rolled = rollCamera(graph.currentCamera!, view.roll);
   graph.currentCamera = rolled;
   graph.camera.set(rolled);
   graph.atmosphere.set({ sunIlluminance: [view.illuminance, view.illuminance, view.illuminance] });
@@ -1205,30 +1223,43 @@ export function applyFlight(graph: AtmosphereGraph, view: FlightView, size: read
       handoffMix: [view.dissolve, 0, 0, 0],
     },
   });
+  applyAirliner(graph, view, state);
+  applyTerrain(graph, view);
+}
+
+/** Bank: turn the camera about its forward axis (the example's camera has no roll). */
+function rollCamera(camera: CameraUniformValues, roll: number): CameraUniformValues {
+  const c = Math.cos(roll);
+  const s = Math.sin(roll);
+  const turn = (a: Vec3, b: Vec3, sign: number) => [0, 1, 2].map((k) => a[k] * c + sign * b[k] * s) as unknown as Vec3;
+  return { ...camera, right: turn(camera.right, camera.up, 1), up: turn(camera.up, camera.right, -1) };
+}
+
+function applyAirliner(graph: AtmosphereGraph, view: FlightView, state: AtmosphereState): void {
   graph.airlinerVisible = view.airliner.visible;
-  if (view.airliner.visible > 0) {
-    graph.airlinerEffect.set({
-      airliner: {
-        camera: view.airliner.camera,
-        exposure: 2 ** state.exposureEv,
-        time: state.time,
-        night: view.cockpit.night,
-        visible: view.airliner.visible,
-        pad: 0,
-      },
-    });
-  }
-  if (view.fuji !== graph.bakedFuji) {
-    graph.features.set({ fuji: view.fuji });
-    graph.heightmapCompute.dispatch(TERRAIN_MAP_SIZE / WEATHER_WORKGROUP, TERRAIN_MAP_SIZE / WEATHER_WORKGROUP, 1);
-    graph.bakedFuji = view.fuji;
-    // The terrain changed under the sun's shadow maps.
-    graph.bakedSunDirection = undefined;
-  }
+  if (view.airliner.visible <= 0) return;
+  graph.airlinerEffect.set({
+    airliner: {
+      camera: view.airliner.camera,
+      exposure: 2 ** state.exposureEv,
+      time: state.time,
+      night: view.cockpit.night,
+      visible: view.airliner.visible,
+      pad: 0,
+    },
+  });
+}
+
+/** The ground slides back as the plane flies, and Fuji comes closer (lib/flight/terrain-shift.ts). */
+function applyTerrain(graph: AtmosphereGraph, view: FlightView): void {
+  const next = terrainShift(graph.terrain, view.travel, view.fuji);
+  graph.terrain = next.state;
+  if (next.rebakeShadows) graph.bakedSunDirection = undefined;
+  graph.terrainShift.set(next.uniforms);
 }
 
 /** Swaps cloud/haze histories and advances their temporal sequences; once per frame, after the passes. */
-export function finishFrame(graph: AtmosphereGraph): void {
+function finishFrame(graph: AtmosphereGraph): void {
   graph.cloudsTargets.swap();
   graph.hazeTargets.swap();
   if (graph.hazeChangeFrames > 0) graph.hazeChangeFrames -= 1;

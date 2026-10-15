@@ -1,0 +1,22 @@
+{
+  // This file is JSONC: fallow reads these comments; generic JSON tools may not.
+  "$schema": "./node_modules/fallow/schema.json",
+  // No `entry`: fallow's Next.js, Jest and Playwright plugins find the routes, tests and configs.
+  "ignorePatterns": [
+    // Hidden folders are skipped by default, but /.secret is a real route (app/.secret/page.tsx).
+    "!app/.secret/**",
+    // Local scratch scripts for rendering the flight headlessly; not part of the site.
+    ".harness/**"
+  ],
+  // The flight's page holds the engine through a React ref, so following those calls needs TypeScript.
+  "typeAware": { "enabled": true },
+  // Loaded by a triple-slash reference in wgsl-env.d.ts (the WebGPU types), which no import can show.
+  "ignoreDependencies": ["@webgpu/types"],
+  "duplicates": {
+    // Hide pair-only clones; focus on widespread copy-paste worth refactoring.
+    "minOccurrences": 3
+  },
+  "rules": {
+    "unused-dependencies": "warn"
+  }
+}

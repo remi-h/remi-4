@@ -1,5 +1,5 @@
 import { AERIAL_KM_PER_SLICE, AERIAL_LUT_DEPTH, AERIAL_MAX_DISTANCE, Atmosphere, Camera, FrameConstants, PI, SunShadow, TERRAIN_TRANSMITTANCE_ENTRIES, cameraRay, raySphere, sampleTransmittance, skyViewUvFast, sunShadowSoft } from "./atmosphere-common.wgsl";
-import { TERRAIN_MAX_HEIGHT, TERRAIN_NEAR, sampleTerrainAlbedoNoise, sampleTerrainHeight, sampleTerrainNormal, terrainAlbedo } from "./terrain.wgsl";
+import { TERRAIN_MAX_HEIGHT, TERRAIN_NEAR, TerrainShift, sampleTerrainAlbedoNoise, sampleTerrainHeight, sampleTerrainNormal, terrainAlbedo } from "./terrain.wgsl";
 import { Clouds, sampleCloudShadow } from "./clouds-common.wgsl";
 import { Night, aurora, cityLights, stars } from "./night.wgsl";
 
@@ -27,8 +27,10 @@ import { Night, aurora, cityLights, stars } from "./night.wgsl";
 @group(0) @binding(18) var sunShadowMap1: texture_depth_2d;
 @group(0) @binding(19) var sunShadowMap2: texture_depth_2d;
 @group(0) @binding(22) var<uniform> night: Night;
+@group(0) @binding(7) var<uniform> terrainShift: TerrainShift;
+@group(0) @binding(8) var terrainSampler: sampler;
 
-fn height(xz: vec2f) -> f32 { return sampleTerrainHeight(terrainMap, lutSampler, xz); }
+fn height(xz: vec2f) -> f32 { return sampleTerrainHeight(terrainMap, terrainSampler, terrainShift, xz); }
 
 /** Sun transmittance at a terrain height from the per-frame table (linear between entries). */
 fn terrainSunTransmittance(surfaceHeight: f32) -> vec3f {
@@ -114,7 +116,9 @@ fn terrainHit(p: Atmosphere, origin: vec3f, dir: vec3f, pixel: vec2i) -> Terrain
 
 /** Terrain shadow on a surface point, from the sun's shadow cascades. */
 fn terrainShadow(p: Atmosphere, position: vec3f, normal: vec3f, sunDir: vec3f) -> f32 {
-  return sunShadowSoft(sunShadow, sunShadowMap0, sunShadowMap1, sunShadowMap2, shadowSampler, position - vec3f(0.0, p.groundRadius, 0.0), normal, sunDir);
+  // The maps were rendered `shadowDelta` km of flight ago: look up where this ground was then.
+  let then = position + vec3f(terrainShift.shadowDelta.x, 0.0, terrainShift.shadowDelta.y);
+  return sunShadowSoft(sunShadow, sunShadowMap0, sunShadowMap1, sunShadowMap2, shadowSampler, then - vec3f(0.0, p.groundRadius, 0.0), normal, sunDir);
 }
 
 @fragment fn fs_main(@builtin(position) fragCoord: vec4f, @location(0) uv: vec2f) -> @location(0) vec4f {
@@ -137,11 +141,11 @@ fn terrainShadow(p: Atmosphere, position: vec3f, normal: vec3f, sunDir: vec3f) -
 
   if (terrain.distance >= 0.0) {
     hitDistance = terrain.distance;
-    let normal = sampleTerrainNormal(terrainMap, lutSampler, terrain.position.xz);
+    let normal = sampleTerrainNormal(terrainMap, terrainSampler, terrainShift, terrain.position.xz);
     let sunZenithCos = dot(normal, p.sunDirection);
     let sunTransmittance = terrainSunTransmittance(terrain.height);
     let shadow = terrainShadow(p, terrain.position, normal, p.sunDirection) * sampleCloudShadow(clouds, sunShadow, cloudShadowNearMap, cloudShadowMap, lutSampler, terrain.position - vec3f(0.0, p.groundRadius, 0.0));
-    let albedo = terrainAlbedo(terrain.height, normal, sampleTerrainAlbedoNoise(terrainAlbedoMap, lutSampler, terrain.position.xz));
+    let albedo = terrainAlbedo(terrain.height, normal, sampleTerrainAlbedoNoise(terrainAlbedoMap, terrainSampler, terrainShift, terrain.position.xz));
     let ambientOcclusion = 0.6 + 0.4 * normal.y;
     let lit = albedo * (p.sunIlluminance * sunTransmittance * max(sunZenithCos, 0.0) * shadow / PI + skyAmbient * ambientOcclusion)
       + cityLights(night, terrain.position.xz) * (1.0 - smoothstep(0.4, 1.0, terrain.height));
@@ -153,7 +157,7 @@ fn terrainShadow(p: Atmosphere, position: vec3f, normal: vec3f, sunDir: vec3f) -
     let normal = normalize(position);
     let sunZenithCos = dot(normal, p.sunDirection);
     let sunTransmittance = sampleTransmittance(p, transmittanceLut, lutSampler, p.groundRadius, sunZenithCos);
-    let albedo = terrainAlbedo(0.0, vec3f(0.0, 1.0, 0.0), sampleTerrainAlbedoNoise(terrainAlbedoMap, lutSampler, position.xz));
+    let albedo = terrainAlbedo(0.0, vec3f(0.0, 1.0, 0.0), sampleTerrainAlbedoNoise(terrainAlbedoMap, terrainSampler, terrainShift, position.xz));
     let shadow = sampleCloudShadow(clouds, sunShadow, cloudShadowNearMap, cloudShadowMap, lutSampler, position - vec3f(0.0, p.groundRadius, 0.0));
     let ground = albedo * (p.sunIlluminance * sunTransmittance * max(sunZenithCos, 0.0) * shadow / PI + skyAmbient)
       + cityLights(night, position.xz);
