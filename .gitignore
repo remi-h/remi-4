@@ -45,3 +45,7 @@ next-env.d.ts
 /test-results/
 .fallow/
 fallow.json
+
+# Local screenshots and scratch scripts
+/*.png
+.harness/
