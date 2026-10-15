@@ -169,7 +169,7 @@ export const SecretFlight = ({ className }: { className?: string }) => {
   return (
     <>
       <Window className={className} meta={landed ? '[ landed ]' : '[ boarding ]'} title="stockholm → tokyo">
-        <div className="px-4 py-[18px] text-[13.5px] leading-[1.9]" data-testid="secret-flight">
+        <div className="px-4 py-4.5 text-[13.5px] leading-[1.9]" data-testid="secret-flight">
           <div aria-live="polite">
             <span className="text-muted">flight</span> <span className="text-yellow">ARN</span>{' '}
             <span className="text-muted">→</span> <span className="text-yellow">HND</span>{' '}
@@ -218,70 +218,70 @@ export const SecretFlight = ({ className }: { className?: string }) => {
 
       {flying
         ? createPortal(
-            <div
-              className="fixed inset-0 z-[101] select-none font-mono text-[13px] text-fg"
-              data-snapshot-skip
-              onClick={state.scene === 'boarding' ? skip : undefined}
-              onPointerMove={onPointerMove}
-            >
-              {state.scene === 'boarding' ? (
-                <>
-                  <button
-                    className="absolute bottom-4 left-5 border border-line bg-ink/85 px-3 py-1 text-fg hover:border-cyan hover:text-cyan"
-                    onClick={(e) => {
-                      // A click elsewhere skips the boarding; this one only mutes.
-                      e.stopPropagation();
-                      toggleSound();
-                    }}
-                    type="button"
-                  >
-                    {sound ? '♪ sound on · press m to mute' : 'sound off · press m to unmute'}
+          <div
+            className="fixed inset-0 z-101 select-none font-mono text-[13px] text-fg"
+            data-snapshot-skip
+            onClick={state.scene === 'boarding' ? skip : undefined}
+            onPointerMove={onPointerMove}
+          >
+            {state.scene === 'boarding' ? (
+              <>
+                <button
+                  className="absolute bottom-4 left-5 border border-line bg-ink/85 px-3 py-1 text-fg hover:border-cyan hover:text-cyan"
+                  onClick={(e) => {
+                    // A click elsewhere skips the boarding; this one only mutes.
+                    e.stopPropagation();
+                    toggleSound();
+                  }}
+                  type="button"
+                >
+                  {sound ? '♪ sound on · press m to mute' : 'sound off · press m to unmute'}
+                </button>
+                <span className="absolute bottom-4 right-5 text-muted">click or esc to skip</span>
+              </>
+            ) : null}
+            {state.hud ? (
+              <>
+                <HeadUpDisplay
+                  altitude={info.altitude}
+                  heading={where.heading}
+                  hudRef={hudRef}
+                  lat={where.lat}
+                  lon={where.lon}
+                />
+                <div className="absolute right-5 top-4 flex gap-4">
+                  <button className="text-muted hover:text-cyan" onClick={toggleSound} type="button">
+                    sound: {sound ? 'on' : 'off'}
                   </button>
-                  <span className="absolute bottom-4 right-5 text-muted">click or esc to skip</span>
-                </>
-              ) : null}
-              {state.hud ? (
-                <>
-                  <HeadUpDisplay
-                    altitude={info.altitude}
-                    heading={where.heading}
-                    hudRef={hudRef}
-                    lat={where.lat}
-                    lon={where.lon}
+                  <button className="text-muted hover:text-cyan" onClick={board} type="button">
+                    replay
+                  </button>
+                  <button className="text-cyan" onClick={land} type="button">
+                    esc · land
+                  </button>
+                </div>
+                <label className="absolute inset-x-0 bottom-5 mx-auto block w-[min(480px,85vw)] text-center text-muted">
+                  <span className="mb-1 block">
+                    <span className="text-yellow">ARN</span> → <span className="text-yellow">HND</span> ·{' '}
+                    {spaced(info.km)} km to go
+                  </span>
+                  <input
+                    aria-label="flight progress, Stockholm to Tokyo"
+                    className="block w-full accent-cyan"
+                    max={1}
+                    min={0}
+                    onChange={(e) => flightRef.current?.setProgress(Number(e.target.value))}
+                    step={0.001}
+                    type="range"
+                    value={state.progress}
                   />
-                  <div className="absolute right-5 top-4 flex gap-4">
-                    <button className="text-muted hover:text-cyan" onClick={toggleSound} type="button">
-                      sound: {sound ? 'on' : 'off'}
-                    </button>
-                    <button className="text-muted hover:text-cyan" onClick={board} type="button">
-                      replay
-                    </button>
-                    <button className="text-cyan" onClick={land} type="button">
-                      esc · land
-                    </button>
-                  </div>
-                  <label className="absolute inset-x-0 bottom-5 mx-auto block w-[min(480px,85vw)] text-center text-muted">
-                    <span className="mb-1 block">
-                      <span className="text-yellow">ARN</span> → <span className="text-yellow">HND</span> ·{' '}
-                      {spaced(info.km)} km to go
-                    </span>
-                    <input
-                      aria-label="flight progress, Stockholm to Tokyo"
-                      className="block w-full accent-cyan"
-                      max={1}
-                      min={0}
-                      onChange={(e) => flightRef.current?.setProgress(Number(e.target.value))}
-                      step={0.001}
-                      type="range"
-                      value={state.progress}
-                    />
-                    <span className="mt-1 block">drag or ← → to fly · move to look around</span>
-                  </label>
-                </>
-              ) : null}
-            </div>,
-            document.body,
-          )
+                  <span className="mt-1 block">drag or ← → to fly · move to look around</span>
+                </label>
+              </>
+            ) : null}
+          </div>,
+          document.body,
+        )
         : null}
     </>
   );
