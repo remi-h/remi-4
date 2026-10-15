@@ -6,24 +6,25 @@ import { routeSky } from '../lib/flight/route';
 
 const [w, h] = [1280, 720];
 const points = (process.argv[2] ?? '0,0.1,0.3,0.45,0.7,0.8,0.86,0.95').split(',').map(Number);
+const travels = (process.argv[3] ?? '').split(',').filter(Boolean).map(Number);
 const gpu = await init();
 const out = target(gpu, { size: [w, h], format: 'rgba8unorm' });
 const graph = await createGraph(gpu, out, 'still');
 graph.accumulate = false;
-for (const p of points) {
+for (const [n, p] of points.entries()) {
   const sky = routeSky(p);
   const view = {
     atmosphere: { ...sky.atmosphere, yaw: 0, pitch: -2, time: 30 },
-    illuminance: sky.illuminance, travel: 600 * p,
+    illuminance: sky.illuminance, travel: travels[n] ?? 600 * p,
     night: { stars: sky.stars, aurora: sky.aurora, city: sky.city, urban: sky.urban },
-    fuji: sky.fuji, cockpit: { intro: 1, look: [0, 0] as const, night: sky.night, fade: 0 }, roll: 0.02,
+    fuji: sky.fuji, cockpit: { intro: 1, look: [0, 0] as const, night: sky.night, fade: 0 }, roll: 0.02, airliner: { camera: [0, 0, -1500] as const, visible: 0 }, dissolve: 1,
   };
   applyFlight(graph, view, out.size);
   if (graph.lutPhase !== 'ready') bakeLuts(gpu, graph);
   for (let i = 0; i < 4; i++) frame(gpu, (f) => renderGraph(f, graph, out));
   const px = await out.color.read({ mipLevel: 0, region: 'all' });
   const png = new PNG({ width: w, height: h }); png.data.set(px);
-  writeFileSync(`/tmp/flight/sky-${p}.png`, PNG.sync.write(png));
+  writeFileSync(`/tmp/flight/sky-${p}-${n}.png`, PNG.sync.write(png));
   console.log('rendered', p);
 }
 gpu.dispose();

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 // See assets/fonts/README.md for where they come from.
 const font = (file: string) => readFile(join(process.cwd(), 'assets/fonts', file));
 
-type Weight = 400 | 800;
+export type Weight = 400 | 800;
 
 export const ogFonts = async () => {
   const [mono, monoBold, grotesk, hi, guchi] = await Promise.all([

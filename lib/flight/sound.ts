@@ -72,12 +72,6 @@ export class CabinSound {
     this.filter!.frequency.setTargetAtTime(260, ctx.currentTime, 0.3);
   }
 
-  stop() {
-    if (!this.ctx) return;
-    this.engine!.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.engine!.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
-  }
-
   dispose() {
     void this.ctx?.close();
   }

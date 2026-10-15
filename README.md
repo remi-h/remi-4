@@ -49,7 +49,13 @@ CONTENTFUL_FIXTURES=1 npm run dev
 | Unit tests | `npm run test` |
 | E2E tests | `npm run test:e2e` |
 | Format files | `npm run format -- <paths>` |
+| Unused code, duplication, complexity | `npm run fallow` |
 | Build | `npm run build` |
+
+`npm run fallow` runs [fallow](https://fallow.tools/docs/) (config in `.fallowrc.json`): it fails on any
+unused file, export or dependency and on copy-paste duplication, and on complexity beyond the committed
+baseline in `fallow-baselines/health.json`. Paid down some complexity? Re-save the baseline with
+`npx fallow health --save-baseline fallow-baselines/health.json` so it only ratchets down.
 
 `npm run test:e2e` starts its own server on port 3100 with `CONTENTFUL_FIXTURES=1`: the dev
 server locally, a production build when `CI=true`. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a

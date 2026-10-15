@@ -1,5 +1,5 @@
 import { Atmosphere, Camera, FrameConstants, PI, TERRAIN_TRANSMITTANCE_ENTRIES, sampleTransmittance, skyViewUv } from "./atmosphere-common.wgsl";
-import { TERRAIN_MAX_DISTANCE, TERRAIN_MAX_HEIGHT, sampleTerrainHeight } from "./terrain.wgsl";
+import { TERRAIN_MAX_DISTANCE, TERRAIN_MAX_HEIGHT, TerrainShift, sampleTerrainHeight } from "./terrain.wgsl";
 
 @group(0) @binding(0) var<uniform> atmosphere: Atmosphere;
 @group(0) @binding(1) var<uniform> camera: Camera;
@@ -8,6 +8,8 @@ import { TERRAIN_MAX_DISTANCE, TERRAIN_MAX_HEIGHT, sampleTerrainHeight } from ".
 @group(0) @binding(4) var lutSampler: sampler;
 @group(0) @binding(5) var<storage, read_write> frameConstants: FrameConstants;
 @group(0) @binding(6) var terrainMap: texture_2d<f32>;
+@group(0) @binding(7) var<uniform> terrainShift: TerrainShift;
+@group(0) @binding(8) var terrainSampler: sampler;
 
 /**
  * Fraction of the solar disc visible above the terrain horizon. The minimum
@@ -24,7 +26,7 @@ fn terrainSunVisibility(p: Atmosphere) -> f32 {
     let position = origin + dir * t;
     let altitude = length(position) - p.groundRadius;
     if (altitude > TERRAIN_MAX_HEIGHT && dir.y >= 0.0) { break; }
-    let clearance = altitude - sampleTerrainHeight(terrainMap, lutSampler, position.xz);
+    let clearance = altitude - sampleTerrainHeight(terrainMap, terrainSampler, terrainShift, position.xz);
     minimumAngularClearance = min(minimumAngularClearance, clearance / t);
     let distanceStep = 0.012 + t * 0.035;
     t += max(0.5 * distanceStep, min(max(clearance, 0.0) * 0.7, distanceStep));

@@ -46,9 +46,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${jetbrainsMono.variable} ${familjenGrotesk.variable} ${dotGothic16.variable} antialiased`}>
+      <body
+        className={`${jetbrainsMono.variable} ${familjenGrotesk.variable} ${dotGothic16.variable} flex min-h-dvh flex-col antialiased`}
+      >
         <Navigation />
-        <div className="root max-w-7xl mx-auto">{children}</div>
+        {/* Grows to fill the window, so the footer sits at the bottom even on short pages. */}
+        <div className="root mx-auto w-full max-w-7xl flex-1">{children}</div>
         <Footer />
         <Analytics />
       </body>

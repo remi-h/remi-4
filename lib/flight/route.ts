@@ -23,7 +23,7 @@ export interface RouteSky {
   night: number;
 }
 
-type Key = readonly [progress: number, value: number];
+export type Key = readonly [progress: number, value: number];
 
 /** Piecewise smooth interpolation through keyframes. */
 export function track(keys: readonly Key[], p: number): number {

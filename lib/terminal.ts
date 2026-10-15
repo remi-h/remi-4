@@ -30,7 +30,7 @@ export const isTyped = (command: string) => command.length <= MAX_TYPED;
 
 export type ScheduleInput = { command: string; hasOutput: boolean };
 
-export type ScheduledStep = {
+type ScheduledStep = {
   promptAt: number;
   typeAt: number;
   outputAt: number;

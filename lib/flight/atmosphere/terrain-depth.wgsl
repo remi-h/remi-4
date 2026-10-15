@@ -1,11 +1,13 @@
 import { Atmosphere, Camera } from "./atmosphere-common.wgsl";
-import { TERRAIN_NEAR, terrainMeshVertex } from "./terrain.wgsl";
+import { TERRAIN_NEAR, TerrainShift, terrainMeshVertex } from "./terrain.wgsl";
 
 @group(0) @binding(0) var<uniform> atmosphere: Atmosphere;
 @group(0) @binding(1) var<uniform> camera: Camera;
 @group(0) @binding(2) var<uniform> mesh: TerrainMesh;
 @group(0) @binding(3) var terrainMap: texture_2d<f32>;
 @group(0) @binding(4) var lutSampler: sampler;
+@group(0) @binding(5) var<uniform> terrainShift: TerrainShift;
+@group(0) @binding(6) var terrainSampler: sampler;
 
 /** The columns of the ring grid this frame draws (terrainSector in camera.ts). */
 struct TerrainMesh { columnOffset: u32, columns: u32 };
@@ -16,7 +18,7 @@ struct TerrainMesh { columnOffset: u32, columns: u32 };
  * TERRAIN_NEAR / view depth keeps precision from 1 m out to 400 km.
  */
 @vertex fn vs_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index) instanceIndex: u32) -> @builtin(position) vec4f {
-  let fromGround = terrainMeshVertex(vertexIndex, instanceIndex, mesh.columnOffset, atmosphere.groundRadius, terrainMap, lutSampler);
+  let fromGround = terrainMeshVertex(vertexIndex, instanceIndex, mesh.columnOffset, atmosphere.groundRadius, terrainMap, terrainSampler, terrainShift);
   // The camera sits on the axis at its altitude above the ground point the grid is relative to.
   let relative = fromGround - vec3f(0.0, camera.position.y - atmosphere.groundRadius, 0.0);
   let view = vec3f(dot(relative, camera.right), dot(relative, camera.up), dot(relative, camera.forward));

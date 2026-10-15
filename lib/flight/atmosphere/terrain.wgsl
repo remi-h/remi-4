@@ -1,9 +1,13 @@
 // Procedural ridged heightfield in kilometres: a flat valley around the camera, mountains from ~6 km out.
+// The plane flies over it: the relief is baked once as a map that tiles every TERRAIN_MAP_EXTENT km, and every
+// lookup reads it at the camera-relative position plus `TerrainShift.offset` (the distance flown), while the
+// valley under the camera and the fade towards the horizon stay with the camera. Mt Fuji is a separate cone,
+// placed in the world near the end of the route, so the plane flies towards it.
 
 export const TERRAIN_MAX_DISTANCE: f32 = 90.0;
 export const TERRAIN_MAX_HEIGHT: f32 = 3.2;
-/** The baked heightmap covers a square of this many km centred on the camera origin. */
-export const TERRAIN_MAP_EXTENT: f32 = 200.0;
+/** The baked relief tiles every this many km (16 cells of the base noise, so the noise wraps exactly). */
+export const TERRAIN_MAP_EXTENT: f32 = 256.0;
 export const TERRAIN_MAP_SIZE: f32 = 2048.0;
 /** Ring grid of the terrain mesh (terrain-mesh.wgsl): azimuth columns around the camera axis and rings per column. */
 export const TERRAIN_MESH_COLUMNS: u32 = 4096u;
@@ -34,22 +38,30 @@ fn ringRadius(ring: u32) -> f32 {
  * baked heightmap, and the surface sits at altitude h over the sphere: y = sqrt((R + h)^2 - r^2), formed here
  * without subtracting two 6360 km numbers, which f32 could not afford. Azimuth 0 is +Z, like the camera yaw.
  */
-export fn terrainMeshVertex(vertexIndex: u32, instanceIndex: u32, columnOffset: u32, groundRadius: f32, map: texture_2d<f32>, mapSampler: sampler) -> vec3f {
+export fn terrainMeshVertex(vertexIndex: u32, instanceIndex: u32, columnOffset: u32, groundRadius: f32, map: texture_2d<f32>, mapSampler: sampler, shift: TerrainShift) -> vec3f {
   let ring = vertexIndex / 2u;
   let column = (columnOffset + instanceIndex + (vertexIndex & 1u)) % TERRAIN_MESH_COLUMNS;
   let theta = f32(column) * (TAU / f32(TERRAIN_MESH_COLUMNS));
   let radius = ringRadius(ring);
   let xz = vec2f(sin(theta), cos(theta)) * radius;
-  let height = sampleTerrainHeight(map, mapSampler, xz);
+  let height = sampleTerrainHeight(map, mapSampler, shift, xz);
   let surfaceRadius = groundRadius + height;
   let rr = dot(xz, xz);
   let y = sqrt(max(surfaceRadius * surfaceRadius - rr, 0.0));
   let relativeY = (height * (2.0 * groundRadius + height) - rr) / (y + groundRadius);
   return vec3f(xz.x, relativeY, xz.y);
 }
+/**
+ * How far the plane has flown over the terrain, and where Fuji stands relative to the camera (km, xz = x, z).
+ * `shadowDelta` is the distance flown since the sun's shadow maps were last rendered: lookups into them add it,
+ * so the maps can be re-rendered every few hundred metres instead of every frame.
+ */
+export struct TerrainShift { offset: vec2f, fujiCenter: vec2f, shadowDelta: vec2f, fuji: f32, pad: f32 };
+
 const TERRAIN_SCALE: f32 = 1.0 / 16.0;
 const OCTAVES: i32 = 6;
-const ROTATE = mat2x2f(vec2f(0.8, 0.6), vec2f(-0.6, 0.8));
+/** Base noise cells across one tile: TERRAIN_MAP_EXTENT * TERRAIN_SCALE. */
+const PERIOD: f32 = 16.0;
 
 /**
  * Uniform [0, 1) value per lattice cell from an integer hash (pcg2d). The usual fract(sin(h) * 43758.5)
@@ -68,63 +80,104 @@ fn hash2(p: vec2f) -> f32 {
   return f32((v.x ^ v.y) >> 8u) / 16777216.0;
 }
 
-fn valueNoise(p: vec2f) -> f32 {
+/** Value noise whose lattice wraps every `period` cells, so the baked map tiles without a seam. */
+fn tiledNoise(p: vec2f, period: f32) -> f32 {
   let i = floor(p);
   let f = fract(p);
   let u = f * f * (3.0 - 2.0 * f);
-  let a = hash2(i);
-  let b = hash2(i + vec2f(1.0, 0.0));
-  let c = hash2(i + vec2f(0.0, 1.0));
-  let d = hash2(i + vec2f(1.0, 1.0));
+  let wrap = (i % period + period) % period;
+  let next = ((i + 1.0) % period + period) % period;
+  let a = hash2(wrap);
+  let b = hash2(vec2f(next.x, wrap.y));
+  let c = hash2(vec2f(wrap.x, next.y));
+  let d = hash2(next);
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y) * 2.0 - 1.0;
 }
 
-/** Height above sea level (km) at a tangent-plane position (km). */
-export fn terrainHeight(xz: vec2f) -> f32 {
-  var p = xz * TERRAIN_SCALE;
+/**
+ * The ridged relief and the fine rolling ground at a world position (km), both tiling every TERRAIN_MAP_EXTENT km.
+ * Octaves double the frequency without rotating, so each octave still wraps on the tile.
+ */
+export fn terrainRelief(world: vec2f) -> vec2f {
+  var p = world * TERRAIN_SCALE;
+  var period = PERIOD;
   var amplitude = 1.0;
   var height = 0.0;
   var weight = 1.0;
   for (var i = 0; i < OCTAVES; i += 1) {
-    let n = 1.0 - abs(valueNoise(p));
+    let n = 1.0 - abs(tiledNoise(p, period));
     height += n * n * amplitude * weight;
     weight = clamp(n * 1.2, 0.0, 1.0);
-    p = ROTATE * p * 2.05 + vec2f(1.7, 9.2);
+    p = p * 2.0 + vec2f(f32(i) * 3.0 + 1.0, f32(i) * 5.0 + 2.0);
+    period *= 2.0;
     amplitude *= 0.5;
   }
-  let distance = length(xz);
+  let fine = world * (PERIOD * 14.0 / TERRAIN_MAP_EXTENT);
+  let rolling = tiledNoise(fine, PERIOD * 14.0) + 0.5 * tiledNoise(fine * 2.0 + 4.0, PERIOD * 28.0);
+  return vec2f(height, rolling);
+}
+
+fn smoothCurve(a: f32, b: f32, x: f32) -> vec2f {
+  // smoothstep and its derivative in x.
+  let t = clamp((x - a) / (b - a), 0.0, 1.0);
+  return vec2f(t * t * (3.0 - 2.0 * t), 6.0 * t * (1.0 - t) / (b - a));
+}
+
+/**
+ * Height above sea level (km) and its slope (d/dx, d/dz) at a camera-relative tangent-plane position (km), as
+ * the plane flies over it: one filtered read of the baked tile (relief, rolling ground and the relief's slope),
+ * then the camera-relative valley and horizon fade and their exact slopes. `mapSampler` must repeat.
+ */
+export fn sampleTerrain(map: texture_2d<f32>, mapSampler: sampler, shift: TerrainShift, xz: vec2f) -> vec3f {
+  let tile = textureSampleLevel(map, mapSampler, (xz + shift.offset) / TERRAIN_MAP_EXTENT, 0.0);
+  let distance = max(length(xz), 1e-4);
+  let radial = xz / distance;
   // Flat ground under the camera, foothills from ~1 km, full mountains beyond ~6 km, fading out before the march limit.
-  let valley = smoothstep(1.0, 6.0, distance);
-  let horizonFade = 1.0 - smoothstep(TERRAIN_MAX_DISTANCE * 0.7, TERRAIN_MAX_DISTANCE, distance);
-  let rolling = 0.02 * (valueNoise(xz * 0.9) + 0.5 * valueNoise(xz * 2.3 + 4.0)) * smoothstep(0.1, 1.0, distance);
-  let mountains = max(0.0, height - 0.55) * 2.6;
-  return max(0.0, (mountains * valley + rolling) * horizonFade);
+  let valley = smoothCurve(1.0, 6.0, distance);
+  let edge = smoothCurve(TERRAIN_MAX_DISTANCE * 0.7, TERRAIN_MAX_DISTANCE, distance);
+  let fade = vec2f(1.0 - edge.x, -edge.y);
+  let rollingMask = smoothCurve(0.1, 1.0, distance);
+  let ridged = tile.x > 0.55;
+  let mountains = select(0.0, (tile.x - 0.55) * 2.6, ridged);
+  let mountainSlope = select(vec2f(0.0), tile.zw * 2.6, ridged);
+  let rolling = 0.02 * tile.y * rollingMask.x;
+  let inner = mountains * valley.x + rolling;
+  var height = inner * fade.x;
+  var slope = (mountainSlope * valley.x + radial * (mountains * valley.y + 0.02 * tile.y * rollingMask.y)) * fade.x + radial * inner * fade.y;
+  if (height <= 0.0) { height = 0.0; slope = vec2f(0.0); }
+  // Fuji, a cone of its own.
+  let toFuji = xz - shift.fujiCenter;
+  let d = length(toFuji) / 24.0;
+  if (shift.fuji > 0.0 && d < 1.0) {
+    let cone = 3.1 * pow(1.0 - d, 1.7) * shift.fuji;
+    if (cone < 3.02 * shift.fuji && cone > height) {
+      height = cone;
+      slope = -toFuji / max(length(toFuji), 1e-4) * (3.1 * 1.7 * pow(1.0 - d, 0.7) / 24.0) * shift.fuji;
+    } else if (cone >= 3.02 * shift.fuji && 3.02 * shift.fuji > height) {
+      height = 3.02 * shift.fuji;
+      slope = vec2f(0.0);
+    }
+  }
+  return vec3f(height, slope);
 }
 
-fn terrainMapUv(xz: vec2f) -> vec2f { return xz / TERRAIN_MAP_EXTENT + 0.5; }
-
-/** Height (km) from the baked map; bilinear, clamped to the map edge where the terrain has already faded out. */
-export fn sampleTerrainHeight(map: texture_2d<f32>, mapSampler: sampler, xz: vec2f) -> f32 {
-  return textureSampleLevel(map, mapSampler, terrainMapUv(xz), 0.0).r;
+export fn sampleTerrainHeight(map: texture_2d<f32>, mapSampler: sampler, shift: TerrainShift, xz: vec2f) -> f32 {
+  return sampleTerrain(map, mapSampler, shift, xz).x;
 }
 
-export fn sampleTerrainNormal(map: texture_2d<f32>, mapSampler: sampler, xz: vec2f) -> vec3f {
-  return normalize(textureSampleLevel(map, mapSampler, terrainMapUv(xz), 0.0).gba);
+export fn sampleTerrainNormal(map: texture_2d<f32>, mapSampler: sampler, shift: TerrainShift, xz: vec2f) -> vec3f {
+  let slope = sampleTerrain(map, mapSampler, shift, xz).yz;
+  return normalize(vec3f(-slope.x, 1.0, -slope.y));
 }
 
-export fn terrainNormal(xz: vec2f, epsilon: f32) -> vec3f {
-  let dx = terrainHeight(xz + vec2f(epsilon, 0.0)) - terrainHeight(xz - vec2f(epsilon, 0.0));
-  let dz = terrainHeight(xz + vec2f(0.0, epsilon)) - terrainHeight(xz - vec2f(0.0, epsilon));
-  return normalize(vec3f(-dx, 2.0 * epsilon, -dz));
+/** The two low-frequency noises the albedo uses, in [0, 1], tiling with the relief; baked by terrain-heightmap.wgsl. */
+export fn terrainAlbedoNoise(world: vec2f) -> vec2f {
+  let p = world / TERRAIN_MAP_EXTENT;
+  return vec2f(0.5 + 0.5 * tiledNoise(p * 90.0, 90.0), 0.5 + 0.5 * tiledNoise(p * 51.0 + 7.0, 51.0));
 }
 
-/** The two low-frequency noises the albedo uses, in [0, 1]; baked into the albedo map by terrain-heightmap.wgsl. */
-export fn terrainAlbedoNoise(xz: vec2f) -> vec2f {
-  return vec2f(0.5 + 0.5 * valueNoise(xz * 0.35), 0.5 + 0.5 * valueNoise(xz * 0.2));
-}
-
-export fn sampleTerrainAlbedoNoise(map: texture_2d<f32>, mapSampler: sampler, xz: vec2f) -> vec2f {
-  return textureSampleLevel(map, mapSampler, terrainMapUv(xz), 0.0).rg;
+export fn sampleTerrainAlbedoNoise(map: texture_2d<f32>, mapSampler: sampler, shift: TerrainShift, xz: vec2f) -> vec2f {
+  return textureSampleLevel(map, mapSampler, (xz + shift.offset) / TERRAIN_MAP_EXTENT, 0.0).rg;
 }
 
 /** Linear reflectance by altitude and slope. Dark vegetation and weathered rock leave headroom for sunlit snow. */

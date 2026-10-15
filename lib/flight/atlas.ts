@@ -2,8 +2,8 @@
 export const FLAP_CHARS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789→·-おかえり';
 /** Letters and digits only: what a flap shows while it is still spinning. */
 export const SPIN_RANGE = [1, 36] as const;
-export const ATLAS_COLS = 8;
-export const ATLAS_ROWS = 6;
+const ATLAS_COLS = 8;
+const ATLAS_ROWS = 6;
 const CELL = 128;
 
 /** Index of each character of `line` on the flaps; unknown characters become blank. */

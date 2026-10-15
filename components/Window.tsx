@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-type WindowProps = {
+export type WindowProps = {
   title: ReactNode;
   meta?: ReactNode;
   className?: string;

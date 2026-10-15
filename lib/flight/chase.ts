@@ -5,7 +5,7 @@
  * to the seat, always facing forward, so the cockpit view simply takes over.
  */
 
-type Vec3 = [number, number, number];
+export type Vec3 = [number, number, number];
 
 const KEYS: readonly { at: number; pos: Vec3 }[] = [
   { at: 0, pos: [-60, 34, -1500] },

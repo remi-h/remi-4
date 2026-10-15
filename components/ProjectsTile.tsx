@@ -61,7 +61,7 @@ const yearOf = (project: ContentfulProject) => {
   return date && !Number.isNaN(date.valueOf()) ? String(date.getUTCFullYear()) : null;
 };
 
-type ProjectsTileProps = {
+export type ProjectsTileProps = {
   featuredOnly?: boolean;
   /** Heading level for project titles, so it fits under the page's own headings. */
   titleAs?: 'h2' | 'h3';
