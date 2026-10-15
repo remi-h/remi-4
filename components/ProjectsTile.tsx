@@ -107,7 +107,7 @@ export const ProjectsTile = async ({
               </>
             }
           >
-            <div className="relative aspect-[16/10] overflow-hidden bg-ink" data-testid="project-art">
+            <div className="relative aspect-16/10 overflow-hidden bg-ink" data-testid="project-art">
               {cover ? (
                 <Image
                   alt={cover.title}
@@ -140,7 +140,7 @@ export const ProjectsTile = async ({
                 </div>
               ) : null}
             </div>
-            <div className="flex flex-1 flex-col px-[18px] pb-5 pt-[18px]">
+            <div className="flex flex-1 flex-col px-4.5 pb-5 pt-4.5">
               <Title className="font-grotesk text-[26px] font-bold leading-tight tracking-tight">
                 {project.fields.title}
               </Title>
