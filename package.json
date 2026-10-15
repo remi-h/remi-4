@@ -11,7 +11,11 @@
     "test": "jest",
     "test:e2e": "playwright test",
     "format": "prettier --write",
-    "fallow": "fallow --health-baseline fallow-baselines/health.json --fail-on-issues"
+    "fallow": "fallow --health-baseline fallow-baselines/health.json --fail-on-issues",
+    "flight:sky": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/flight/register.mjs scripts/flight/render-sky.mts",
+    "flight:sheet": "node scripts/flight/contact-sheet.mjs",
+    "flight:bench": "node scripts/flight/benchmark.mjs",
+    "flight:capture": "node scripts/flight/capture.mjs"
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^16.1.6",
@@ -30,6 +34,7 @@
     "@testing-library/react": "^16.3.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vgpu/wgsl": "^0.6.0",
@@ -40,6 +45,7 @@
     "fallow": "^3.33.1",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
+    "pngjs": "^7.0.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4",
     "typescript": "^5"

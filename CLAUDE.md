@@ -126,7 +126,9 @@ alone.
   driven along the route by `route.ts`, over ground that scrolls past with the clouds (a baked tile the
   terrain shaders read at the distance flown; `terrain-shift.ts`), seen through thick windshield glass (edge refraction, dust, wiper
   scratches and frost, `cockpit.wgsl`) under a cyan head-up display. The landing board says おかえり.
-  Keep it at about 60 fps on a laptop: measure before raising cloud detail or the render width. Pointer looks around, ← → and the slider move along the route; Esc or reaching Tokyo
+  Keep it at about 60 fps on a laptop: measure before raising cloud detail or the render width, with
+  `npm run flight:bench` against a production build (see README, "Flight tools"); `flight:sky` renders the
+  view headless for judging a shader change, `flight:capture` screenshots the real sequence. Pointer looks around, ← → and the slider move along the route; Esc or reaching Tokyo
   lands: the board flips to `LANDED` and back to the page, which then says it landed. Timings live in
   `timeline.ts`. Read the installed version's docs with `npm exec --no -- vgpu docs …` (never bare
   `npx vgpu`), and validate every changed shader with `npm exec --no -- vgpu check <file>

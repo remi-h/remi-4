@@ -46,6 +46,7 @@ next-env.d.ts
 .fallow/
 fallow.json
 
-# Local screenshots and scratch scripts
+# Local screenshots, scratch scripts, and renders from scripts/flight
 /*.png
 .harness/
+/tmp/

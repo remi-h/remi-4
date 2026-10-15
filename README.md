@@ -57,6 +57,21 @@ unused file, export or dependency and on copy-paste duplication, and on complexi
 baseline in `fallow-baselines/health.json`. Paid down some complexity? Re-save the baseline with
 `npx fallow health --save-baseline fallow-baselines/health.json` so it only ratchets down.
 
+### Flight tools
+
+For working on the `/.secret` flight (`scripts/flight/`, output in `tmp/flight/`, which is ignored):
+
+| Task | Command |
+| --- | --- |
+| Render the cockpit view at points along the route, headless | `npm run flight:sky -- --at 0.35,0.86` |
+| Combine renders or screenshots into one image | `npm run flight:sheet -- a.png b.png` |
+| Frame rate at dusk, night and sunrise, in Chrome | `npm run flight:bench -- --url <url>` |
+| Screenshots of the boarding sequence at given seconds | `npm run flight:capture -- --at 5,10` |
+
+The Chrome tools default to `http://localhost:3000/.secret`. Measure frame rate against a production
+build (`npm run build && npx next start -p 3200`, then `--url http://localhost:3200/.secret`): the dev
+server is much slower and reloads while files change.
+
 `npm run test:e2e` starts its own server on port 3100 with `CONTENTFUL_FIXTURES=1`: the dev
 server locally, a production build when `CI=true`. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a
 Chromium that is already installed.
