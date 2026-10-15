@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 const prompt = (page: import('@playwright/test').Page) => page.getByRole('textbox', { name: 'Type a command' });
 
 const type = async (page: import('@playwright/test').Page, line: string) => {
+  // Typing before hydration would submit the form natively instead of running the command.
+  await expect(page.getByTestId('shell')).toHaveAttribute('data-ready', 'true');
   await prompt(page).fill(line);
   await prompt(page).press('Enter');
 };
@@ -24,7 +26,7 @@ test('the prompt answers like bash: listing, reading, and refusing locked folder
   await expect(shell).toContainText('projects');
 
   await type(page, 'cat about.txt');
-  await expect(shell).toContainText('Experience Designer & Software Engineer');
+  await expect(shell).toContainText('Software Engineer & Designer');
 
   await type(page, 'ls -l projects');
   await expect(shell).toContainText('drwxr-x--- 2 remi remi 4096');

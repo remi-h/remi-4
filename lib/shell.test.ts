@@ -11,6 +11,7 @@ import {
   HOME,
   logFileName,
   pathForRoute,
+  plantBonsai,
   routeFor,
   run,
   type ShellDir,
@@ -55,6 +56,16 @@ const write = (node: ShellDir, path: string) => {
   }
 };
 
+const planted = plantBonsai(tree, Math.floor(Date.now() / 1000));
+
+/** Sets every folder's write bit for its owner on or off (the visitor is never the owner). */
+const ownerWrites = (node: ShellDir, path: string, on: boolean) => {
+  for (const [name, child] of Object.entries(node.children)) {
+    if (child.type === 'dir' && child.mode !== FOLDER_MODES.locked) ownerWrites(child, join(path, name), on);
+  }
+  chmodSync(path, on ? node.mode : node.mode & ~0o200);
+};
+
 describe('the working prompt matches real bash', () => {
   let root: string;
   let bin: string;
@@ -62,13 +73,14 @@ describe('the working prompt matches real bash', () => {
   beforeAll(() => {
     root = mkdtempSync(join(tmpdir(), 'portfolio-shell-'));
     chmodSync(root, 0o755);
-    write(tree, root);
+    // The bonsai grows daily, so the disk gets today's, as the prompt plants it.
+    write(planted, root);
     utimesSync(root, tree.mtime, tree.mtime);
-    // The portfolio machine only has ls and cat (cd and pwd are bash builtins), so the real
+    // The portfolio machine only has ls, cat and rm (cd and pwd are bash builtins), so the real
     // bash gets a PATH with just those: anything else is "command not found" there too.
     bin = mkdtempSync(join(tmpdir(), 'portfolio-bin-'));
     chmodSync(bin, 0o755);
-    for (const tool of ['ls', 'cat']) {
+    for (const tool of ['ls', 'cat', 'rm']) {
       symlinkSync(which(tool), join(bin, tool));
     }
   });
@@ -80,27 +92,29 @@ describe('the working prompt matches real bash', () => {
     rmSync(bin, { recursive: true, force: true });
   });
 
-  /** Runs a line in interactive bash in ~/<cwd>; returns its output and where it ended up. */
-  const bash = (cwd: string[], line: string) => {
+  /**
+   * Opens the disk to bash as the guest would find it while `run` runs. A page can open the prompt inside
+   * a locked folder (it has a page but is 750): as root we enter it before dropping to nobody; without
+   * root it is opened for the start and locked again from inside (the returned prefix). rm must find
+   * nothing it may delete: as nobody that is already so; as the owner, folders lose their write bit.
+   */
+  const asGuest = <T>(cwd: string[], line: string, run: (prefix: string) => T): T => {
     const dir = join(root, ...cwd);
-    // A page can open the prompt inside a locked folder (it has a page but is 750). bash is
-    // started there directly, as the page does: as root we enter it before dropping to
-    // nobody; without root it is opened for the start and locked again from inside.
-    const startsLocked = cwd.length >= 2 && cwd[0] === 'projects' && cwd[1] === gamma;
-    if (startsLocked && !isRoot) chmodSync(dir, 0o700);
-    const relock = startsLocked && !isRoot ? `${which('chmod')} 000 "$PWD"\n` : '';
-    const script = `${relock}{\n:\n${line}\n} 2>&1\necho "@@$PWD"`;
-    const args = ['--norc', '--noprofile', '-i', '-c', script];
-    const options = {
-      cwd: dir,
-      env: { PATH: bin, HOME: root, PWD: dir, LC_ALL: 'C', NODE_ENV: 'test' as const },
-      encoding: 'utf8' as const,
-    };
-    const result = isRoot
-      ? spawnSync(which('setpriv'), ['--reuid=65534', '--regid=65534', '--clear-groups', BASH, ...args], options)
-      : spawnSync(BASH, args, options);
-    if (startsLocked && !isRoot) chmodSync(dir, 0o000);
-    const lines = result.stdout
+    const startsLocked = !isRoot && cwd.length >= 2 && cwd[0] === 'projects' && cwd[1] === gamma;
+    const guardsRm = !isRoot && line.startsWith('rm');
+    if (startsLocked) chmodSync(dir, 0o700);
+    if (guardsRm) ownerWrites(planted, root, false);
+    try {
+      return run(startsLocked ? `${which('chmod')} 000 "$PWD"\n` : '');
+    } finally {
+      if (startsLocked) chmodSync(dir, 0o000);
+      if (guardsRm) ownerWrites(planted, root, true);
+    }
+  };
+
+  /** bash's output with the mirror's path read as $HOME, and where it ended up (the @@ line). */
+  const parse = (stdout: string) => {
+    const lines = stdout
       .replaceAll(root, HOME)
       .split('\n')
       // Without root, locked folders stand in as 000 (see above); ls -l shows their real 750.
@@ -110,6 +124,23 @@ describe('the working prompt matches real bash', () => {
     const relative = pwd === HOME ? [] : pwd.slice(HOME.length + 1).split('/');
     return { output: lines.slice(0, end), cwd: relative };
   };
+
+  /** Runs a line in interactive bash in ~/<cwd>; returns its output and where it ended up. */
+  const bash = (cwd: string[], line: string) =>
+    asGuest(cwd, line, (prefix) => {
+      const dir = join(root, ...cwd);
+      const script = `${prefix}{\n:\n${line}\n} 2>&1\necho "@@$PWD"`;
+      const args = ['--norc', '--noprofile', '-i', '-c', script];
+      const options = {
+        cwd: dir,
+        env: { PATH: bin, HOME: root, PWD: dir, LC_ALL: 'C', NODE_ENV: 'test' as const },
+        encoding: 'utf8' as const,
+      };
+      const result = isRoot
+        ? spawnSync(which('setpriv'), ['--reuid=65534', '--regid=65534', '--clear-groups', BASH, ...args], options)
+        : spawnSync(BASH, args, options);
+      return parse(result.stdout);
+    });
 
   const cases: [string[], string][] = [
     [[], 'ls'],
@@ -122,6 +153,28 @@ describe('the working prompt matches real bash', () => {
     [['.secret'], 'ls'],
     [['.secret'], 'pwd'],
     [['.secret'], 'ls -l'],
+    [['.secret'], 'cat bonsai.txt'],
+    [[], 'cat .secret/bonsai.txt'],
+    [[], 'ls -la .secret'],
+    [[], 'rm about.txt'],
+    [[], 'rm'],
+    [[], 'rm -rf'],
+    [[], 'rm nope'],
+    [[], 'rm -f nope'],
+    [[], 'rm projects'],
+    [[], 'rm -r projects'],
+    [[], 'rm -rf ~'],
+    [[], 'rm -rf /'],
+    [[], 'rm -rf .'],
+    [['log'], 'rm -rf ..'],
+    [[], 'rm -rf *'],
+    [['projects'], 'rm -fr ../log'],
+    [[], `rm -rf projects/${gamma}`],
+    [[], `rm -rf projects/${gamma}/README.md`],
+    [['.secret'], 'rm -Rf card bonsai.txt'],
+    [[], 'rm --recursive --force featured'],
+    [[], 'rm -rf -- log'],
+    [[], 'rm -z about.txt'],
     [['.secret'], 'cd card'],
     [[], 'cd .secret/card'],
     [['.secret', 'card'], 'ls -a'],
@@ -213,7 +266,9 @@ describe('the working prompt matches real bash', () => {
     const real = bash(cwd, line);
     // ls -l names the files' real owner here; the site shows remi.
     const ours = run(tree, cwd, line, { user: owner, now: Math.floor(Date.now() / 1000) });
-    expect({ output: ours.output, cwd: ours.cwd }).toEqual(real);
+    // rm walks folders in the disk's own order; the site lists them sorted.
+    const order = (lines: string[]) => (line.startsWith('rm') ? [...lines].sort() : lines);
+    expect({ output: order(ours.output), cwd: ours.cwd }).toEqual({ output: order(real.output), cwd: real.cwd });
   });
 
   it('the bash run really is refused by locked folders', () => {
@@ -231,6 +286,40 @@ describe('the virtual tree', () => {
     expect(Object.keys(projectsDir.children).sort()).toEqual([...folders].sort());
     expect((projectsDir.children[gamma] as ShellDir).mode).toBe(FOLDER_MODES.locked);
     expect(Object.keys((tree.children.log as ShellDir).children)).toHaveLength(fixtureLogs.length);
+  });
+});
+
+describe('rm', () => {
+  it('refuses the guest like GNU rm, and with -r and -f the site then plays along', () => {
+    const result = run(tree, [], 'rm -rf ~');
+    expect(result.effect).toBe('collapse');
+    expect(result.output).toContain("rm: cannot remove '/home/remi/about.txt': Permission denied");
+    expect(result.output.every((l) => l.endsWith('Permission denied'))).toBe(true);
+    for (const line of ['rm -fr /', 'rm -Rf .', 'rm -r -f projects', 'rm --recursive --force *']) {
+      expect(run(tree, [], line).effect).toBe('collapse');
+    }
+  });
+
+  it('says so for real rm options it does not have, rather than faking them', () => {
+    expect(run(tree, [], 'rm -i about.txt').output).toEqual(['rm: -i is not supported in this shell (try -r, -f)']);
+    expect(run(tree, [], 'rm --verbose x').output).toEqual([
+      'rm: --verbose is not supported in this shell (try -r, -f)',
+    ]);
+  });
+
+  it('only -r with -f sets it off, even with nothing to remove', () => {
+    expect(run(tree, [], 'rm -rf')).toEqual({ output: [], cwd: [], effect: 'collapse' });
+    for (const line of ['rm about.txt', 'rm -r projects', 'rm -f about.txt', 'rm -rf -z x']) {
+      expect(run(tree, [], line).effect).toBeUndefined();
+    }
+  });
+});
+
+describe('the bonsai in the shell', () => {
+  it('is in ~/.secret, and today’s', () => {
+    const now = Date.parse('2026-12-01T12:00:00Z') / 1000;
+    expect(run(tree, ['.secret'], 'ls', { now }).output).toEqual(['bonsai.txt', 'card']);
+    expect(run(tree, ['.secret'], 'cat bonsai.txt', { now }).output.join('\n')).toContain('day 47 ·');
   });
 });
 

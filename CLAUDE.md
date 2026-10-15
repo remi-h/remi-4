@@ -104,12 +104,16 @@ alone.
   (`components/Shell.tsx` → `ShellPrompt.tsx`, logic in `lib/shell.ts`). The visitor is
   `guest@portfolio` (HOME is still `~`), so locked folders (750) refuse them. It knows
   `ls` (-a -A -d -l -t -r -1; `-l` prints GNU's long format with remi as owner and group,
-  ext4-style sizes and UTC dates), `cd`, `cat`, `pwd`, `clear` and `#` comments over a virtual copy of
+  ext4-style sizes and UTC dates), `cd`, `cat`, `pwd`, `clear`, `rm` (-r -f; it refuses the guest exactly
+  as GNU rm does, since nothing here is theirs) and `#` comments over a virtual copy of
   the site (about.txt, featured/, projects/<folder>/README.md, log/<date>_<title>.md).
   `cd` into a folder with a page opens it. `lib/shell.test.ts` writes the same tree to disk
   and checks every case against interactive bash run as an unprivileged user, with a PATH
-  holding only ls and cat. Add a case there for any new command or flag. Unimplemented
-  real ls flags say so ("not supported in this shell") rather than faking output.
+  holding only ls, cat and rm (rm cases compare sorted lines: rm walks folders in disk order, the
+  site sorts them). Add a case there for any new command or flag. Unimplemented
+  real ls and rm flags say so ("not supported in this shell") rather than faking output.
+  Lines the site adds after a command's output (`notes`) are `#` comments in muted type, rendered
+  apart from the output and never passed off as what bash printed.
 - **The hidden page:** `/.secret` is the folder `~/.secret`:
   `ls` hides it, `ls -a` / `ls -A` list it, `cd .secret` opens it (the shell tree in
   `lib/shell.ts`, checked against real bash in `lib/shell.test.ts`). The header has a `0 .secret`
@@ -148,6 +152,27 @@ alone.
     `cardPoint` in `motion.ts` traces the click onto the card the same way the shader does and `linkAt` in
     `faces.ts` finds the printed row. Input maths lives in `motion.ts` (unit
     tested). The canvas is `aria-hidden`; the name, role and links are real elements under it.
+  - `bonsai.txt` (`cat bonsai.txt` in `~/.secret`): an ASCII bonsai (`lib/bonsai.ts`) planted on
+    2026-10-15 that grows a little every day and changes with the seasons (blossom `@` in spring, autumn
+    `%`, bare with snow in winter). The tree is grown once from a fixed seed with each piece stamped with
+    when it grows, so everyone sees the same tree on the same day. The prompt plants it when a command
+    runs (`plantBonsai`), not at build time, so it is today's even on a page built weeks ago. The pot is our
+    own drawing.
+- **`rm -rf`:** after rm's honest refusal the site adds its notes ("that's not allowed... but if that's what
+  you want...") and a black hole drinks the page (`lib/collapse.ts`, `lib/blackhole/`, drawn with vgpu,
+  adapted from vgpu's Black Hole example, see `lib/blackhole/NOTICE.md`). It warms up (WebGPU, every
+  pipeline) while the notes are typed. Each frame: a compute pass moves the page's 8px tiles along infall
+  orbits (`debris.wgsl`, a function of time, so running time backwards gives the page back exactly), an
+  instanced draw paints them, `trace.wgsl` traces Schwarzschild geodesics at up to 900px wide into two
+  targets (the disk's light, and where each escaped ray lands on the page plane and the sky), `resolve.wgsl`
+  draws the lensed page and debris from those at full resolution so the type stays sharp, then bloom and
+  `present.wgsl`. Its first frame is the page itself (the hole has no mass yet and the tone curve leaves
+  everything up to white alone). When the last tile is gone the disk flares, a bare `503 Service
+  Unavailable` page stands in for the site, and after a few seconds (or a click or key) the clock runs
+  backwards, faster: a white hole gives everything back, and the prompt says nothing was deleted. Timings
+  live in `lib/blackhole/timeline.ts`; tile release and fall times are shared with the shaders through
+  `RELEASE` and `space.wgsl`. Without WebGPU the blocks spiral into the middle with CSS instead; reduced
+  motion cuts straight to the 503 and back. About 60 fps on a laptop: measure before raising the trace width.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font

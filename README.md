@@ -1,6 +1,6 @@
 # Remi Higuchi, portfolio
 
-The portfolio of Remi Higuchi, Experience Designer & Software Engineer. It is laid out as a
+The portfolio of Remi Higuchi, Software Engineer & Designer. It is laid out as a
 terminal session: every page opens with a real shell command typed out, then its output,
 and ends on a prompt visitors can type into (`ls`, `cd`, `cat`, `pwd`, `clear`).
 
@@ -10,7 +10,7 @@ and ends on a prompt visitors can type into (`ls`, `cd`, `cat`, `pwd`, `clear`).
 - Tailwind CSS v4, fonts through `next/font` (JetBrains Mono, Familjen Grotesk, DotGothic16)
 - Content (projects, log) from [Contentful](https://www.contentful.com)
 - OG image and icons generated at build time with `next/og`
-- WebGPU on the hidden `/.secret` page with [vgpu](https://www.npmjs.com/package/vgpu): a flight from Stockholm to Tokyo, with a physically based sky adapted from vgpu's Atmosphere & Clouds example (MIT, see `lib/flight/atmosphere/NOTICE.md`), and in `/.secret/card` a holographic business card (`lib/card/`, diffraction from vgpu's Holographic Card example, see `lib/card/NOTICE.md`). `.wgsl` files are prepared at build time by `@vgpu/wgsl` (the `turbopack.rules` entry in `next.config.ts`). Check a shader on a real device with `npm exec --no -- vgpu check <file.wgsl> --require-validation`
+- WebGPU on the hidden `/.secret` page with [vgpu](https://www.npmjs.com/package/vgpu): a flight from Stockholm to Tokyo, with a physically based sky adapted from vgpu's Atmosphere & Clouds example (MIT, see `lib/flight/atmosphere/NOTICE.md`), and in `/.secret/card` a holographic business card (`lib/card/`, diffraction from vgpu's Holographic Card example, see `lib/card/NOTICE.md`), and the black hole `rm -rf` opens at the prompt (`lib/blackhole/`, geodesics and bloom from vgpu's Black Hole example, see `lib/blackhole/NOTICE.md`). `.wgsl` files are prepared at build time by `@vgpu/wgsl` (the `turbopack.rules` entry in `next.config.ts`). Check a shader on a real device with `npm exec --no -- vgpu check <file.wgsl> --require-validation`
 - Jest + Testing Library for unit tests, Playwright + axe for end-to-end tests
 - Deployed on Vercel from `main`
 
