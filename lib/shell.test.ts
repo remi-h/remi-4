@@ -121,6 +121,11 @@ describe('the working prompt matches real bash', () => {
     [['.secret'], 'ls -a'],
     [['.secret'], 'ls'],
     [['.secret'], 'pwd'],
+    [['.secret'], 'ls -l'],
+    [['.secret'], 'cd card'],
+    [[], 'cd .secret/card'],
+    [['.secret', 'card'], 'ls -a'],
+    [['.secret', 'card'], 'cd ..'],
     [['.secret'], 'cd ..'],
     [[], 'cd .secret'],
     [[], 'cd ./.secret'],
@@ -235,6 +240,7 @@ describe('routes', () => {
     expect(routeFor(['projects'], tree)).toBe('/projects');
     expect(routeFor(['log'], tree)).toBe('/log');
     expect(routeFor(['.secret'], tree)).toBe('/.secret');
+    expect(routeFor(['.secret', 'card'], tree)).toBe('/.secret/card');
     expect(routeFor(['projects', alpha], tree)).toBe(`/projects/${alpha}`);
     // Locked projects and featured/ have no page of their own.
     expect(routeFor(['projects', gamma], tree)).toBeNull();
@@ -246,6 +252,7 @@ describe('routes', () => {
     expect(pathForRoute('/projects/fixture-alpha')).toEqual(['projects', 'fixture-alpha']);
     expect(displayCwd(['log'])).toBe('~/log');
     expect(pathForRoute('/.secret')).toEqual(['.secret']);
+    expect(pathForRoute('/.secret/card')).toEqual(['.secret', 'card']);
     expect(displayCwd([])).toBe('~');
   });
 });

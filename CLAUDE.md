@@ -134,6 +134,20 @@ alone.
   `npx vgpu`), and validate every changed shader with `npm exec --no -- vgpu check <file>
   --require-validation` (the build does not). Without WebGPU the button says so; reduced motion skips
   straight to a still cockpit. The canvas is `aria-hidden`; the HUD readout and slider are real elements.
+- **Hidden extras:** `/.secret` opens with a short welcome that says there is more to find. Each extra is a
+  plain folder inside `~/.secret` (so `ls` there lists it) with its own route under `app/.secret/`, `noindex`
+  like its parent, and must be in the shell tree, `routeFor` and the real-bash cases in `lib/shell.test.ts`.
+  - `card/` (`/.secret/card`, typed as `cd .secret/card`): Remi's business card drawn with vgpu
+    (`components/SecretCard.tsx`, `lib/card/`). One full-screen pass (`card.wgsl`) ray-traces the card as a
+    plane: ink stock, printed type (canvas-drawn with the page's fonts into a four-channel mask, `faces.ts`),
+    holographic foil from a diffraction grating (from vgpu's Holographic Card example, see `lib/card/NOTICE.md`),
+    a hot foil seal, two sizes of glitter flakes and a glass coat (Fresnel studio reflection, parallax and
+    colour fringe on the print, a lit bevel). It turns towards the mouse anywhere on the page, or follows the
+    phone's tilt (`deviceorientation`; iOS asks first, so a `[ tilt with your phone ]` tap starts it); left
+    alone it sways. Click, `[ flip ]` or f turns it over to the links, which open when clicked:
+    `cardPoint` in `motion.ts` traces the click onto the card the same way the shader does and `linkAt` in
+    `faces.ts` finds the printed row. Input maths lives in `motion.ts` (unit
+    tested). The canvas is `aria-hidden`; the name, role and links are real elements under it.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font
