@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const routes = ['/', '/projects', '/projects/fixture-alpha', '/log', '/.secret'];
+const routes = ['/', '/projects', '/projects/fixture-alpha', '/log', '/.secret', '/.secret/card'];
 const widths = [375, 1280];
 
 for (const width of widths) {
