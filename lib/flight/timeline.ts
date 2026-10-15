@@ -50,7 +50,7 @@ export function arrivalLines(cols: number): string[] {
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-/** Which shader draws at time `t`, and how far the porthole has opened. */
+/** Which shader draws at time `t`, and how far the handoff into the cockpit has got. */
 export function sceneAt(t: number): Scene {
   if (t < T.handoff) return { scene: 'boarding', intro: 0, hud: false };
   const intro = clamp01((t - T.handoff) / (T.introEnd - T.handoff));
