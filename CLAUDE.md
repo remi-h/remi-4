@@ -173,6 +173,11 @@ alone.
   live in `lib/blackhole/timeline.ts`; tile release and fall times are shared with the shaders through
   `RELEASE` and `space.wgsl`. Without WebGPU the blocks spiral into the middle with CSS instead; reduced
   motion cuts straight to the 503 and back. About 60 fps on a laptop: measure before raising the trace width.
+- **The investor page:** `/investor` (`cd investor`, a folder in the shell tree) lets anyone "invest" any whole
+  amount in kr (presets 10/50/100/500 or their own) with an email for a quarterly report. It is a **mock
+  checkout** (`components/InvestForm.tsx`, validation in `lib/investor.ts`): nothing is charged, stored or sent,
+  and the receipt says so. The sample report beside it is labelled as a sample. Real payments or a real email
+  list need a provider and secrets, which build, tests and e2e must not require.
 - **Kept simple:** a command or two per page, no filters.
 - Tailwind note: base element styles (`a`, `body`, focus) live in
   `@layer base`; unlayered CSS would beat utilities such as `text-cyan`. Font

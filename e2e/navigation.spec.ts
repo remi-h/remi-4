@@ -41,13 +41,14 @@ test('the current page is marked in the nav', async ({ page }) => {
   await expect(nav.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current', 'page');
 });
 
-test('the nav is three numbered tabs plus the hidden 0 .secret, and has no Contact link', async ({ page }) => {
+test('the nav is four numbered tabs plus the hidden 0 .secret, and has no Contact link', async ({ page }) => {
   await page.goto('/log', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
     /0\s+\.secret/,
     /1\s+home/,
     /2\s+projects/,
     /3\s+log/,
+    /4\s+investor/,
   ]);
 });
 

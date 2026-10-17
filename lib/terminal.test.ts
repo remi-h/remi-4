@@ -49,6 +49,7 @@ describe('the displayed commands are real shell commands', () => {
       touch(file, entry.fields.date ?? '');
     }
     mkdirSync(join(root, 'featured'));
+    mkdirSync(join(root, 'investor'));
     mkdirSync(join(root, '.secret', 'card'), { recursive: true });
     mkdirSync(join(root, 'projects'));
     for (const { folder, featured, locked, date } of projects) {
@@ -135,6 +136,10 @@ describe('the displayed commands are real shell commands', () => {
 
   it('log: cd log succeeds and leaves you in ~/log', () => {
     expect(sh(`${commands.toLog} && pwd`).trim()).toBe(join(root, 'log'));
+  });
+
+  it('investor: cd investor succeeds and leaves you in ~/investor', () => {
+    expect(sh(`${commands.toInvestor} && pwd`).trim()).toBe(join(root, 'investor'));
   });
 
   it('404: cd into a missing path fails with exactly the error the page shows', () => {

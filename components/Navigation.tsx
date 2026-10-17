@@ -10,6 +10,7 @@ const tabs = [
   { href: '/', label: 'home', n: 1 },
   { href: '/projects', label: 'projects', n: 2 },
   { href: '/log', label: 'log', n: 3 },
+  { href: '/investor', label: 'investor', n: 4 },
 ];
 
 export const Navigation = () => {
@@ -33,7 +34,7 @@ export const Navigation = () => {
             </span>
           </span>
         </Link>
-        <nav aria-label="Main" className="flex gap-1 text-sm">
+        <nav aria-label="Main" className="flex flex-wrap gap-1 text-sm">
           {tabs.map(({ href, label, n, hidden }) => {
             const active = notFound
               ? false

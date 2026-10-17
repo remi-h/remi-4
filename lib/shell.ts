@@ -75,7 +75,9 @@ export const buildTree = (projects: ShellProject[], logs: ShellLog[]): ShellDir 
   const updated = newest(folders);
   // A hidden page: ls only shows it with -a or -A, and cd opens it. Inside it, more pages (card/).
   const secret = dir({ card: dir({}, FOLDER_MODES.public, updated) }, FOLDER_MODES.public, updated);
-  return dir({ 'about.txt': file(aboutTxt(), updated), '.secret': secret, ...folders }, FOLDER_MODES.public, updated);
+  // The investor page is a folder with nothing in it, like featured/ when nothing is featured.
+  const investor = dir({}, FOLDER_MODES.public, updated);
+  return dir({ 'about.txt': file(aboutTxt(), updated), '.secret': secret, investor, ...folders }, FOLDER_MODES.public, updated);
 };
 
 /**
@@ -100,7 +102,7 @@ const childOf = (node: ShellDir, name: string): ShellNode | undefined =>
 /** The page a directory has, if any. */
 export const routeFor = (path: string[], tree: ShellDir) => {
   if (path.length === 0) return '/';
-  if (path.length === 1 && (path[0] === 'projects' || path[0] === 'log' || path[0] === '.secret')) return `/${path[0]}`;
+  if (path.length === 1 && (path[0] === 'projects' || path[0] === 'log' || path[0] === 'investor' || path[0] === '.secret')) return `/${path[0]}`;
   if (path.length === 2 && path[0] === '.secret' && path[1] === 'card') return '/.secret/card';
   if (path.length === 2 && path[0] === 'projects') {
     const node = tree.children.projects;

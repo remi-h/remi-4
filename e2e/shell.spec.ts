@@ -9,7 +9,7 @@ const type = async (page: import('@playwright/test').Page, line: string) => {
   await prompt(page).press('Enter');
 };
 
-for (const path of ['/', '/projects', '/projects/fixture-alpha', '/log', '/.secret', '/.secret/card', '/nope']) {
+for (const path of ['/', '/projects', '/projects/fixture-alpha', '/log', '/investor', '/.secret', '/.secret/card', '/nope']) {
   test(`${path} ends on a working prompt`, async ({ page }) => {
     await page.goto(path, { waitUntil: 'domcontentloaded' });
     await expect(prompt(page)).toBeVisible();

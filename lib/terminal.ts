@@ -90,6 +90,7 @@ export const commands = {
   parent: 'cd ..',
   back: 'cd .. # go back',
   toLog: 'cd log',
+  toInvestor: 'cd investor',
   toSecret: 'cd .secret',
   toCard: 'cd .secret/card',
   /** Projects are shown newest first, which is what -t prints; -l adds the modes the cards show. */

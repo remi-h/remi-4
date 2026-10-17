@@ -239,6 +239,9 @@ describe('the working prompt matches real bash', () => {
     [[], `cd projects/${gamma}`],
     [[], 'cd nope'],
     [[], 'cd about.txt'],
+    [[], 'cd investor'],
+    [['investor'], 'ls'],
+    [[], 'ls -d investor'],
     [[], 'cd log projects'],
     [[], 'cd "log"'],
     [['projects', alpha], 'cd ..'],
@@ -328,6 +331,7 @@ describe('routes', () => {
     expect(routeFor([], tree)).toBe('/');
     expect(routeFor(['projects'], tree)).toBe('/projects');
     expect(routeFor(['log'], tree)).toBe('/log');
+    expect(routeFor(['investor'], tree)).toBe('/investor');
     expect(routeFor(['.secret'], tree)).toBe('/.secret');
     expect(routeFor(['.secret', 'card'], tree)).toBe('/.secret/card');
     expect(routeFor(['projects', alpha], tree)).toBe(`/projects/${alpha}`);
