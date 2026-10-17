@@ -37,9 +37,16 @@ test.describe('the footer sits at the bottom of the window on short pages', () =
     test(route, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 1400 });
       await page.goto(route, { waitUntil: 'domcontentloaded' });
-      const box = await page.getByRole('contentinfo').boundingBox();
-      expect(box).not.toBeNull();
-      expect(Math.abs(box!.y + box!.height - 1400)).toBeLessThanOrEqual(1);
+      const footer = page.getByRole('contentinfo');
+      // The page streams in and hydrates after domcontentloaded (the 404 re-renders once the browser
+      // knows the path), so wait for the footer and let the layout settle instead of measuring once.
+      await expect(footer).toBeVisible();
+      await expect
+        .poll(async () => {
+          const box = await footer.boundingBox();
+          return box ? Math.abs(box.y + box.height - 1400) : null;
+        })
+        .toBeLessThanOrEqual(1);
     });
   }
 });
